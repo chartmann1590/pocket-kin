@@ -1,0 +1,133 @@
+{
+  "tool": "built-in imagegen",
+  "records": [
+    {
+      "id": "meadow",
+      "file": "game/assets/meadow.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-b51fea51-ac51-4c97-baf6-475f1704f92a.png",
+      "prompt": "Use case: illustration-story. Production game background for Pocket Kin. Landscape 3:2, premium cozy gouache storybook illustration with paper texture, cream peach sage palette, polished soft shapes, softly shaded depth, no outlines. A sunlit wildflower meadow, winding soft path, daisies and clover, rolling sage hills, peach sky, a small picnic clearing in foreground. Spacious readable composition, no animals or people, no lettering or UI or watermark. Final game-ready original background.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "woodland",
+      "file": "game/assets/woodland.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-8079a7e5-01c3-4ef8-b4f0-7668673b5834.png",
+      "prompt": "Use case: illustration-story. Production game background for Pocket Kin. Landscape 3:2, premium cozy gouache storybook illustration with paper texture, cream peach sage palette, polished soft shapes, softly shaded depth, no outlines. An enchanting woodland clearing, tall rounded trees, ferns, mushrooms, a mossy fallen log and a small golden sunbeam lighting a path. Spacious readable composition, no animals or people, no lettering or UI or watermark. Final game-ready original background.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "pond",
+      "file": "game/assets/pond.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-7354c0af-b619-4fee-b4b4-c8203f330a89.png",
+      "prompt": "Use case: illustration-story. Production game background for Pocket Kin. Landscape 3:2, premium cozy gouache storybook illustration with paper texture, cream peach sage palette, polished soft shapes, softly shaded depth, no outlines. A magical moonlit pond, lavender dusk, crescent moon, floating lily pads and silver reeds, fireflies, stepping stones in the foreground. Spacious readable composition, no animals or people, no lettering or UI or watermark. Final game-ready original background.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "sanctuary",
+      "file": "game/assets/sanctuary.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-dd53a33a-0a68-465d-ba04-ad1044636670.png",
+      "prompt": "Use case: illustration-story. Production game background for Pocket Kin. Landscape 3:2, premium cozy gouache storybook illustration with paper texture, cream peach sage palette, polished soft shapes, softly shaded depth, no outlines. A beautiful cozy garden sanctuary for retired virtual pets, tiny empty cottage doorways, flower beds, a curved stepping-stone path, cushions under a willow, warm late afternoon light. Spacious readable composition, no animals or people, no lettering or UI or watermark. Final game-ready original background.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "pet_mochi",
+      "file": "game/assets/pet_mochi.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-2f1e8bbf-6f86-4bb9-a4e5-28038c38d702.png",
+      "prompt": "Use case: illustration-story. Final production transparent PNG sprite atlas for original virtual pet Pocket Kin. Exactly EIGHT sprites in a precise FOUR-column TWO-row equal-cell grid. Creature: cream bunny with peach-tipped floppy ears and a green leaf tuft, glossy chocolate eyes, blush cheeks, adorable expressive friendly face, rounded squishy proportions. Top row left to right: a patterned egg in creature colors; tiny baby creature; slightly taller juvenile creature; full-grown creature. Bottom row: delighted adult arms raised; sleeping curled creature eyes closed; muddy dirty creature with concerned face; sick creature with a little cold compress on head. Same consistent creature identity across all poses, each sprite entirely within its own cell with 15 percent transparent margins, no overlaps. Premium cozy gouache storybook art, clean soft silhouette. TRANSPARENT BACKGROUND with actual alpha, no colored backdrop, no vignette, no checkerboard drawn in image, no ground or cast shadows. No text, labels, grid lines, or watermark. Landscape 3:2 atlas. Every cell equal size.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "pet_fern",
+      "file": "game/assets/pet_fern.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-14509256-90da-4709-beb3-e0eb83457b1f.png",
+      "prompt": "Use case: illustration-story. Final production transparent PNG sprite atlas for original virtual pet Pocket Kin. Exactly EIGHT sprites in a precise FOUR-column TWO-row equal-cell grid. Creature: sage green fox with large pointed ears and a cream belly, glossy chocolate eyes, blush cheeks, adorable expressive friendly face, rounded squishy proportions. Top row left to right: a patterned egg in creature colors; tiny baby creature; slightly taller juvenile creature; full-grown creature. Bottom row: delighted adult arms raised; sleeping curled creature eyes closed; muddy dirty creature with concerned face; sick creature with a little cold compress on head. Same consistent creature identity across all poses, each sprite entirely within its own cell with 15 percent transparent margins, no overlaps. Premium cozy gouache storybook art, clean soft silhouette. TRANSPARENT BACKGROUND with actual alpha, no colored backdrop, no vignette, no checkerboard drawn in image, no ground or cast shadows. No text, labels, grid lines, or watermark. Landscape 3:2 atlas. Every cell equal size.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "pet_pebble",
+      "file": "game/assets/pet_pebble.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-ff95720f-8962-4768-ba87-570cca97fa31.png",
+      "prompt": "Use case: illustration-story. Final production transparent PNG sprite atlas for original virtual pet Pocket Kin. Exactly EIGHT sprites in a precise FOUR-column TWO-row equal-cell grid. Creature: powder-blue round bear with little round ears and a white cloud tuft, glossy chocolate eyes, blush cheeks, adorable expressive friendly face, rounded squishy proportions. Top row left to right: a patterned egg in creature colors; tiny baby creature; slightly taller juvenile creature; full-grown creature. Bottom row: delighted adult arms raised; sleeping curled creature eyes closed; muddy dirty creature with concerned face; sick creature with a little cold compress on head. Same consistent creature identity across all poses, each sprite entirely within its own cell with 15 percent transparent margins, no overlaps. Premium cozy gouache storybook art, clean soft silhouette. TRANSPARENT BACKGROUND with actual alpha, no colored backdrop, no vignette, no checkerboard drawn in image, no ground or cast shadows. No text, labels, grid lines, or watermark. Landscape 3:2 atlas. Every cell equal size.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "pet_clover",
+      "file": "game/assets/pet_clover.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-5a082617-72ea-4854-97ac-83a4fcf82be9.png",
+      "prompt": "Use case: illustration-story. Final production transparent PNG sprite atlas for original virtual pet Pocket Kin. Exactly EIGHT sprites in a precise FOUR-column TWO-row equal-cell grid. Creature: soft moss-green baby deer with tiny twig antlers and cream spots, glossy chocolate eyes, blush cheeks, adorable expressive friendly face, rounded squishy proportions. Top row left to right: a patterned egg in creature colors; tiny baby creature; slightly taller juvenile creature; full-grown creature. Bottom row: delighted adult arms raised; sleeping curled creature eyes closed; muddy dirty creature with concerned face; sick creature with a little cold compress on head. Same consistent creature identity across all poses, each sprite entirely within its own cell with 15 percent transparent margins, no overlaps. Premium cozy gouache storybook art, clean soft silhouette. TRANSPARENT BACKGROUND with actual alpha, no colored backdrop, no vignette, no checkerboard drawn in image, no ground or cast shadows. No text, labels, grid lines, or watermark. Landscape 3:2 atlas. Every cell equal size.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "pet_pippin",
+      "file": "game/assets/pet_pippin.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-c82275c0-0f61-4e5f-860d-38646d819957.png",
+      "prompt": "Use case: illustration-story. Final production transparent PNG sprite atlas for original virtual pet Pocket Kin. Exactly EIGHT sprites in a precise FOUR-column TWO-row equal-cell grid. Creature: honey-yellow round fluffy bird with tiny wings and an orange beak, glossy chocolate eyes, blush cheeks, adorable expressive friendly face, rounded squishy proportions. Top row left to right: a patterned egg in creature colors; tiny baby creature; slightly taller juvenile creature; full-grown creature. Bottom row: delighted adult arms raised; sleeping curled creature eyes closed; muddy dirty creature with concerned face; sick creature with a little cold compress on head. Same consistent creature identity across all poses, each sprite entirely within its own cell with 15 percent transparent margins, no overlaps. Premium cozy gouache storybook art, clean soft silhouette. TRANSPARENT BACKGROUND with actual alpha, no colored backdrop, no vignette, no checkerboard drawn in image, no ground or cast shadows. No text, labels, grid lines, or watermark. Landscape 3:2 atlas. Every cell equal size.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "pet_lumi",
+      "file": "game/assets/pet_lumi.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-72c9f0ab-d9f2-4b15-b4af-452f0dd9c862.png",
+      "prompt": "Use case: illustration-story. Final production transparent PNG sprite atlas for original virtual pet Pocket Kin. Exactly EIGHT sprites in a precise FOUR-column TWO-row equal-cell grid. Creature: lavender moth-cat with a crescent forehead mark and little moon-patterned butterfly wings, glossy chocolate eyes, blush cheeks, adorable expressive friendly face, rounded squishy proportions. Top row left to right: a patterned egg in creature colors; tiny baby creature; slightly taller juvenile creature; full-grown creature. Bottom row: delighted adult arms raised; sleeping curled creature eyes closed; muddy dirty creature with concerned face; sick creature with a little cold compress on head. Same consistent creature identity across all poses, each sprite entirely within its own cell with 15 percent transparent margins, no overlaps. Premium cozy gouache storybook art, clean soft silhouette. TRANSPARENT BACKGROUND with actual alpha, no colored backdrop, no vignette, no checkerboard drawn in image, no ground or cast shadows. No text, labels, grid lines, or watermark. Landscape 3:2 atlas. Every cell equal size.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending in-game review"
+    },
+    {
+      "id": "decor-final",
+      "file": "game/assets/decor-final.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-39aa26e2-0c92-4dec-89cf-7beb1df3a432.png",
+      "prompt": "Use case: illustration-story. Production art for Pocket Kin virtual pet game. Exactly 30 separate room decoration sprites in a precise 6-column by 5-row grid. Columns in order: plush cushion, potted plant, table lamp, oval rug, string of bunting flags, framed landscape picture. Rows are color themes: peach, sage green, honey yellow, lavender, powder blue. Every item at consistent size within its equal cell, generous margins. No overlapping cells. Single atlas. Premium polished cozy gouache storybook illustration, cream peach sage soft colors, clean silhouettes, delicate shading. For sprites use actual transparent PNG alpha outside objects, no backdrop or vignette, no drawn checkerboard, no shadows outside silhouettes. Do not include labels, text, grid lines or watermark. Strict regular equal-cell atlas layout, each sprite centered in cell.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending atlas review"
+    },
+    {
+      "id": "accessories-final",
+      "file": "game/assets/accessories-final.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-4986a934-ca65-4847-a663-5c38aaf78c02.png",
+      "prompt": "Use case: illustration-story. Production art for Pocket Kin virtual pet game. Exactly 12 separate wearable accessory sprites in a precise 4-column by 3-row grid. Row one: peach bow, sage scarf, sun crown, lavender moon ribbon. Row two: berry bow, cloud blue scarf, daisy crown, green leaf ribbon. Row three: honey bow, lilac scarf, star crown, sky blue ribbon. Front view, no pets wearing them. Generous margins. Single atlas. Premium polished cozy gouache storybook illustration, cream peach sage soft colors, clean silhouettes, delicate shading. For sprites use actual transparent PNG alpha outside objects, no backdrop or vignette, no drawn checkerboard, no shadows outside silhouettes. Do not include labels, text, grid lines or watermark. Strict regular equal-cell atlas layout, each sprite centered in cell.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending atlas review"
+    },
+    {
+      "id": "objects-final",
+      "file": "game/assets/objects-final.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-9e644afc-d8bc-444d-8113-dd05c6b73fd1.png",
+      "prompt": "Use case: illustration-story. Production art for Pocket Kin virtual pet game. Exactly 24 separate item sprites in precise 6-column by 4-row grid. Row one: peach, berry bunch, pear, apple, melon slice, purple plum. Row two: daisy crown, smooth pebble, four-leaf clover, amber acorn, fern leaf print, robin feather. Row three: moon seashell, star lily, silver reed, raindrop, little wrapped gift parcel, wicker catching basket. Row four: pet food bowl, pink soap bubble, blue cold compress, gold petal coin, small storybook, shiny star. Equal cells generous margins. Single atlas. Premium polished cozy gouache storybook illustration, cream peach sage soft colors, clean silhouettes, delicate shading. For sprites use actual transparent PNG alpha outside objects, no backdrop or vignette, no drawn checkerboard, no shadows outside silhouettes. Do not include labels, text, grid lines or watermark. Strict regular equal-cell atlas layout, each sprite centered in cell.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending atlas review"
+    },
+    {
+      "id": "ui-icons-final",
+      "file": "game/assets/ui-icons-final.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-3ec3372e-481b-414f-ba99-05217f9bf066.png",
+      "prompt": "Use case: illustration-story. Production art for Pocket Kin virtual pet game. Exactly twelve icon sprites in 6-column by 2-row grid. Row one: food bowl, heart, soap bubbles, crescent moon, pawprint, gold petal coin. Row two: notification bell, paintbrush, play ball, open memory book, settings cog, checkmark. Chunky simple readable illustrations, equal cell sizes, generous margin. Single atlas. Premium polished cozy gouache storybook illustration, cream peach sage soft colors, clean silhouettes, delicate shading. For sprites use actual transparent PNG alpha outside objects, no backdrop or vignette, no drawn checkerboard, no shadows outside silhouettes. Do not include labels, text, grid lines or watermark. Strict regular equal-cell atlas layout, each sprite centered in cell.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending atlas review"
+    },
+    {
+      "id": "premium-final",
+      "file": "game/assets/premium-final.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-77716b75-7489-477d-8247-fc9aec195af7.png",
+      "prompt": "Use case: illustration-story. Production art for Pocket Kin virtual pet game. Exactly three separate collectible room sets in a 3-column one-row atlas. First cell cozy cottage furnishings: floral cushion, oak side table, peach teapot, daisy vase. Second cell moonlight furnishings: lavender star cushion, crescent moon lamp, indigo rug. Third cell blossom picnic furnishings: pink gingham cushion, picnic basket, cherry blossom branch in vase. All objects fully inside their group cell, generous margins. No room background. Single atlas. Premium polished cozy gouache storybook illustration, cream peach sage soft colors, clean silhouettes, delicate shading. For sprites use actual transparent PNG alpha outside objects, no backdrop or vignette, no drawn checkerboard, no shadows outside silhouettes. Do not include labels, text, grid lines or watermark. Strict regular equal-cell atlas layout, each sprite centered in cell.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending atlas review"
+    },
+    {
+      "id": "launcher-final",
+      "file": "game/assets/launcher-final.png",
+      "source": "C:\\Users\\Charles\\.codex\\generated_images\\01a07c5e-2a4e-7282-8b1a-67ab2e18fbab\\exec-1a211387-69dc-4bf9-8f64-eaf29ab268c3.png",
+      "prompt": "Use case: illustration-story. Production art for Pocket Kin virtual pet game. One beautiful original app icon, square. A closeup smiling cream bunny-fox with peach ears, green leaf tuft, shiny chocolate eyes and rosy cheeks on a SOLID muted sage square background with softly rounded corners. Face fills central 65 percent safely for adaptive icon cropping. No lettering. This icon is opaque. Premium polished cozy gouache storybook illustration, cream peach sage soft colors, clean silhouettes, delicate shading. For sprites use actual transparent PNG alpha outside objects, no backdrop or vignette, no drawn checkerboard, no shadows outside silhouettes. Do not include labels, text, grid lines or watermark. Strict regular equal-cell atlas layout, each sprite centered in cell.",
+      "tool": "built-in imagegen",
+      "status": "generated; pending atlas review"
+    }
+  ]
+}

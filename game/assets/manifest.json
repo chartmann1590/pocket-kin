@@ -1,0 +1,1690 @@
+{
+  "version": 2,
+  "visual_style": "Original cozy gouache storybook, cream/peach/sage",
+  "generation_tool": "built-in imagegen",
+  "records_file": "generation-records.json",
+  "assets": [
+    {
+      "id": "mochi_egg",
+      "file": "pet_mochi.png",
+      "cell": 0,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "mochi_baby",
+      "file": "pet_mochi.png",
+      "cell": 1,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "mochi_juvenile",
+      "file": "pet_mochi.png",
+      "cell": 2,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "mochi_adult",
+      "file": "pet_mochi.png",
+      "cell": 3,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "mochi_delighted",
+      "file": "pet_mochi.png",
+      "cell": 4,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "mochi_sleeping",
+      "file": "pet_mochi.png",
+      "cell": 5,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "mochi_dirty",
+      "file": "pet_mochi.png",
+      "cell": 6,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "mochi_ill",
+      "file": "pet_mochi.png",
+      "cell": 7,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "fern_egg",
+      "file": "pet_fern.png",
+      "cell": 0,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "fern_baby",
+      "file": "pet_fern.png",
+      "cell": 1,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "fern_juvenile",
+      "file": "pet_fern.png",
+      "cell": 2,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "fern_adult",
+      "file": "pet_fern.png",
+      "cell": 3,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "fern_delighted",
+      "file": "pet_fern.png",
+      "cell": 4,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "fern_sleeping",
+      "file": "pet_fern.png",
+      "cell": 5,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "fern_dirty",
+      "file": "pet_fern.png",
+      "cell": 6,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "fern_ill",
+      "file": "pet_fern.png",
+      "cell": 7,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pebble_egg",
+      "file": "pet_pebble.png",
+      "cell": 0,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pebble_baby",
+      "file": "pet_pebble.png",
+      "cell": 1,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pebble_juvenile",
+      "file": "pet_pebble.png",
+      "cell": 2,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pebble_adult",
+      "file": "pet_pebble.png",
+      "cell": 3,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pebble_delighted",
+      "file": "pet_pebble.png",
+      "cell": 4,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pebble_sleeping",
+      "file": "pet_pebble.png",
+      "cell": 5,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pebble_dirty",
+      "file": "pet_pebble.png",
+      "cell": 6,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pebble_ill",
+      "file": "pet_pebble.png",
+      "cell": 7,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "clover_egg",
+      "file": "pet_clover.png",
+      "cell": 0,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "clover_baby",
+      "file": "pet_clover.png",
+      "cell": 1,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "clover_juvenile",
+      "file": "pet_clover.png",
+      "cell": 2,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "clover_adult",
+      "file": "pet_clover.png",
+      "cell": 3,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "clover_delighted",
+      "file": "pet_clover.png",
+      "cell": 4,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "clover_sleeping",
+      "file": "pet_clover.png",
+      "cell": 5,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "clover_dirty",
+      "file": "pet_clover.png",
+      "cell": 6,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "clover_ill",
+      "file": "pet_clover.png",
+      "cell": 7,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pippin_egg",
+      "file": "pet_pippin.png",
+      "cell": 0,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pippin_baby",
+      "file": "pet_pippin.png",
+      "cell": 1,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pippin_juvenile",
+      "file": "pet_pippin.png",
+      "cell": 2,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pippin_adult",
+      "file": "pet_pippin.png",
+      "cell": 3,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pippin_delighted",
+      "file": "pet_pippin.png",
+      "cell": 4,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pippin_sleeping",
+      "file": "pet_pippin.png",
+      "cell": 5,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pippin_dirty",
+      "file": "pet_pippin.png",
+      "cell": 6,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pippin_ill",
+      "file": "pet_pippin.png",
+      "cell": 7,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "lumi_egg",
+      "file": "pet_lumi.png",
+      "cell": 0,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "lumi_baby",
+      "file": "pet_lumi.png",
+      "cell": 1,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "lumi_juvenile",
+      "file": "pet_lumi.png",
+      "cell": 2,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "lumi_adult",
+      "file": "pet_lumi.png",
+      "cell": 3,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "lumi_delighted",
+      "file": "pet_lumi.png",
+      "cell": 4,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "lumi_sleeping",
+      "file": "pet_lumi.png",
+      "cell": 5,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "lumi_dirty",
+      "file": "pet_lumi.png",
+      "cell": 6,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "lumi_ill",
+      "file": "pet_lumi.png",
+      "cell": 7,
+      "grid": [
+        4,
+        2
+      ],
+      "use": "Adoption / home / sanctuary / watch",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Peach Cushion",
+      "file": "decor-final.png",
+      "cell": 0,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Peach Plant",
+      "file": "decor-final.png",
+      "cell": 1,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Peach Lamp",
+      "file": "decor-final.png",
+      "cell": 2,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Peach Rug",
+      "file": "decor-final.png",
+      "cell": 3,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Peach Bunting",
+      "file": "decor-final.png",
+      "cell": 4,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Peach Picture",
+      "file": "decor-final.png",
+      "cell": 5,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sage Cushion",
+      "file": "decor-final.png",
+      "cell": 6,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sage Plant",
+      "file": "decor-final.png",
+      "cell": 7,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sage Lamp",
+      "file": "decor-final.png",
+      "cell": 8,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sage Rug",
+      "file": "decor-final.png",
+      "cell": 9,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sage Bunting",
+      "file": "decor-final.png",
+      "cell": 10,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sage Picture",
+      "file": "decor-final.png",
+      "cell": 11,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Honey Cushion",
+      "file": "decor-final.png",
+      "cell": 12,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Honey Plant",
+      "file": "decor-final.png",
+      "cell": 13,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Honey Lamp",
+      "file": "decor-final.png",
+      "cell": 14,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Honey Rug",
+      "file": "decor-final.png",
+      "cell": 15,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Honey Bunting",
+      "file": "decor-final.png",
+      "cell": 16,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Honey Picture",
+      "file": "decor-final.png",
+      "cell": 17,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Lavender Cushion",
+      "file": "decor-final.png",
+      "cell": 18,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Lavender Plant",
+      "file": "decor-final.png",
+      "cell": 19,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Lavender Lamp",
+      "file": "decor-final.png",
+      "cell": 20,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Lavender Rug",
+      "file": "decor-final.png",
+      "cell": 21,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Lavender Bunting",
+      "file": "decor-final.png",
+      "cell": 22,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Lavender Picture",
+      "file": "decor-final.png",
+      "cell": 23,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cloud Cushion",
+      "file": "decor-final.png",
+      "cell": 24,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cloud Plant",
+      "file": "decor-final.png",
+      "cell": 25,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cloud Lamp",
+      "file": "decor-final.png",
+      "cell": 26,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cloud Rug",
+      "file": "decor-final.png",
+      "cell": 27,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cloud Bunting",
+      "file": "decor-final.png",
+      "cell": 28,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cloud Picture",
+      "file": "decor-final.png",
+      "cell": 29,
+      "grid": [
+        6,
+        5
+      ],
+      "use": "Room shop / furnished home",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Peach bow",
+      "file": "accessories-final.png",
+      "cell": 0,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sage scarf",
+      "file": "accessories-final.png",
+      "cell": 1,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sun crown",
+      "file": "accessories-final.png",
+      "cell": 2,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Moon ribbon",
+      "file": "accessories-final.png",
+      "cell": 3,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Berry bow",
+      "file": "accessories-final.png",
+      "cell": 4,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cloud scarf",
+      "file": "accessories-final.png",
+      "cell": 5,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Daisy crown",
+      "file": "accessories-final.png",
+      "cell": 6,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Leaf ribbon",
+      "file": "accessories-final.png",
+      "cell": 7,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Honey bow",
+      "file": "accessories-final.png",
+      "cell": 8,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Lilac scarf",
+      "file": "accessories-final.png",
+      "cell": 9,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Star crown",
+      "file": "accessories-final.png",
+      "cell": 10,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sky ribbon",
+      "file": "accessories-final.png",
+      "cell": 11,
+      "grid": [
+        4,
+        3
+      ],
+      "use": "Accessory shop / pet",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Peach",
+      "file": "objects-final.png",
+      "cell": 0,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Berries",
+      "file": "objects-final.png",
+      "cell": 1,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Pear",
+      "file": "objects-final.png",
+      "cell": 2,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Apple",
+      "file": "objects-final.png",
+      "cell": 3,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Melon",
+      "file": "objects-final.png",
+      "cell": 4,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Plum",
+      "file": "objects-final.png",
+      "cell": 5,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Daisy crown discovery",
+      "file": "objects-final.png",
+      "cell": 6,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Smooth pebble",
+      "file": "objects-final.png",
+      "cell": 7,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Four-leaf clover",
+      "file": "objects-final.png",
+      "cell": 8,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Amber acorn",
+      "file": "objects-final.png",
+      "cell": 9,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Fern print",
+      "file": "objects-final.png",
+      "cell": 10,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Robin feather",
+      "file": "objects-final.png",
+      "cell": 11,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Moon shell",
+      "file": "objects-final.png",
+      "cell": 12,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Star lily",
+      "file": "objects-final.png",
+      "cell": 13,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Silver reed",
+      "file": "objects-final.png",
+      "cell": 14,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Raindrop",
+      "file": "objects-final.png",
+      "cell": 15,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Reward parcel",
+      "file": "objects-final.png",
+      "cell": 16,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Wicker basket",
+      "file": "objects-final.png",
+      "cell": 17,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Food bowl",
+      "file": "objects-final.png",
+      "cell": 18,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Soap bubble",
+      "file": "objects-final.png",
+      "cell": 19,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cold compress",
+      "file": "objects-final.png",
+      "cell": 20,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Petal coin",
+      "file": "objects-final.png",
+      "cell": 21,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Storybook",
+      "file": "objects-final.png",
+      "cell": 22,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Star",
+      "file": "objects-final.png",
+      "cell": 23,
+      "grid": [
+        6,
+        4
+      ],
+      "use": "Care / mini-games / discoveries / rewards",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Feed icon",
+      "file": "ui-icons-final.png",
+      "cell": 0,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Affection icon",
+      "file": "ui-icons-final.png",
+      "cell": 1,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Wash icon",
+      "file": "ui-icons-final.png",
+      "cell": 2,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Sleep icon",
+      "file": "ui-icons-final.png",
+      "cell": 3,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Paw icon",
+      "file": "ui-icons-final.png",
+      "cell": 4,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Petal icon",
+      "file": "ui-icons-final.png",
+      "cell": 5,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Reminder icon",
+      "file": "ui-icons-final.png",
+      "cell": 6,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Decorate icon",
+      "file": "ui-icons-final.png",
+      "cell": 7,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Play icon",
+      "file": "ui-icons-final.png",
+      "cell": 8,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Album icon",
+      "file": "ui-icons-final.png",
+      "cell": 9,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Settings icon",
+      "file": "ui-icons-final.png",
+      "cell": 10,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Confirm icon",
+      "file": "ui-icons-final.png",
+      "cell": 11,
+      "grid": [
+        6,
+        2
+      ],
+      "use": "Native phone/watch controls",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Cottage mornings",
+      "file": "premium-final.png",
+      "cell": 0,
+      "grid": [
+        3,
+        1
+      ],
+      "use": "Premium previews / equipped room collection",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Moonlight dreams",
+      "file": "premium-final.png",
+      "cell": 1,
+      "grid": [
+        3,
+        1
+      ],
+      "use": "Premium previews / equipped room collection",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Blossom picnic",
+      "file": "premium-final.png",
+      "cell": 2,
+      "grid": [
+        3,
+        1
+      ],
+      "use": "Premium previews / equipped room collection",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "home",
+      "file": "home.png",
+      "cell": 0,
+      "grid": [
+        1,
+        1
+      ],
+      "use": "Background",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "meadow",
+      "file": "meadow.png",
+      "cell": 0,
+      "grid": [
+        1,
+        1
+      ],
+      "use": "Background",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "woodland",
+      "file": "woodland.png",
+      "cell": 0,
+      "grid": [
+        1,
+        1
+      ],
+      "use": "Background",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "pond",
+      "file": "pond.png",
+      "cell": 0,
+      "grid": [
+        1,
+        1
+      ],
+      "use": "Background",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "sanctuary",
+      "file": "sanctuary.png",
+      "cell": 0,
+      "grid": [
+        1,
+        1
+      ],
+      "use": "Background",
+      "status": "generated-integrated",
+      "exists": true
+    },
+    {
+      "id": "Pocket Kin launcher",
+      "file": "launcher-final.png",
+      "cell": 0,
+      "grid": [
+        1,
+        1
+      ],
+      "use": "Phone/watch launcher",
+      "status": "generated-integrated",
+      "exists": true
+    }
+  ],
+  "audio": [
+    {
+      "file": "ambient.wav",
+      "status": "original-procedural-composition",
+      "source": "tools/generate_audio.py"
+    },
+    {
+      "file": "tap.wav",
+      "status": "original-procedural-composition",
+      "source": "tools/generate_audio.py"
+    },
+    {
+      "file": "care.wav",
+      "status": "original-procedural-composition",
+      "source": "tools/generate_audio.py"
+    },
+    {
+      "file": "hatch.wav",
+      "status": "original-procedural-composition",
+      "source": "tools/generate_audio.py"
+    },
+    {
+      "file": "reward.wav",
+      "status": "original-procedural-composition",
+      "source": "tools/generate_audio.py"
+    },
+    {
+      "file": "sleep.wav",
+      "status": "original-procedural-composition",
+      "source": "tools/generate_audio.py"
+    }
+  ],
+  "fonts": [
+    {
+      "file": "Nunito.ttf",
+      "license": "OFL-1.1",
+      "license_file": "Nunito-OFL.txt"
+    },
+    {
+      "file": "Lora.ttf",
+      "license": "OFL-1.1",
+      "license_file": "Lora-OFL.txt"
+    }
+  ],
+  "archive": [
+    "mochi.png",
+    "species-reference.png",
+    "decor.png",
+    "accessories.png",
+    "objects.png",
+    "ui-icons.png",
+    "premium.png",
+    "launcher.png",
+    "icon.svg"
+  ],
+  "notes": [
+    "Archive files are excluded from production exports.",
+    "Atlas regions are runtime slices, not separately redrawn images.",
+    "Decor atlas regions include a small gutter crop to exclude neighboring cell fragments.",
+    "Image files retain generated alpha; rendered preview backgrounds can differ from actual transparency.",
+    "Generated illustrations, assets and code are original to this project; font licenses are retained."
+  ]
+}

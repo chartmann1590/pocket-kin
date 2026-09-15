@@ -1,0 +1,39 @@
+config_version=5
+
+[application]
+
+config/name="Pocket Kin"
+config/description="An original cozy virtual pet game. Hatch a creature and grow a lasting friendship through care, play, exploration, and walking."
+config/version="0.2.0"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://assets/launcher-final.png"
+
+[autoload]
+World="*res://scripts/world.gd"
+Platform="*res://scripts/platform.gd"
+
+[display]
+window/size/viewport_width=720
+window/size/viewport_height=1280
+window/size/window_width_override=450
+window/size/window_height_override=800
+window/size/resizable=true
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
+
+[android]
+package/unique_name="com.pocketkin.game"
+package/name="Pocket Kin"
+package/signed=false
+
+[gui]
+theme/default_font_multichannel_signed_distance_field=true
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+textures/vram_compression/import_etc2_astc=true
+environment/defaults/default_clear_color=Color(0.98, 0.965, 0.94, 1)

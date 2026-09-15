@@ -1,0 +1,156 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/kin_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="12dp"
+    android:background="@drawable/kin_widget_background">
+
+    <!-- Header: Pet name & Stage/Mood badges -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="4dp">
+
+        <TextView
+            android:id="@+id/kin_name"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="#3B342A"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="Pocket Kin" />
+
+        <TextView
+            android:id="@+id/kin_stage_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/kin_widget_badge"
+            android:textColor="#556E4A"
+            android:textSize="11sp"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:text="✦ Baby" />
+
+        <TextView
+            android:id="@+id/kin_mood_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:textColor="#8D5A4C"
+            android:textSize="11sp"
+            android:text="💖 Happy" />
+    </LinearLayout>
+
+    <!-- Content: Pet Image & Status/Meters -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageView
+            android:id="@+id/kin_pet"
+            android:layout_width="74dp"
+            android:layout_height="74dp"
+            android:scaleType="fitCenter"
+            android:contentDescription="Open Pocket Kin" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginStart="8dp">
+
+            <TextView
+                android:id="@+id/kin_status"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#5C5243"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:text="Fed 85% · Happy 90%" />
+
+            <ProgressBar
+                android:id="@+id/kin_hunger_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:layout_marginTop="3dp"
+                android:max="100"
+                android:progress="85" />
+
+            <ProgressBar
+                android:id="@+id/kin_happy_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:layout_marginTop="3dp"
+                android:max="100"
+                android:progress="90" />
+
+            <TextView
+                android:id="@+id/kin_steps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#556E4A"
+                android:textSize="11sp"
+                android:maxLines="1"
+                android:text="👟 0 / 3,000 steps" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Quick Actions -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp">
+
+        <Button
+            android:id="@+id/kin_care"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="38dp"
+            android:background="@drawable/kin_widget_button"
+            android:text="🍎 Feed"
+            android:textColor="#3B342A"
+            android:textSize="12sp"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/kin_cuddle"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="38dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/kin_widget_button"
+            android:text="💖 Love"
+            android:textColor="#3B342A"
+            android:textSize="12sp"
+            android:textAllCaps="false" />
+
+        <Button
+            android:id="@+id/kin_walk"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="38dp"
+            android:layout_marginStart="4dp"
+            android:background="@drawable/kin_widget_button"
+            android:text="👟 Walk"
+            android:textColor="#3B342A"
+            android:textSize="12sp"
+            android:textAllCaps="false" />
+    </LinearLayout>
+</LinearLayout>
