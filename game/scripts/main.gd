@@ -32,7 +32,7 @@ var root_margin: MarginContainer
 var safe_top := 38
 var safe_bottom := 22
 
-# --- 3D Toy Ball in Room ---
+# --- 3D Interactive Room Toys ---
 var toy_active := false
 var toy_vp_container: SubViewportContainer
 var toy_vp: SubViewport
@@ -41,6 +41,23 @@ var toy_pos := Vector3(0, 0, 0)
 var toy_vel := Vector3(2.5, 3.5, 0)
 var toy_touch_down := false
 var toy_touch_start := Vector2.ZERO
+var toy_type := 0 # 0: Bouncy Ball, 1: Yarn Ball, 2: Squeaky Duck
+
+# --- Autonomous Room Roaming & Walking Animations ---
+var pet_roam_state := "idle" # "idle", "walk", "sniff", "chase_toy", "cheer"
+var pet_target_x := 191.0
+var pet_base_x := 191.0
+var pet_base_y := 100.0
+var pet_walk_timer := 0.0
+var pet_roam_cooldown := 3.0
+var pet_facing := 1.0 # 1.0 = right, -1.0 = left
+var pet_pounce_cooldown := 0.0
+var pet_dance_timer := 0.0
+var pet_zzz_timer := 0.0
+
+# --- Interactive Decor States ---
+var lamp_lit := false
+var lamp_glow_overlay: ColorRect
 
 func _ready() -> void:
 	var theme := Theme.new()
@@ -347,6 +364,35 @@ func spawn_heart(parent: Node, pos: Vector2) -> void:
 	tween.parallel().tween_property(heart, "modulate:a", 0.0, 0.7)
 	tween.tween_callback(heart.queue_free)
 
+func spawn_zzz(pos: Vector2) -> void:
+	if not is_instance_valid(pet_image) or not pet_image.get_parent(): return
+	var z := Label.new()
+	z.text = ["z", "Z", "Zzz", "💤"][randi() % 4]
+	z.position = pos
+	z.add_theme_font_size_override("font_size", randi_range(20, 28))
+	z.add_theme_color_override("font_color", Color("7b8fa1"))
+	z.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pet_image.get_parent().add_child(z)
+	var tw := create_tween()
+	tw.tween_property(z, "position", pos + Vector2(randf_range(15, 45), -randf_range(35, 60)), 1.5)
+	tw.parallel().tween_property(z, "modulate:a", 0.0, 1.5)
+	tw.tween_callback(z.queue_free)
+
+func spawn_sparkles_2d(pos: Vector2, count := 6) -> void:
+	if not is_instance_valid(pet_image) or not pet_image.get_parent(): return
+	var parent := pet_image.get_parent()
+	for i in range(count):
+		var star := Label.new()
+		star.text = ["✨", "⭐", "🌸", "💖", "🎾", "💫"][randi() % 6]
+		star.position = pos + Vector2(randf_range(-35, 35), randf_range(-25, 25))
+		star.add_theme_font_size_override("font_size", randi_range(22, 30))
+		star.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		parent.add_child(star)
+		var tw := create_tween()
+		tw.tween_property(star, "position", star.position + Vector2(randf_range(-45, 45), -randf_range(45, 85)), 0.85)
+		tw.parallel().tween_property(star, "modulate:a", 0.0, 0.85)
+		tw.tween_callback(star.queue_free)
+
 func bubble_bath_modal() -> void:
 	show_page("Home")
 	for child in body.get_children():
@@ -390,6 +436,9 @@ func bubble_bath_modal() -> void:
 	, body, true)
 
 func _setup_3d_toy(stage: Control) -> void:
+	if is_instance_valid(toy_vp_container):
+		toy_vp_container.queue_free()
+
 	toy_vp_container = SubViewportContainer.new()
 	toy_vp_container.position = Vector2.ZERO
 	toy_vp_container.size = Vector2(668, 395)
@@ -411,7 +460,7 @@ func _setup_3d_toy(stage: Control) -> void:
 
 	var dir_light := DirectionalLight3D.new()
 	dir_light.rotation_degrees = Vector3(-45, 30, 0)
-	dir_light.light_energy = 1.2
+	dir_light.light_energy = 1.25
 	toy_vp.add_child(dir_light)
 
 	var omni := OmniLight3D.new()
@@ -419,21 +468,57 @@ func _setup_3d_toy(stage: Control) -> void:
 	omni.light_energy = 1.4
 	toy_vp.add_child(omni)
 
-	toy_ball = MeshInstance3D.new()
-	var s_mesh := SphereMesh.new()
-	s_mesh.radius = 0.35
-	s_mesh.height = 0.7
-	toy_ball.mesh = s_mesh
-
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color("ff6b6b") # vibrant bouncy rubber ball
-	mat.roughness = 0.2
-	mat.metallic = 0.1
-	toy_ball.material_override = mat
-	toy_vp.add_child(toy_ball)
+	_create_toy_mesh()
 
 	toy_pos = Vector3(0, 0.5, 0)
 	toy_vel = Vector3(randf_range(-2.5, 2.5), 3.5, 0)
+
+func _create_toy_mesh() -> void:
+	if not is_instance_valid(toy_vp): return
+	if is_instance_valid(toy_ball):
+		toy_ball.queue_free()
+
+	toy_ball = MeshInstance3D.new()
+	var mat := StandardMaterial3D.new()
+
+	if toy_type == 0: # 🎾 Bouncy Rubber Ball
+		var s_mesh := SphereMesh.new()
+		s_mesh.radius = 0.35
+		s_mesh.height = 0.7
+		toy_ball.mesh = s_mesh
+		mat.albedo_color = Color("ff5964") # coral red
+		mat.roughness = 0.15
+		mat.metallic = 0.1
+	elif toy_type == 1: # 🧶 Soft Yarn Ball
+		var s_mesh := SphereMesh.new()
+		s_mesh.radius = 0.38
+		s_mesh.height = 0.76
+		toy_ball.mesh = s_mesh
+		mat.albedo_color = Color("9b5de5") # violet yarn
+		mat.roughness = 0.85
+	else: # 🦆 Squeaky Duck
+		var s_mesh := SphereMesh.new()
+		s_mesh.radius = 0.36
+		s_mesh.height = 0.65
+		toy_ball.mesh = s_mesh
+		mat.albedo_color = Color("fee440") # yellow rubber duck
+		mat.roughness = 0.3
+
+		var beak := MeshInstance3D.new()
+		var c_mesh := CylinderMesh.new()
+		c_mesh.top_radius = 0.05
+		c_mesh.bottom_radius = 0.16
+		c_mesh.height = 0.28
+		beak.mesh = c_mesh
+		beak.rotation_degrees = Vector3(0, 0, 90)
+		beak.position = Vector3(0.38, 0, 0)
+		var b_mat := StandardMaterial3D.new()
+		b_mat.albedo_color = Color("f77f00") # orange beak
+		beak.material_override = b_mat
+		toy_ball.add_child(beak)
+
+	toy_ball.material_override = mat
+	toy_vp.add_child(toy_ball)
 
 func home() -> void:
 	var pet: Dictionary = World.data.pet
@@ -475,6 +560,14 @@ func home() -> void:
 	light_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stage.add_child(light_overlay)
 
+	# Cozy Lamp Warm Glow Overlay
+	lamp_glow_overlay = ColorRect.new()
+	lamp_glow_overlay.color = Color(1.0, 0.93, 0.72, 0.22)
+	lamp_glow_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	lamp_glow_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	lamp_glow_overlay.visible = lamp_lit
+	stage.add_child(lamp_glow_overlay)
+
 	# Furnishings
 	var slots := {"cushion":Vector2(55,260),"plant":Vector2(495,195),"lamp":Vector2(465,100),"rug":Vector2(235,295),"bunting":Vector2(250,8),"picture":Vector2(50,60)}
 	for item in World.catalog():
@@ -483,6 +576,86 @@ func home() -> void:
 			deco.position = slots[item.slot]
 			deco.size = Vector2(130, 100)
 			stage.add_child(deco)
+
+	# --- Interactive Room Zones ---
+	# 1. Window Zone (Top-Left: birds fly by)
+	var window_btn := Button.new()
+	window_btn.flat = true
+	window_btn.position = Vector2(15, 8)
+	window_btn.size = Vector2(145, 78)
+	window_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	window_btn.pressed.connect(func():
+		play_sound("coin")
+		toast("🌤️ A flock of birds flew past the window!")
+		if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
+			thought_box.get_child(0).text = "Watching birds soar past the window! 🕊️"
+		for bi in range(3):
+			var bird := Label.new()
+			bird.text = "🕊️"
+			bird.position = Vector2(-30 - bi * 35, 20 + bi * 16)
+			bird.add_theme_font_size_override("font_size", 26)
+			bird.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			stage.add_child(bird)
+			var btw := create_tween()
+			btw.tween_property(bird, "position:x", 700.0, 2.0 + bi * 0.3)
+			btw.tween_callback(bird.queue_free)
+	)
+	stage.add_child(window_btn)
+
+	# 2. Houseplant Zone (Right side: water & sniff)
+	var plant_btn := Button.new()
+	plant_btn.flat = true
+	plant_btn.position = Vector2(470, 180)
+	plant_btn.size = Vector2(150, 120)
+	plant_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	plant_btn.pressed.connect(func():
+		play_sound("care")
+		pet_target_x = 360.0
+		pet_roam_state = "walk"
+		spawn_sparkles_2d(plant_btn.position + Vector2(75, 45))
+		World.data.pet.happiness = minf(100.0, World.data.pet.happiness + 1.0)
+		World.data.petals = World.data.get("petals", 0) + 1
+		World.save(true)
+		if is_instance_valid(coin_label):
+			coin_label.text = "✦ %d" % World.data.petals
+		if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
+			thought_box.get_child(0).text = "Sniffing the fresh mint leaves! 🌿"
+		toast("🌿 You tended the houseplant! Found +1 🌸 petal!")
+	)
+	stage.add_child(plant_btn)
+
+	# 3. Floor Lamp Zone (Toggle cozy ambient glow)
+	var lamp_btn := Button.new()
+	lamp_btn.flat = true
+	lamp_btn.position = Vector2(450, 80)
+	lamp_btn.size = Vector2(130, 95)
+	lamp_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	lamp_btn.pressed.connect(func():
+		lamp_lit = not lamp_lit
+		play_sound("tap")
+		if is_instance_valid(lamp_glow_overlay):
+			lamp_glow_overlay.visible = lamp_lit
+		if World.data.settings.haptics: Input.vibrate_handheld(20)
+		toast("💡 Lamp switched on! Cozy amber glow." if lamp_lit else "💡 Lamp switched off.")
+	)
+	stage.add_child(lamp_btn)
+
+	# 4. Cozy Cushion / Music Zone (Left side: dance spin)
+	var cushion_btn := Button.new()
+	cushion_btn.flat = true
+	cushion_btn.position = Vector2(35, 240)
+	cushion_btn.size = Vector2(135, 110)
+	cushion_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+	cushion_btn.pressed.connect(func():
+		play_sound("reward")
+		pet_dance_timer = 2.5
+		World.data.pet.happiness = minf(100.0, World.data.pet.happiness + 3.0)
+		spawn_sparkles_2d(cushion_btn.position + Vector2(65, 50))
+		if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
+			thought_box.get_child(0).text = "Dancing to cozy room tunes! 🎵"
+		toast("🎶 Cozy melody plays! %s is doing a joyful dance!" % World.data.pet.name)
+	)
+	stage.add_child(cushion_btn)
 
 	# Floating Mood Thought Bubble
 	thought_box = PanelContainer.new()
@@ -528,36 +701,58 @@ func home() -> void:
 					get_tree().create_timer(1.2).timeout.connect(refresh)
 			# Flick 3D toy if active
 			if toy_active and is_instance_valid(toy_ball):
-				toy_vel = Vector3(randf_range(-4.0, 4.0), randf_range(3.5, 6.0), 0)
+				var touch_x_norm: float = (event.position.x - 334.0) / 100.0
+				toy_vel = Vector3(clampf(touch_x_norm * 2.8, -4.5, 4.5), randf_range(4.5, 6.5), 0)
 				play_sound("bounce")
+				pet_roam_state = "chase_toy"
 		elif (event is InputEventScreenTouch and not event.pressed) or (event is InputEventMouseButton and not event.pressed):
-			if toy_active:
-				toy_vel = Vector3(randf_range(-3.5, 3.5), randf_range(3.0, 5.5), 0)
+			if toy_active and is_instance_valid(toy_ball):
+				var touch_x_norm: float = (event.position.x - 334.0) / 100.0
+				toy_vel = Vector3(clampf(touch_x_norm * 2.5, -4.0, 4.0), randf_range(4.2, 6.0), 0)
 				play_sound("bounce")
+				pet_roam_state = "chase_toy"
 			else:
 				do_care("love")
 	)
 	stage.add_child(pet_touch)
 
-	# 3D Toy Toggle Button on Stage
+	# 3D Toy Selector / Toggle Button on Stage
 	var toy_btn := Button.new()
-	toy_btn.text = "🎾 3D Toy"
+	var toy_labels := ["🎾 Bouncy Ball", "🧶 Yarn Ball", "🦆 Squeaky Duck"]
+	toy_btn.text = toy_labels[toy_type] if toy_active else "🎾 3D Toy"
 	toy_btn.position = Vector2(20, 18)
-	toy_btn.custom_minimum_size = Vector2(130, 48)
+	toy_btn.custom_minimum_size = Vector2(152, 48)
 	toy_btn.add_theme_font_size_override("font_size", 18)
 	toy_btn.add_theme_stylebox_override("normal", box(Color("fff9ee"), 16, Color("e5d2b0"), 2, 2))
 	toy_btn.pressed.connect(func():
-		toy_active = not toy_active
-		if toy_active:
+		if not toy_active:
+			toy_active = true
+			toy_type = 0
 			_setup_3d_toy(stage)
-			toast("🎾 3D Toy Ball dropped in the room! Flick it to bounce!")
+			toy_btn.text = toy_labels[toy_type]
+			toast("🎾 %s dropped in the room! Flick to throw!" % toy_labels[toy_type])
 			play_sound("bounce")
+			pet_roam_state = "chase_toy"
 		else:
-			if is_instance_valid(toy_vp_container):
-				toy_vp_container.queue_free()
-			toy_vp_container = null
-			toy_ball = null
-			toast("Toy put away.")
+			toy_type += 1
+			if toy_type >= toy_labels.size():
+				toy_active = false
+				toy_type = 0
+				if is_instance_valid(toy_vp_container):
+					toy_vp_container.queue_free()
+				toy_vp_container = null
+				toy_ball = null
+				toy_btn.text = "🎾 3D Toy"
+				pet_roam_state = "idle"
+				toast("Toy put away in the toybox.")
+			else:
+				toy_btn.text = toy_labels[toy_type]
+				_create_toy_mesh()
+				toy_pos = Vector3(0, 0.5, 0)
+				toy_vel = Vector3(randf_range(-2.5, 2.5), 4.2, 0)
+				play_sound("bounce")
+				pet_roam_state = "chase_toy"
+				toast("Switched to %s! %s is chasing it!" % [toy_labels[toy_type], World.data.pet.name])
 	)
 	stage.add_child(toy_btn)
 
@@ -1137,47 +1332,196 @@ func play_sound(name: String) -> void:
 func _process(delta: float) -> void:
 	time += delta
 
-	# Subtle pet idle breathing & life
-	if is_instance_valid(pet_image) and not World.data.settings.reduced_motion:
-		var breath := sin(time * 3.2) * 0.032
-		pet_image.scale = Vector2(1.0 + breath, 1.0 - breath)
-		pet_image.position.y = 100 + sin(time * 2.0) * 3.5
+	# Pounce cooldown & timers
+	if pet_pounce_cooldown > 0.0:
+		pet_pounce_cooldown -= delta
+	if pet_dance_timer > 0.0:
+		pet_dance_timer -= delta
 
-	# Gentle floating bob for mood thought bubble
-	if is_instance_valid(thought_box) and not World.data.settings.reduced_motion:
-		thought_box.position.y = 44 + sin(time * 2.2) * 3.0
+	var is_sleeping: bool = World.data.pet.get("sleeping", false)
 
-	# 3D Toy Ball physics in the pet room
+	# --- 3D Toy Physics in the pet room ---
 	if toy_active and is_instance_valid(toy_ball):
-		toy_vel.y -= 12.0 * delta # gravity
+		var grav := 11.5
+		var damp := 0.84
+		if toy_type == 1: # Yarn Ball is softer, less bouncy
+			grav = 13.0
+			damp = 0.65
+		elif toy_type == 2: # Squeaky Duck wobbles
+			grav = 10.0
+			damp = 0.78
+
+		toy_vel.y -= grav * delta
 		toy_pos += toy_vel * delta
 
 		# Floor bounce
 		if toy_pos.y <= -1.4:
 			toy_pos.y = -1.4
-			toy_vel.y = absf(toy_vel.y) * 0.82
-			toy_vel.x *= 0.95
-			play_sound("bounce")
-			if is_instance_valid(pet_image):
-				pet_image.scale = Vector2(1.15, 0.85)
+			toy_vel.y = absf(toy_vel.y) * damp
+			toy_vel.x *= 0.94
+			if toy_type == 2:
+				play_sound("spring") # Squeak!
+			else:
+				play_sound("bounce")
+			if is_instance_valid(pet_image) and not is_sleeping:
+				pet_image.scale = Vector2(1.15 * pet_facing, 0.85)
 
 		# Ceiling bounce
 		if toy_pos.y >= 1.6:
 			toy_pos.y = 1.6
-			toy_vel.y = -absf(toy_vel.y) * 0.8
+			toy_vel.y = -absf(toy_vel.y) * 0.75
 
 		# Wall bounds
 		if toy_pos.x <= -2.4:
 			toy_pos.x = -2.4
-			toy_vel.x = absf(toy_vel.x) * 0.8
+			toy_vel.x = absf(toy_vel.x) * 0.78
 			play_sound("bounce")
 		elif toy_pos.x >= 2.4:
 			toy_pos.x = 2.4
-			toy_vel.x = -absf(toy_vel.x) * 0.8
+			toy_vel.x = -absf(toy_vel.x) * 0.78
 			play_sound("bounce")
 
 		toy_ball.position = toy_pos
-		toy_ball.rotation.z += toy_vel.x * delta * 3.0
+		toy_ball.rotation.z += toy_vel.x * delta * 3.5
+
+	# --- Autonomous Pet Roaming, Walking & Toy Interaction ---
+	if is_instance_valid(pet_image):
+		if is_sleeping:
+			# Gentle sleeping breathing & "Zzz"
+			var breath := sin(time * 1.8) * 0.02
+			pet_image.scale = Vector2((1.0 + breath) * pet_facing, 1.0 - breath)
+			pet_image.position.y = pet_base_y + 12.0
+			pet_zzz_timer += delta
+			if pet_zzz_timer >= 1.8:
+				pet_zzz_timer = 0.0
+				spawn_zzz(pet_image.global_position + Vector2(100, 40))
+		elif pet_dance_timer > 0.0:
+			# Happy dance spin!
+			pet_image.rotation_degrees += delta * 720.0
+			pet_image.scale = Vector2(1.1 * pet_facing, 1.1)
+			pet_image.position.y = pet_base_y - absf(sin(time * 15.0)) * 14.0
+		elif toy_active and is_instance_valid(toy_ball):
+			# === CHASE & INTERACT WITH 3D TOY ===
+			# Map 3D toy X to 2D stage X (stage is 668 wide, center is 334)
+			var toy_2d_x: float = 334.0 + (toy_pos.x / 2.4) * 220.0
+			pet_target_x = clampf(toy_2d_x - 141.0, 30.0, 400.0)
+
+			var dist_x: float = absf(pet_image.position.x - pet_target_x)
+			if dist_x > 8.0:
+				pet_facing = 1.0 if pet_target_x > pet_image.position.x else -1.0
+				pet_image.position.x = move_toward(pet_image.position.x, pet_target_x, delta * 125.0)
+				pet_walk_timer += delta * 18.0
+				pet_image.rotation_degrees = sin(pet_walk_timer) * 9.0 * pet_facing
+				pet_image.position.y = pet_base_y - absf(sin(pet_walk_timer)) * 11.0
+				pet_image.scale = Vector2(pet_facing, 1.0)
+			else:
+				pet_image.rotation_degrees = 0.0
+				var breath := sin(time * 4.0) * 0.03
+				pet_image.scale = Vector2((1.0 + breath) * pet_facing, 1.0 - breath)
+
+			# Pounce / Boop the toy when near and toy is low!
+			var pet_center_x: float = pet_image.position.x + 141.0
+			if absf(pet_center_x - toy_2d_x) < 95.0 and toy_pos.y <= -0.2 and pet_pounce_cooldown <= 0.0:
+				pet_pounce_cooldown = 0.85
+				# Boop the ball back up with lively impulse!
+				toy_vel = Vector3(randf_range(-3.2, 3.2) + pet_facing * 2.4, randf_range(4.8, 6.6), 0)
+				if toy_type == 2:
+					play_sound("spring")
+				else:
+					play_sound("bounce")
+				play_sound("purr")
+				if World.data.settings.haptics: Input.vibrate_handheld(30)
+
+				# Pet squish & cheer jump
+				var tw := create_tween()
+				tw.tween_property(pet_image, "scale", Vector2(1.3 * pet_facing, 0.72), 0.08)
+				tw.tween_property(pet_image, "scale", Vector2(0.82 * pet_facing, 1.3), 0.14)
+				tw.tween_property(pet_image, "scale", Vector2(pet_facing, 1.0), 0.12)
+				pet_image.texture = Art.pet(World.data.pet.species, 4)
+
+				# Hearts & sparkles
+				spawn_sparkles_2d(pet_image.global_position + Vector2(141, 100))
+
+				# Happiness bonus
+				World.data.pet.happiness = minf(100.0, World.data.pet.happiness + 2.0)
+				World.save(true)
+
+				if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
+					var msgs: Array = [
+						"🎾 Boop! Great bounce!",
+						"✨ Pounced on the toy! Wheee!",
+						"🎾 Bounced it right back to you!",
+						"💖 Loving this game so much!"
+					]
+					thought_box.get_child(0).text = msgs[randi() % msgs.size()]
+
+				get_tree().create_timer(1.2).timeout.connect(func():
+					if is_instance_valid(pet_image) and not World.data.pet.get("sleeping", false):
+						pet_image.texture = Art.pet(World.data.pet.species, pose())
+				)
+
+		else:
+			# === AUTONOMOUS ROOM ROAMING & WADDLING ===
+			pet_roam_cooldown -= delta
+			if pet_roam_cooldown <= 0.0:
+				if pet_roam_state == "idle":
+					# Pick new destination in room
+					var choice := randf()
+					if choice < 0.45:
+						pet_target_x = randf_range(50.0, 390.0)
+						pet_roam_state = "walk"
+						if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
+							thought_box.get_child(0).text = ["Waddling around the room 🐾", "Exploring cozy corners ✨", "Stretching my little paws 💕"][randi() % 3]
+					elif choice < 0.70:
+						# Walk to cushion on left
+						pet_target_x = 65.0
+						pet_roam_state = "walk"
+						if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
+							thought_box.get_child(0).text = "Checking out the soft cushion ☁️"
+					elif choice < 0.90:
+						# Walk to plant on right
+						pet_target_x = 370.0
+						pet_roam_state = "walk"
+						if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
+							thought_box.get_child(0).text = "Sniffing the green houseplant 🌿"
+					else:
+						# Happy little hop in place!
+						pet_roam_state = "idle"
+						pet_roam_cooldown = randf_range(3.0, 5.0)
+						var tw := create_tween()
+						tw.tween_property(pet_image, "position:y", pet_base_y - 22.0, 0.15)
+						tw.tween_property(pet_image, "position:y", pet_base_y, 0.15)
+						play_sound("tap")
+				elif pet_roam_state == "walk":
+					pet_roam_state = "idle"
+					pet_roam_cooldown = randf_range(4.0, 7.0)
+					pet_image.rotation_degrees = 0.0
+
+			if pet_roam_state == "walk":
+				var dist: float = absf(pet_image.position.x - pet_target_x)
+				if dist > 3.0:
+					pet_facing = 1.0 if pet_target_x > pet_image.position.x else -1.0
+					pet_image.position.x = move_toward(pet_image.position.x, pet_target_x, delta * 70.0)
+					pet_walk_timer += delta * 13.0
+					# Waddle tilt & footstep bobbing
+					pet_image.rotation_degrees = sin(pet_walk_timer) * 7.5 * pet_facing
+					pet_image.position.y = pet_base_y - absf(sin(pet_walk_timer)) * 8.5
+					pet_image.scale = Vector2(pet_facing, 1.0)
+				else:
+					pet_roam_state = "idle"
+					pet_image.rotation_degrees = 0.0
+					pet_image.position.y = pet_base_y
+					pet_roam_cooldown = randf_range(3.5, 6.0)
+			else:
+				# Idle gentle breathing
+				pet_image.rotation_degrees = 0.0
+				var breath := sin(time * 3.2) * 0.03
+				pet_image.scale = Vector2((1.0 + breath) * pet_facing, 1.0 - breath)
+				pet_image.position.y = pet_base_y + sin(time * 2.0) * 3.0
+
+	# Gentle floating bob for mood thought bubble
+	if is_instance_valid(thought_box) and not World.data.settings.reduced_motion:
+		thought_box.position.y = 44 + sin(time * 2.2) * 3.0
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_RESUMED:

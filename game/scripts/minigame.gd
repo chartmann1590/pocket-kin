@@ -45,18 +45,20 @@ var pet_cheer_sprite: TextureRect
 # --- GAME 2: Kin Cloud Hop 3D (Vertical Platformer) ---
 var hop_pet: MeshInstance3D
 var hop_pet_sprite: Sprite3D
-var hop_pos := Vector3(0, 1.5, 0)
+var hop_pos := Vector3(0, 0.8, 0)
 var hop_vel := Vector3.ZERO
-var hop_cam_y := 4.0
+var hop_cam_y := 3.5
 var hop_platforms: Array = [] # {mesh: Node3D, pos: Vector3, size: Vector3, type: String, broken: bool, dir: float}
 var hop_stars: Array = []     # {mesh: MeshInstance3D, pos: Vector3, collected: bool}
 var hop_touch_active := false
 var hop_target_x := 0.0
-var hop_highest_y := 0.0
+var hop_highest_y := 0.8
 var hop_fall_rescue := false
 var hop_sky_mesh: MeshInstance3D
 var hop_bg_clouds: Array = []
 var hop_last_milestone := 0
+var hop_rescues_left := 2
+var hop_flap_cooldown := 0.0
 
 # --- GAME 3: Treasure Match 3D (Tactile 3D Tilt Card Flip) ---
 var cards: Array = [] # {btn: Button, face_tex: Texture2D, id: int, revealed: bool, matched: bool, flip_t: float, flipping: bool, target_rev: bool}
@@ -169,16 +171,43 @@ func _build_ui() -> void:
 	instructions = Label.new()
 	instructions.text = {
 		"catch": "Slide to aim & tap to drop fruits! Catch them in the basket!",
-		"hop": "Tap Left / Right to leap across floating 3D clouds & springs!",
+		"hop": "Tap Left / Right or Drag to steer! Tap 🚀 BOOST or screen to flap sky-high!",
 		"match": "Tap cards to flip in 3D & find the matching pairs!"
 	}.get(kind, "")
-	instructions.position = Vector2(40, 150)
-	instructions.size = Vector2(640, 50)
+	instructions.position = Vector2(40, 145)
+	instructions.size = Vector2(640, 52)
 	instructions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instructions.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	instructions.add_theme_font_size_override("font_size", 21)
 	instructions.add_theme_color_override("font_color", Color("766957"))
 	add_child(instructions)
+
+	# Dedicated tutorial card for Hop
+	if kind == "hop":
+		var info_box := PanelContainer.new()
+		info_box.name = "hop_info_card"
+		info_box.add_theme_stylebox_override("panel", _box_style(Color("fdfcf8"), 24, Color("b0c4de"), 3))
+		info_box.position = Vector2(50, 320)
+		info_box.size = Vector2(620, 240)
+		var info_vbox := VBoxContainer.new()
+		info_vbox.add_theme_constant_override("separation", 8)
+		info_box.add_child(info_vbox)
+
+		var h_title := Label.new()
+		h_title.text = "☁️ HOW TO HOP ☁️"
+		h_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		h_title.add_theme_font_size_override("font_size", 26)
+		h_title.add_theme_color_override("font_color", Color("1d3557"))
+		info_vbox.add_child(h_title)
+
+		var h_desc := Label.new()
+		h_desc.text = "• Land on clouds to bounce automatically upward!\n• Tap ◀ Left / Right ▶ or DRAG screen to steer\n• Tap 🚀 BOOST (or tap screen) for a mid-air flap!\n• Pink mushroom caps give SUPER springs! 🍄\n• You have 2 Rainbow Rescue Clouds if you fall!"
+		h_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		h_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		h_desc.add_theme_font_size_override("font_size", 19)
+		h_desc.add_theme_color_override("font_color", Color("3d5a80"))
+		info_vbox.add_child(h_desc)
+		add_child(info_box)
 
 	# Ready / Start Overlay Button
 	start_button = Button.new()
@@ -193,17 +222,24 @@ func _build_ui() -> void:
 	start_button.pressed.connect(func():
 		started = true
 		start_button.hide()
+		if has_node("hop_info_card"):
+			get_node("hop_info_card").hide()
+		if kind == "hop":
+			hop_vel.y = 13.8
+			play_sfx("spring", 1.25)
+			hud_combo.text = "🚀 LEAP OFF! Tap 🚀 BOOST or screen to flap!"
+		else:
+			play_sfx("tap")
 		instructions.text = "Go! Go! Go!"
-		play_sfx("tap")
 	)
 	add_child(start_button)
 
 	if kind == "hop":
 		var left_btn := Button.new()
-		left_btn.text = "◀ Hop Left"
-		left_btn.position = Vector2(40, 1060)
-		left_btn.size = Vector2(300, 95)
-		left_btn.add_theme_stylebox_override("normal", _box_style(Color(1, 1, 1, 0.78), 24, Color("b0c4de"), 3))
+		left_btn.text = "◀ Left"
+		left_btn.position = Vector2(24, 1060)
+		left_btn.size = Vector2(196, 95)
+		left_btn.add_theme_stylebox_override("normal", _box_style(Color(1, 1, 1, 0.82), 24, Color("b0c4de"), 3))
 		left_btn.add_theme_stylebox_override("pressed", _box_style(Color("dceefb"), 24, Color("4a90e2"), 3))
 		left_btn.add_theme_font_size_override("font_size", 26)
 		left_btn.add_theme_color_override("font_color", Color("2c3e50"))
@@ -214,11 +250,24 @@ func _build_ui() -> void:
 		)
 		add_child(left_btn)
 
+		var boost_btn := Button.new()
+		boost_btn.text = "🚀 BOOST"
+		boost_btn.position = Vector2(236, 1060)
+		boost_btn.size = Vector2(248, 95)
+		boost_btn.add_theme_stylebox_override("normal", _box_style(Color("64b5f6"), 24, Color("1e88e5"), 3))
+		boost_btn.add_theme_stylebox_override("pressed", _box_style(Color("1976d2"), 24, Color("0d47a1"), 3))
+		boost_btn.add_theme_font_size_override("font_size", 28)
+		boost_btn.add_theme_color_override("font_color", Color.WHITE)
+		boost_btn.pressed.connect(func():
+			_hop_flap()
+		)
+		add_child(boost_btn)
+
 		var right_btn := Button.new()
-		right_btn.text = "Hop Right ▶"
-		right_btn.position = Vector2(380, 1060)
-		right_btn.size = Vector2(300, 95)
-		right_btn.add_theme_stylebox_override("normal", _box_style(Color(1, 1, 1, 0.78), 24, Color("b0c4de"), 3))
+		right_btn.text = "Right ▶"
+		right_btn.position = Vector2(500, 1060)
+		right_btn.size = Vector2(196, 95)
+		right_btn.add_theme_stylebox_override("normal", _box_style(Color(1, 1, 1, 0.82), 24, Color("b0c4de"), 3))
 		right_btn.add_theme_stylebox_override("pressed", _box_style(Color("dceefb"), 24, Color("4a90e2"), 3))
 		right_btn.add_theme_font_size_override("font_size", 26)
 		right_btn.add_theme_color_override("font_color", Color("2c3e50"))
@@ -630,15 +679,51 @@ func _init_cloud_hop_3d() -> void:
 	_spawn_hop_platforms(0.0, 35.0)
 
 func _spawn_hop_platforms(from_y: float, to_y: float) -> void:
-	var cur_y := from_y
+	# Solid launching base cloud if starting at the bottom
+	if from_y <= 0.0:
+		var base_root := Node3D.new()
+		base_root.position = Vector3(0, 0, 0)
+		vp.add_child(base_root)
+
+		var base_mesh := MeshInstance3D.new()
+		var base_box := BoxMesh.new()
+		base_box.size = Vector3(5.0, 0.45, 1.2)
+		base_mesh.mesh = base_box
+
+		var base_mat := StandardMaterial3D.new()
+		base_mat.albedo_color = Color("ffffff")
+		base_mat.roughness = 0.35
+		base_mesh.material_override = base_mat
+		base_root.add_child(base_mesh)
+
+		for side in [-2.4, 2.4]:
+			var puff := MeshInstance3D.new()
+			var puff_sphere := SphereMesh.new()
+			puff_sphere.radius = 0.38
+			puff_sphere.height = 0.55
+			puff.mesh = puff_sphere
+			puff.position = Vector3(side, 0, 0)
+			puff.material_override = base_mat
+			base_root.add_child(puff)
+
+		hop_platforms.append({
+			"mesh": base_root,
+			"pos": Vector3(0, 0, 0),
+			"size": Vector3(5.0, 0.45, 1.2),
+			"type": "normal",
+			"broken": false,
+			"dir": 0.0
+		})
+
+	var cur_y := maxf(from_y, 0.0)
 	while cur_y < to_y:
-		cur_y += randf_range(1.6, 2.3)
-		var p_x := randf_range(-2.4, 2.4)
+		cur_y += randf_range(1.25, 1.8)
+		var p_x := randf_range(-2.3, 2.3)
 		var p_type := "normal"
 		var r := randf()
-		if r < 0.18: p_type = "spring" # Super jump spring
-		elif r < 0.35: p_type = "crumbly" # Crumbles fast
-		elif r < 0.50: p_type = "moving" # Moves left and right
+		if r < 0.22: p_type = "spring" # Super jump spring mushroom
+		elif r < 0.38: p_type = "crumbly" # Crumbles on bounce
+		elif r < 0.54: p_type = "moving" # Moves left and right
 
 		var plat_root := Node3D.new()
 		plat_root.position = Vector3(p_x, cur_y, 0)
@@ -646,7 +731,7 @@ func _spawn_hop_platforms(from_y: float, to_y: float) -> void:
 
 		var plat_mesh := MeshInstance3D.new()
 		var p_box := BoxMesh.new()
-		p_box.size = Vector3(1.5, 0.3, 0.8)
+		p_box.size = Vector3(1.8, 0.35, 0.9)
 		plat_mesh.mesh = p_box
 
 		var p_mat := StandardMaterial3D.new()
@@ -665,11 +750,11 @@ func _spawn_hop_platforms(from_y: float, to_y: float) -> void:
 		plat_root.add_child(plat_mesh)
 
 		# Fluffy rounded cloud end-puffs
-		for side in [-0.75, 0.75]:
+		for side in [-0.85, 0.85]:
 			var puff := MeshInstance3D.new()
 			var puff_sphere := SphereMesh.new()
-			puff_sphere.radius = 0.26
-			puff_sphere.height = 0.45
+			puff_sphere.radius = 0.28
+			puff_sphere.height = 0.48
 			puff.mesh = puff_sphere
 			puff.position = Vector3(side, 0, 0)
 			puff.material_override = p_mat
@@ -679,39 +764,39 @@ func _spawn_hop_platforms(from_y: float, to_y: float) -> void:
 		if p_type == "spring":
 			var cap := MeshInstance3D.new()
 			var cap_sphere := SphereMesh.new()
-			cap_sphere.radius = 0.3
-			cap_sphere.height = 0.3
+			cap_sphere.radius = 0.32
+			cap_sphere.height = 0.34
 			cap.mesh = cap_sphere
-			cap.position = Vector3(0, 0.2, 0)
+			cap.position = Vector3(0, 0.22, 0)
 			var cap_mat := StandardMaterial3D.new()
 			cap_mat.albedo_color = Color("ff3377")
 			cap_mat.emission_enabled = true
-			cap_mat.emission = Color("ff3377") * 0.7
+			cap_mat.emission = Color("ff3377") * 0.75
 			cap.material_override = cap_mat
 			plat_root.add_child(cap)
 
 		hop_platforms.append({
 			"mesh": plat_root,
 			"pos": Vector3(p_x, cur_y, 0),
-			"size": Vector3(1.6, 0.3, 0.8),
+			"size": Vector3(1.9, 0.35, 0.9),
 			"type": p_type,
 			"broken": false,
 			"dir": 1.0 if randf() > 0.5 else -1.0
 		})
 
 		# Golden Star above platform
-		if randf() < 0.35:
+		if randf() < 0.38:
 			var star := MeshInstance3D.new()
 			var star_mesh := TorusMesh.new()
-			star_mesh.inner_radius = 0.14
-			star_mesh.outer_radius = 0.28
+			star_mesh.inner_radius = 0.15
+			star_mesh.outer_radius = 0.3
 			star.mesh = star_mesh
 			star.rotation_degrees = Vector3(90, 0, 0)
 			star.position = Vector3(p_x, cur_y + 0.85, 0)
 			var s_mat := StandardMaterial3D.new()
 			s_mat.albedo_color = Color("ffd166")
 			s_mat.emission_enabled = true
-			s_mat.emission = Color("ffd166") * 0.6
+			s_mat.emission = Color("ffd166") * 0.65
 			star.material_override = s_mat
 			vp.add_child(star)
 			hop_stars.append({
@@ -720,23 +805,36 @@ func _spawn_hop_platforms(from_y: float, to_y: float) -> void:
 				"collected": false
 			})
 
+func _hop_flap() -> void:
+	if not started or ended or hop_flap_cooldown > 0.0: return
+	hop_flap_cooldown = 0.28
+	hop_vel.y = 13.5
+	play_sfx("spring", randf_range(1.2, 1.4))
+	hud_combo.text = "☁️ FLAP BOOST! 🚀"
+	if World.data.settings.haptics: Input.vibrate_handheld(25)
+	if is_instance_valid(hop_pet):
+		hop_pet.scale = Vector3(0.78, 1.35, 0.78)
+
 func _update_cloud_hop_3d(delta: float) -> void:
 	if not started or ended: return
 
+	if hop_flap_cooldown > 0.0:
+		hop_flap_cooldown -= delta
+
 	# Physics
-	var gravity := Vector3(0, -18.0, 0)
+	var gravity := Vector3(0, -17.5, 0)
 	hop_vel += gravity * delta
 	hop_pos += hop_vel * delta
 
 	# Horizontal steering toward target
-	hop_pos.x = lerpf(hop_pos.x, hop_target_x, delta * 10.0)
+	hop_pos.x = lerpf(hop_pos.x, hop_target_x, delta * 9.5)
 	hop_pos.x = clampf(hop_pos.x, -3.2, 3.2)
 
 	# Squish & Stretch jump animation
 	if hop_vel.y > 0:
-		hop_pet.scale = Vector3(0.85, 1.2, 0.85)
+		hop_pet.scale = Vector3(0.85, 1.25, 0.85)
 	else:
-		hop_pet.scale = Vector3(1.1, 0.9, 1.1)
+		hop_pet.scale = Vector3(1.12, 0.88, 1.12)
 
 	# Platform landing check (only when falling)
 	if hop_vel.y < 0:
@@ -744,15 +842,15 @@ func _update_cloud_hop_3d(delta: float) -> void:
 			if p.broken: continue
 			var dx: float = absf(hop_pos.x - p.pos.x)
 			var dy: float = hop_pos.y - p.pos.y
-			if dx < p.size.x * 0.58 and dy >= -0.2 and dy <= 0.45:
+			if dx < p.size.x * 0.62 and dy >= -0.2 and dy <= 0.55:
 				if p.type == "spring":
-					hop_vel.y = 18.0 # Super Jump!
-					play_sfx("spring", 1.3)
+					hop_vel.y = 19.5 # Super Jump!
+					play_sfx("spring", 1.35)
 					hud_combo.text = "🚀 SUPER SPRING JUMP! +50"
 					score += 50
 					combo += 1
 				else:
-					hop_vel.y = 11.8 # Standard bounce
+					hop_vel.y = 12.8 # Standard bounce
 					play_sfx("bounce", randf_range(1.1, 1.3))
 					score += 15
 					combo += 1
@@ -770,7 +868,7 @@ func _update_cloud_hop_3d(delta: float) -> void:
 		if is_instance_valid(s.mesh) and not s.collected:
 			s.mesh.rotation_degrees.y += delta * 150.0
 			s.mesh.position.y = s.pos.y + sin(elapsed * 4.0 + s.pos.x) * 0.1
-			if hop_pos.distance_to(s.mesh.position) < 0.75:
+			if hop_pos.distance_to(s.mesh.position) < 0.8:
 				s.collected = true
 				s.mesh.queue_free()
 				score += 30
@@ -801,7 +899,7 @@ func _update_cloud_hop_3d(delta: float) -> void:
 			play_sfx("fever", 1.2)
 			if World.data.settings.haptics: Input.vibrate_handheld(40)
 
-	var target_cam_y: float = maxf(4.0, hop_pos.y + 1.5)
+	var target_cam_y: float = maxf(3.5, hop_pos.y + 1.5)
 	camera.position.y = lerpf(camera.position.y, target_cam_y, delta * 8.0)
 
 	# Backdrop sky gradient progression
@@ -831,8 +929,17 @@ func _update_cloud_hop_3d(delta: float) -> void:
 	hop_pet.position = hop_pos
 
 	# Fall rescue / Game over
-	if hop_pos.y < camera.position.y - 7.0:
-		finish()
+	if hop_pos.y < camera.position.y - 6.5:
+		if hop_rescues_left > 0:
+			hop_rescues_left -= 1
+			hop_vel.y = 18.5
+			hop_pos.x = 0.0
+			hop_target_x = 0.0
+			play_sfx("fever", 1.25)
+			hud_combo.text = "🌈 RESCUE CLOUD BOUNCE! (%d left) ✨" % hop_rescues_left
+			if World.data.settings.haptics: Input.vibrate_handheld(45)
+		else:
+			finish()
 
 # -------------------------------------------------------------
 # GAME 3: TREASURE MATCH 3D (TACTILE 3D CARD FLIP)
@@ -1008,10 +1115,9 @@ func _gui_input(event: InputEvent) -> void:
 		if event is InputEventScreenTouch or event is InputEventMouseButton:
 			if event.pressed:
 				hop_touch_active = true
-				if event.position.x < 360:
-					hop_target_x = clampf(hop_pos.x - 1.4, -2.8, 2.8)
-				else:
-					hop_target_x = clampf(hop_pos.x + 1.4, -2.8, 2.8)
+				var touch_x: float = (event.position.x / 720.0 - 0.5) * 6.0
+				hop_target_x = clampf(touch_x, -2.8, 2.8)
+				_hop_flap()
 		elif event is InputEventScreenDrag or event is InputEventMouseMotion:
 			var touch_x: float = (event.position.x / 720.0 - 0.5) * 6.0
 			hop_target_x = clampf(touch_x, -2.8, 2.8)
