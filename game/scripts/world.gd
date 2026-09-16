@@ -34,7 +34,7 @@ func watch_action(request: Dictionary) -> bool:
 	receipts[id] = ok
 	if receipts.size()>100: receipts.erase(receipts.keys()[0])
 	data.watch_receipts = receipts
-	save(false)
+	save(true)
 	return ok
 
 func fresh() -> Dictionary:
@@ -311,7 +311,7 @@ func pet_stroke() -> void:
 		memory("Sweet cuddles", "%s loves being gently stroked and purred softly." % data.pet.name)
 		data.coins += 10
 		notice.emit("Warm cuddles! +10 petals from %s." % data.pet.name)
-	save(false)
+	save(true)
 	changed.emit()
 
 func pop_bath_bubble() -> bool:
@@ -323,7 +323,7 @@ func pop_bath_bubble() -> bool:
 		memory("Bubble bath fun", "%s splashed joyfully and is squeaky clean!" % data.pet.name)
 		data.coins += 15
 		notice.emit("Squeaky clean! +15 petals.")
-	save(false)
+	save(true)
 	changed.emit()
 	return true
 

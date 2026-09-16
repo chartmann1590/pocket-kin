@@ -38,6 +38,10 @@ if __name__ == '__main__':
     melody('bubble.wav', [76, 83, 88], .06, .25)
     melody('munch.wav', [74, 81], .08, .22)
     melody('purr.wav', [64, 67, 72], .12, .5)
+    melody('bounce.wav', [67, 72], .06, .2)
+    melody('coin.wav', [84, 88], .06, .25)
+    melody('fever.wav', [72, 76, 79, 84, 88, 91], .09, .9)
+    melody('spring.wav', [60, 67, 74, 81], .05, .3)
     # A complete 32-second four-chord music-box phrase, fading into silence
     # at the loop boundary, rather than cutting through a sustained note.
     samples = [0.] * (32 * RATE)
@@ -47,4 +51,5 @@ if __name__ == '__main__':
         for j, midi in enumerate(chord): note(samples, bar * 8 + j * .35, 5.5, midi, .055)
     for i, midi in enumerate(tune): note(samples, i * 1.8 + .5, 1.7, midi, .08)
     save('ambient.wav', samples)
-    print('Generated nine original audio files.')
+    print('Generated thirteen original audio files.')
+

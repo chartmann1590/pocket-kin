@@ -392,14 +392,14 @@ class WatchActivity : ComponentActivity() {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Chip(
                             onClick = { performCare("feed") },
-                            enabled = hasPet && !pendingAction && syncMode != SyncMode.OFFLINE,
+                            enabled = hasPet && !pendingAction,
                             label = { Text("🍎 Feed", fontSize = 12.sp) },
                             colors = ChipDefaults.chipColors(backgroundColor = Color(0xFF2D3C2B)),
                             modifier = Modifier.weight(1f)
                         )
                         Chip(
                             onClick = { performCare("love") },
-                            enabled = hasPet && !pendingAction && syncMode != SyncMode.OFFLINE,
+                            enabled = hasPet && !pendingAction,
                             label = { Text("💖 Cuddle", fontSize = 12.sp) },
                             colors = ChipDefaults.chipColors(backgroundColor = Color(0xFF2D3C2B)),
                             modifier = Modifier.weight(1f)
@@ -411,14 +411,14 @@ class WatchActivity : ComponentActivity() {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Chip(
                             onClick = { performCare("clean") },
-                            enabled = hasPet && !pendingAction && syncMode != SyncMode.OFFLINE,
+                            enabled = hasPet && !pendingAction,
                             label = { Text("🫧 Wash", fontSize = 12.sp) },
                             colors = ChipDefaults.chipColors(backgroundColor = Color(0xFF2D3C2B)),
                             modifier = Modifier.weight(1f)
                         )
                         Chip(
                             onClick = { performCare("sleep") },
-                            enabled = hasPet && !pendingAction && syncMode != SyncMode.OFFLINE,
+                            enabled = hasPet && !pendingAction,
                             label = { Text("💤 Bed", fontSize = 12.sp) },
                             colors = ChipDefaults.chipColors(backgroundColor = Color(0xFF2D3C2B)),
                             modifier = Modifier.weight(1f)
@@ -430,7 +430,7 @@ class WatchActivity : ComponentActivity() {
                 item {
                     Chip(
                         onClick = { startRhythmPlay() },
-                        enabled = hasPet && syncMode != SyncMode.OFFLINE,
+                        enabled = hasPet && !playingRhythm,
                         label = { Text("🎵 Raindrop Rhythm", fontSize = 12.sp) },
                         colors = ChipDefaults.chipColors(backgroundColor = Color(0xFF334631)),
                         modifier = Modifier.fillMaxWidth()

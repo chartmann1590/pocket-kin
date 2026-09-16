@@ -48,6 +48,8 @@ class SyncManager(
     init {
         val cached = prefs.getString("snapshot", "{}") ?: "{}"
         currentSnapshot = runCatching { JSONObject(cached) }.getOrDefault(JSONObject())
+        fallbackIp = prefs.getString("phone_ip", "10.0.0.113") ?: "10.0.0.113"
+        fallbackPort = prefs.getInt("server_port", 8765)
         extractFallbackInfo(currentSnapshot)
     }
 
@@ -68,9 +70,13 @@ class SyncManager(
         val ip = snapshot.optString("phone_ip", "")
         if (ip.isNotBlank() && ip != "127.0.0.1") {
             fallbackIp = ip
+            prefs.edit().putString("phone_ip", ip).apply()
         }
         val port = snapshot.optInt("server_port", 8765)
-        if (port > 0) fallbackPort = port
+        if (port > 0) {
+            fallbackPort = port
+            prefs.edit().putInt("server_port", port).apply()
+        }
     }
 
     private fun startHeartbeat() {
@@ -84,6 +90,7 @@ class SyncManager(
     }
 
     fun refresh() = scope.launch {
+        fetchStateOverInternet()
         syncCycle()
     }
 
@@ -109,19 +116,18 @@ class SyncManager(
                 currentMode = SyncMode.BLUETOOTH
                 onMessage("Connected via Bluetooth")
             }
-            return
-        }
-
-        // 2. Fallback: Internet / Local HTTP Sync
-        val fetched = fetchStateOverInternet()
-        if (fetched) {
-            if (currentMode != SyncMode.INTERNET_FALLBACK) {
-                currentMode = SyncMode.INTERNET_FALLBACK
-            }
-        } else if (System.currentTimeMillis() - lastSyncTime > 15000L) {
-            if (currentMode != SyncMode.OFFLINE) {
-                currentMode = SyncMode.OFFLINE
-                onMessage("Offline · showing saved view")
+        } else {
+            // 2. Fallback: Internet / Local HTTP Sync
+            val fetched = fetchStateOverInternet()
+            if (fetched) {
+                if (currentMode != SyncMode.INTERNET_FALLBACK) {
+                    currentMode = SyncMode.INTERNET_FALLBACK
+                }
+            } else if (System.currentTimeMillis() - lastSyncTime > 15000L) {
+                if (currentMode != SyncMode.OFFLINE) {
+                    currentMode = SyncMode.OFFLINE
+                    onMessage("Offline · showing saved view")
+                }
             }
         }
     }
@@ -159,12 +165,22 @@ class SyncManager(
                     val curRev = currentSnapshot.optLong("revision", -1L)
                     val newPet = data.optJSONObject("pet")
                     val curPet = currentSnapshot.optJSONObject("pet")
-                    val petChanged = (newPet != null && (curPet == null || newPet.toString() != curPet.toString()))
+
+                    val shouldUpdate = (curPet == null) ||
+                        (newRev != curRev) ||
+                        (newPet?.optDouble("updated", 0.0) != curPet.optDouble("updated", 0.0)) ||
+                        (newPet?.optInt("hunger", -1) != curPet.optInt("hunger", -1)) ||
+                        (newPet?.optInt("happiness", -1) != curPet.optInt("happiness", -1)) ||
+                        (newPet?.optInt("cleanliness", -1) != curPet.optInt("cleanliness", -1)) ||
+                        (newPet?.optInt("energy", -1) != curPet.optInt("energy", -1)) ||
+                        (newPet?.optInt("bond", -1) != curPet.optInt("bond", -1)) ||
+                        (newPet?.optBoolean("sleeping", false) != curPet.optBoolean("sleeping", false)) ||
+                        (newPet?.optBoolean("ill", false) != curPet.optBoolean("ill", false))
 
                     withContext(Dispatchers.Main) {
                         currentMode = SyncMode.INTERNET_FALLBACK
                         lastSyncTime = System.currentTimeMillis()
-                        if (newRev > curRev || petChanged) {
+                        if (shouldUpdate) {
                             currentSnapshot = data
                             cacheState(data)
                             onStateUpdated(data, SyncMode.INTERNET_FALLBACK)
