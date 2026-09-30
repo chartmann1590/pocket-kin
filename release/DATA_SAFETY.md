@@ -1,5 +1,7 @@
 # Pocket Kin — Data Safety answers (copy into Play Console)
 
+Privacy policy URL to enter first: https://chartmann1590.github.io/pocket-kin/privacy
+
 ## Collects / shares
 - **App activity (game save):** pet/inventory/room/discoveries/memories/settings/revision — collected, stored in Firebase, not shared with third parties. Required for cloud backup; optional (offline play works). [Ephemeral? No.]
 - **Personal identifiers (Firebase UID, optional Google account):** collected for auth/cloud save, not shared. Deletion available in-app.
@@ -12,3 +14,9 @@ Data encrypted in transit (HTTPS/TLS) + at rest (Firestore). Owner-only Firestor
 
 ## Families / ads
 Target includes children (all ages, Teacher-approved path optional later). Ads: AdMob with Families-compliant + UMP consent; ads only when permitted, never in care/milestone/watch flows. Declare `android.permission.health.READ_STEPS` + ACTIVITY_RECOGNITION with prominent disclosure (in-game Walk Together copy + PrivacyActivity).
+
+## Ads declaration (App content → Advertising ID)
+- Does the app use advertising ID? **Yes** (AdMob).
+- Purposes: advertising, analytics? **Advertising only**; note that users' ad settings/consent
+  (UMP) apply and child users are tagged child-directed.
+- Ads declaration: **Yes, contains ads** (banner-less; rewarded + interstitial only).

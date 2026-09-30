@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Data extraction rules (Android 12+): cloud-sync and device-transfer include only
+  gameplay state (save file + app prefs). Everything else — tokens, ad/consent prefs,
+  watch prefs — is excluded implicitly because specific includes act as an allowlist.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="pocket-kin-save.json" />
+        <include domain="file" path="pocket-kin-save.json.bak" />
+        <include domain="sharedpref" path="kin_native.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="pocket-kin-save.json" />
+        <include domain="file" path="pocket-kin-save.json.bak" />
+        <include domain="sharedpref" path="kin_native.xml" />
+    </device-transfer>
+</data-extraction-rules>

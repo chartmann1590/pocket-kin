@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Explicit allowlist for Android 11 and lower auto backup. Gameplay state only;
+  tokens and ads/consent prefs are excluded (see data_extraction_rules for 12+).
+-->
+<full-backup-content>
+    <include domain="file" path="pocket-kin-save.json" />
+    <include domain="file" path="pocket-kin-save.json.bak" />
+    <include domain="sharedpref" path="kin_native.xml" />
+</full-backup-content>

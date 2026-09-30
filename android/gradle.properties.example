@@ -1,0 +1,15 @@
+# Copy to android/gradle.properties (gitignored) for release builds.
+# Never commit real values.
+
+# --- AdMob (replace the Google test defaults with production units) ---
+# Application ID from AdMob > Apps > Settings > App ID.
+admobAppId=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
+# Rewarded video unit (game bonuses).
+rewardedAdUnit=ca-app-pub-XXXXXXXXXXXXXXXX/RRRRRRRRRR
+# Interstitial unit (every 3rd mini-game, 10-minute minimum gap).
+interstitialAdUnit=ca-app-pub-XXXXXXXXXXXXXXXX/IIIIIIIIII
+
+# --- Upload keystore (see release/PLAY_SUBMISSION.md for rotation steps) ---
+KIN_STORE_PASSWORD=
+KIN_KEY_ALIAS=pocketkin
+KIN_KEY_PASSWORD=

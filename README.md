@@ -80,6 +80,25 @@ flowchart TD
 
 ---
 
+## 🏪 Google Play release
+
+The store package lives in `release/` — a full submission runbook (`PLAY_SUBMISSION.md`),
+final listing copy (`LISTING.md`), Data Safety answers (`DATA_SAFETY.md`), IARC content-rating
+answers (`CONTENT_RATING.md`), health-permission declaration (`HEALTH_PERMISSIONS.md`), and the
+Families self-certification checklist (`FAMILIES.md`).
+
+- **Website / privacy policy / support:** https://chartmann1590.github.io/pocket-kin/
+  (source in `docs/`, deployed automatically by GitHub Actions on every push to `main`).
+- **Store graphics:** regenerate with `python tools/generate_play_assets.py` →
+  `artifacts/play-assets/store-listing/` (icon, feature graphic, phone/tablet/Wear screenshots)
+  and `artifacts/play-assets/graphic-assets/`.
+- **Ads:** AdMob rewarded + interstitial with UMP consent, age screen and parent gate.
+  Debug builds use Google test units; release units are set via `android/gradle.properties`
+  (see `android/gradle.properties.example`) — never commit production ad IDs.
+- **Compliance:** cleartext traffic is disabled except local Wear sync, backups/transfer rules
+  are declared, Wear OS pairing intent filters are present, and `versionCode` bumps with every
+  upload (currently 3).
+
 ## 🚀 Building & Testing
 
 ### Prerequisites
@@ -88,7 +107,7 @@ flowchart TD
 - Godot 4.3+ / 4.7+
 - Gradle 8.13
 
-### Build Phone & Wear APKs
+### Build Phone & Wear APKs / store bundles
 ```powershell
 # Export Godot PCK
 ./tools/godot/Godot_v4.7.2-stable_win64_console.exe --headless --path game --export-pack Pack ../artifacts/pocket-kin.pck
@@ -96,6 +115,12 @@ Copy-Item artifacts/pocket-kin.pck android/phone/src/main/assets/pocket-kin.pck
 
 # Build Debug APKs
 ./tools/gradle-8.13/bin/gradle.bat -p android :phone:assembleDebug :wear:assembleDebug
+
+# Build signed Play bundles (needs KIN_STORE_PASSWORD / KIN_KEY_PASSWORD)
+./tools/gradle-8.13/bin/gradle.bat -p android :phone:bundleRelease :wear:bundleRelease
+
+# Regenerate Play Store graphics
+python tools/generate_play_assets.py && python docs/deploy-play-assets.py
 ```
 
 ### Install to Devices

@@ -16,7 +16,12 @@ APKs, bundles, setup docs, release checklist.
 - [ ] Create Firebase/AdMob/Play accounts + google-services.json + products (none yet — user action).
 - [ ] Rotate upload-key passwords + back up keystore offline (placeholder passwords — user action).
 - [ ] Run DEVICE_MATRIX on phone + watch hardware, capture store graphics, closed testing, pre-launch report.
-- [ ] Update plan and release readiness.
+- [x] Play-readiness package (2026-09-29, `play-store-readiness` PR): store asset generator
+      (`tools/generate_play_assets.py` → icon/feature graphic/phone/tablet/wear screenshots +
+      promos), GitHub Pages website with privacy policy + support (`docs/`, auto-deploy workflow),
+      final listing/Data Safety/content-rating/health/Families paperwork (`release/`), network
+      security config + backup rules + Wear pair intent filters + pre-consent ad gating
+      (versionCode 3, phone + wear release AABs rebuilt, backend 4/4 PASS, Godot sim + world PASS).
 
 ## Release checklist (all open)
 

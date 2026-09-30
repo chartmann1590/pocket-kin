@@ -15,6 +15,10 @@ import java.time.Year
 class AdsBridge(private val activity:Activity,private val reply:(String,JSONObject)->Unit) {
     private val prefs=activity.getSharedPreferences("kin_native",0)
     private var loading=false
+    // MobileAds.initialize() must not run before a UMP consent choice exists
+    // (Google Play Families ads policy). Ad requests stay blocked until
+    // canRequestAds() is true, so this flag gates the very first initialize.
+    private var initialized=false
     fun configureAge(after:()->Unit = {}) {
         if (prefs.contains("age_band")) { after(); return }
         val year=EditText(activity).apply { inputType=InputType.TYPE_CLASS_NUMBER; hint="Year of birth" }
@@ -30,7 +34,10 @@ class AdsBridge(private val activity:Activity,private val reply:(String,JSONObje
         val info=UserMessagingPlatform.getConsentInformation(activity)
         info.requestConsentInfoUpdate(activity,ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(child).build(),{
             UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { error ->
-                if (error==null && info.canRequestAds()) MobileAds.initialize(activity) { activity.runOnUiThread(after) }
+                if (error==null && info.canRequestAds()) {
+                    if (!initialized) { initialized=true; MobileAds.initialize(activity) }
+                    activity.runOnUiThread(after)
+                }
                 else message("privacy","Ads are unavailable with the current privacy settings.")
             }
         },{ message("privacy","Privacy settings could not load. Please try again later.") })

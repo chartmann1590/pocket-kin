@@ -1161,7 +1161,7 @@ func room_page() -> void:
 				show_page("Home")
 			else: parent_gate(func(): Platform.call_service("purchase", {"product": pack[0]}))
 		, premium)
-	button("Optional video · 20 bonus petals", func(): Platform.call_service("rewarded"), body)
+	button("Optional video · 20 bonus petals", func(): parent_gate(func(): Platform.call_service("rewarded")), body)
 
 func album_page() -> void:
 	section("The story of us", "Little moments, forever.", "A growing collection of the days you shared.")

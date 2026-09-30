@@ -1,6 +1,9 @@
-# Pocket Kin — Privacy Policy (DRAFT — host this URL before submission)
+# Pocket Kin — Privacy Policy (LIVE)
 
-Last updated: 2026-09-08. Contact: [ADD SUPPORT EMAIL].
+Canonical public URL: **https://chartmann1590.github.io/pocket-kin/privacy**
+(source: `docs/privacy.html`, deployed to GitHub Pages by `.github/workflows/deploy-pages.yml`).
+
+Last updated: 2026-09-29. Contact: support@charleshartmann.com.
 
 ## What Pocket Kin is
 Single-player cozy virtual pet game for all ages. One active pet, no chat/trading, English, portrait phone + Wear OS companion.
@@ -26,6 +29,7 @@ Neutral age screen + parent gate (7×8) before sign-in/purchases/restore/deletio
 INTERNET, ACCESS_NETWORK_STATE, VIBRATE, POST_NOTIFICATIONS (reminders, after first care), ACTIVITY_RECOGNITION + `health.READ_STEPS` (walking, opt-in), FOREGROUND_SERVICE_HEALTH (sensor fallback with persistent notification), RECEIVE_BOOT_COMPLETED (restore reminders). Health permission rationale screen included (`PrivacyActivity` / `VIEW_PERMISSION_USAGE`).
 
 ## Retention / rights
-Local saves versioned + backed up; cloud saves revisioned with explicit conflict choice (never silent merge). Request export/deletion via [SUPPORT EMAIL] or in-game Delete Account.
+Local saves versioned + backed up; cloud saves revisioned with explicit conflict choice (never silent merge). Request export/deletion via support@charleshartmann.com or in-game Settings → Delete cloud account.
 
-Host this file publicly and paste the URL into Play Console (app content → Privacy policy) + in-game Settings → Privacy.
+The GitHub Pages copy (docs/privacy.html) is the authoritative version — update it whenever
+this file changes, then redeploy Pages before publishing a new release.
