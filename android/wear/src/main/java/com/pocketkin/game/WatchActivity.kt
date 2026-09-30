@@ -102,9 +102,20 @@ class WatchActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        requestBodySensorsIfNeeded()
         healthManager.registerSensors()
         syncManager.start()
         scope.launch { syncManager.syncHealth(healthManager.getHealthPayload()) }
+    }
+
+    /**
+     * BODY_SENSORS is declared in the manifest but must be granted at runtime before
+     * heart-rate readings arrive. Asking here keeps the heart-rate feature an explicit,
+     * revocable choice on the watch (denied = heart-rate rows simply stay hidden).
+     */
+    private fun requestBodySensorsIfNeeded() {
+        if (checkSelfPermission(android.Manifest.permission.BODY_SENSORS) == android.content.pm.PackageManager.PERMISSION_GRANTED) return
+        requestPermissions(arrayOf(android.Manifest.permission.BODY_SENSORS), 801)
     }
 
     override fun onPause() {

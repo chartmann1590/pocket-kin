@@ -23,7 +23,7 @@ class PhoneWatchService : WearableListenerService() {
     override fun onMessageReceived(event:MessageEvent) {
         scope.launch {
             PhoneSyncServer.start(this@PhoneWatchService)
-            val prefs=getSharedPreferences("kin_native",0)
+            val prefs=GamePrefs.game(this@PhoneWatchService)
             if(event.path=="/kin/ping") {
                 val snapshot=JSONObject(prefs.getString("snapshot","{}") ?: "{}")
                 snapshot.put("phone_ip", PhoneSyncServer.getLocalIpAddress(this@PhoneWatchService))

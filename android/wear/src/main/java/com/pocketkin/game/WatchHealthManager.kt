@@ -12,7 +12,8 @@ import java.time.LocalDate
 
 class WatchHealthManager(private val context: Context, private val onHealthChanged: (JSONObject) -> Unit) : SensorEventListener {
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val prefs = context.getSharedPreferences("kin_watch_health", Context.MODE_PRIVATE)
+    // Synced into "kin_watch" (single backup story); watch data never leaves the phone pair.
+    private val prefs = context.getSharedPreferences("kin_watch", Context.MODE_PRIVATE)
 
     private var baselineStep = -1
     private var simulatedSteps = 0

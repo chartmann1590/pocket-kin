@@ -1,42 +1,78 @@
-# Pocket Kin — Play submission runbook (0.2.0 / versionCode 2)
+# Pocket Kin — Play submission runbook (0.2.0 / versionCode 3)
 
-Target: full Play Store submission (phone + Wear OS). Accounts: none yet — all external steps listed.
+Target: full Play Store submission (phone + Wear OS). Version code bumped 2 → 3 for the
+release-readiness build. All repo-side work is done; remaining items are console actions
+on your accounts, listed in the exact order they must happen.
 
-## 1. Artifacts built 2026-09-08 (local, `artifacts/` gitignored)
+## 0. What ships (built from this branch)
 
-- `pocket-kin.pck` 33.5 MB (fresh `--export-pack Pack`, final art)
-- `android/phone/src/main/assets/pocket-kin.pck` synced copy used by Gradle builds
-- `pocket-kin-phone-debug.apk` 217 MB, `pocket-kin-wear-debug.apk` 45 MB (install on your phone + watch now)
-- `pocket-kin-phone-release.aab` 96.7 MB, `pocket-kin-wear-release.aab` 24.0 MB (signed with local upload key, upload to Play)
-- Godot sim + world PASS, backend `npm test` 4/4 PASS, Firestore + Functions emulator PASS
+- `artifacts/pocket-kin.pck` — fresh export of the game (parent-gated rewarded ads).
+- `android/phone/src/main/assets/pocket-kin.pck` — synced copy used by Gradle.
+- `artifacts/pocket-kin-phone-release.aab` — phone bundle, versionCode 3, upload-key signed.
+- `artifacts/pocket-kin-wear-release.aab` — Wear OS bundle, versionCode 3.
+- `artifacts/play-assets/store-listing/` — icon, feature graphic, phone/tablet/Wear screenshots.
+- `artifacts/play-assets/graphic-assets/` — logo, banner, promo variants.
+- Website (privacy policy + support) in `docs/`, deployed to GitHub Pages by
+  `.github/workflows/deploy-pages.yml` → **https://chartmann1590.github.io/pocket-kin/**
+  (enable once under repo Settings → Pages → Source: GitHub Actions).
+
+## 1. Keystore (rotate before any upload)
 
 Upload key: `android/pocket-kin-upload.keystore` (gitignored), alias `pocketkin`,
 SHA256 `81:57:C3:D6:E7:58:82:3D:DF:F3:F7:75:7C:D4:00:F7:B8:E1:B5:19:53:45:8F:41:99:64:4F:C8:61:B3:F7:6B`,
 SHA1 `9D:85:2B:39:86:0F:03:FD:91:6C:CC:67:C1:24:2D:0A:7F:F9:D7:DE`.
 
-> ROTATE IMMEDIATELY: passwords are placeholder `changeit-SEE-RELEASE-NOTES`.
-> `keytool -storepasswd -keystore android/pocket-kin-upload.keystore` + `-keypasswd -alias pocketkin`,
-> then set env `KIN_STORE_PASSWORD` / `KIN_KEY_PASSWORD` / `KIN_KEY_ALIAS` (or `gradle.properties`
-> `KIN_STORE_PASSWORD=` etc. locally — never commit). Back up keystore + passwords offline.
-> Enroll the SHA256 above in Play App Signing; keep upload key separate from app-signing key.
+> ROTATE NOW: passwords are still placeholder `changeit-SEE-RELEASE-NOTES`.
+> `keytool -storepasswd -keystore android/pocket-kin-upload.keystore` and
+> `-keypasswd -alias pocketkin`, then set `KIN_STORE_PASSWORD` / `KIN_KEY_PASSWORD` /
+> `KIN_KEY_ALIAS` as environment variables or in `android/gradle.properties`
+> (see `android/gradle.properties.example`; never commit). Back up the keystore offline.
+> Enroll the SHA256 above in Play App Signing; keep the upload key separate from the app-signing key.
 
-## 2. Create accounts (order matters)
+## 2. Accounts, in order
 
-1. Google Play Console ($25): create app `Pocket Kin`, package `com.pocketkin.game`, enroll Play App Signing, upload both AABs to internal → closed track.
-2. Firebase Console: project (e.g. `pocket-kin-prod`), enable Auth (Anonymous + Google), Firestore, Functions, Crashlytics, Remote Config. Download `google-services.json` → `android/phone/google-services.json` (gitignored). Set `ANDROID_PACKAGE=com.pocketkin.game`.
-3. AdMob: App ID + rewarded + interstitial units + UMP funding-choices. Replace test IDs in `android/phone/build.gradle.kts:15-17` via gradle props `admobAppId`, `rewardedAdUnit`, `interstitialAdUnit`. Rebuild + retest.
-4. Play Monetization: managed products `kin_cottage`, `kin_moonlight`, `kin_blossom` (permanent cosmetic bundles), license testers, pending/refund/restore tests.
-5. Service account with `Android Publisher` role → JSON to Functions env (`GOOGLE_APPLICATION_CREDENTIALS`); set `ANDROID_PACKAGE`. Deploys `saveGame/loadGame/verifyPurchase/refreshPurchase/deleteAccount`. Configure `play-purchases` Pub/Sub topic → `refreshPurchase`.
+1. **GitHub Pages** — merge this PR to `main`, then repo Settings → Pages →
+   Source "GitHub Actions". Verify https://chartmann1590.github.io/pocket-kin/privacy
+   loads. (Play Console requires a live privacy-policy URL before app creation.)
+2. **Google Play Console** ($25): create app `Pocket Kin`, package `com.pocketkin.game`,
+   enroll Play App Signing, upload both AABs to the internal track.
+3. **Firebase Console**: project `pocket-kin-prod`; enable Auth (Anonymous + Google),
+   Firestore, Functions, Crashlytics, Remote Config. Download `google-services.json` →
+   `android/phone/google-services.json` (gitignored). Set `ANDROID_PACKAGE=com.pocketkin.game`.
+4. **AdMob**: create the app (package `com.pocketkin.game`), link the Firebase project, then
+   create a **rewarded** unit and an **interstitial** unit. Put the three IDs into
+   `android/gradle.properties` (`admobAppId`, `rewardedAdUnit`, `interstitialAdUnit`) and
+   rebuild. Test units remain the default for debug builds.
+5. **Play Monetization**: managed products `kin_cottage`, `kin_moonlight`, `kin_blossom`
+   (permanent cosmetic bundles), license testers, pending/refund/restore tests.
+6. **Service account** with *Android Publisher* role → JSON for Functions env
+   (`GOOGLE_APPLICATION_CREDENTIALS`); set `ANDROID_PACKAGE`. Deploy
+   `saveGame/loadGame/verifyPurchase/refreshPurchase/deleteAccount`; configure the
+   `play-purchases` Pub/Sub topic → `refreshPurchase`.
 
-## 3. Pre-launch gates (must all be green before production track)
+## 3. Console paperwork (copy/paste sources)
 
-- Device matrix in `DEVICE_MATRIX.md` on your phone + watch (steps, reminders, watch pairing, tile/complication, offline, reboot, revocation).
-- Content rating questionnaire, Data Safety (see `DATA_SAFETY.md`), Health permissions declaration (steps-only video + `PRIVACY_POLICY.md` URL), Families self-cert (neutral age screen + parent gate 7×8 already in client), Ads declaration (AdMob + UMP), News? No.
-- Closed testing ≥12 testers / 14 days (new accounts). Fix pre-launch report crashes.
-- Store listing in `LISTING.md` + feature graphic + 2+ phone + watch screenshots (capture from your hardware, 16:9/9:16 per Play spec).
-- Version: bump `versionCode` each upload; keep `versionName 0.2.0` until public. Tag release in git.
+| Console task | Use |
+| --- | --- |
+| Store listing | `release/LISTING.md` + `artifacts/play-assets/store-listing/` |
+| Privacy policy URL | `https://chartmann1590.github.io/pocket-kin/privacy` |
+| Support email | `support@charleshartmann.com` (site: `/support`) |
+| Data safety | `release/DATA_SAFETY.md` |
+| Content rating | questionnaire answers in `release/CONTENT_RATING.md` |
+| Ads declaration | Yes, contains ads (AdMob); UMP consent implemented |
+| Health apps declaration | steps (phone) + watch heart rate; demo video + `release/HEALTH_PERMISSIONS.md` |
+| Families policy | self-certification checklist in `release/FAMILIES.md` |
+| App content → website | `https://chartmann1590.github.io/pocket-kin/` |
 
-## 4. Rebuild commands
+## 4. Pre-launch gates (all green before production)
+
+- Device matrix in `DEVICE_MATRIX.md` on your phone + watch (steps, reminders, watch
+  pairing, tile/complication, offline, reboot, revocation).
+- Closed testing ≥12 testers / 14 days (new personal accounts). Fix pre-launch report crashes.
+- Content rating complete, Data safety complete, all declarations above submitted.
+- Version: bump `versionCode` for every upload; keep `versionName 0.2.0` until public launch.
+
+## 5. Rebuild commands
 
 ```
 # Godot PCK (from game/)
@@ -51,4 +87,8 @@ Copy-Item ..\artifacts\pocket-kin.pck android\phone\src\main\assets\pocket-kin.p
 npm --prefix backend test
 npx firebase-tools emulators:exec --only firestore,auth --project demo-pocket-kin "node backend/test/firestore.integration.js"
 npx firebase-tools emulators:exec --only firestore,auth,functions --project demo-pocket-kin "node backend/test/functions.integration.js"
+
+# Store assets (needs Python + Pillow)
+python tools/generate_play_assets.py
+python docs/deploy-play-assets.py
 ```

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Data extraction rules (Android 12+): cloud backup and device transfer carry only
+  gameplay state — the Godot save (user://pocket-kin.json -> files/pocket-kin.json)
+  and the game prefs file. kin_private.xml (ad consent state) is implicitly
+  excluded because specific includes act as an allowlist.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="pocket-kin.json" />
+        <include domain="file" path="pocket-kin.json.bak" />
+        <include domain="sharedpref" path="kin_native.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="pocket-kin.json" />
+        <include domain="file" path="pocket-kin.json.bak" />
+        <include domain="sharedpref" path="kin_native.xml" />
+    </device-transfer>
+</data-extraction-rules>

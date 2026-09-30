@@ -106,7 +106,7 @@ object PhoneSyncServer {
 
     private fun processRequest(method: String, path: String, body: String): String {
         val ctx = appContext ?: return JSONObject().put("ok", false).put("message", "Service initializing").toString()
-        val prefs = ctx.getSharedPreferences("kin_native", 0)
+        val prefs = GamePrefs.game(ctx)
 
         when {
             path == "/kin/ping" -> {

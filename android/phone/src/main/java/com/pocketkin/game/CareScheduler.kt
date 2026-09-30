@@ -12,7 +12,7 @@ import java.time.*
 
 object CareScheduler {
     fun schedule(context: Context) {
-        val prefs = context.getSharedPreferences("kin_native",0)
+        val prefs = GamePrefs.game(context)
         val settings = JSONObject(prefs.getString("settings","{}") ?: "{}")
         val alarms = context.getSystemService(AlarmManager::class.java)
         for (i in 0..2) alarms.cancel(pending(context,i))
