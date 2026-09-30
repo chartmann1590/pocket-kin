@@ -18,7 +18,7 @@ import org.json.JSONObject
 
 class KinServices(private val activity: Activity, private val reply: (String, JSONObject) -> Unit) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    val prefs = activity.getSharedPreferences("kin_native", 0)
+    val prefs = GamePrefs.game(activity)
     var paused = false
     private val steps by lazy { StepsBridge(activity, scope, reply) }
     private val cloud by lazy { CloudBridge(activity, scope, reply) }

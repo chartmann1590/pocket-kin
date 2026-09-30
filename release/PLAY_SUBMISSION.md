@@ -60,7 +60,7 @@ SHA1 `9D:85:2B:39:86:0F:03:FD:91:6C:CC:67:C1:24:2D:0A:7F:F9:D7:DE`.
 | Data safety | `release/DATA_SAFETY.md` |
 | Content rating | questionnaire answers in `release/CONTENT_RATING.md` |
 | Ads declaration | Yes, contains ads (AdMob); UMP consent implemented |
-| Health apps declaration | steps-only; demo video + `release/HEALTH_PERMISSIONS.md` |
+| Health apps declaration | steps (phone) + watch heart rate; demo video + `release/HEALTH_PERMISSIONS.md` |
 | Families policy | self-certification checklist in `release/FAMILIES.md` |
 | App content → website | `https://chartmann1590.github.io/pocket-kin/` |
 

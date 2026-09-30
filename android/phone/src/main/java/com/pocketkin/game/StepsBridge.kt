@@ -14,7 +14,7 @@ import java.time.*
 
 class StepsBridge(private val activity: Activity, private val scope: CoroutineScope, private val reply: (String,JSONObject)->Unit) {
     fun read(activatedSeconds: Long, requestPermission: Boolean = true) = scope.launch {
-        val prefs = activity.getSharedPreferences("kin_native",0)
+        val prefs = GamePrefs.game(activity)
         val zone = ZoneId.systemDefault()
         val today = LocalDate.now(zone)
         val activation = Instant.ofEpochSecond(activatedSeconds.takeIf { it > 0 } ?: Instant.now().epochSecond)

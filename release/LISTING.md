@@ -18,7 +18,7 @@ Pocket Kin is an original cozy virtual pet game. Hatch a creature from three sta
 - Play: fruit catching, matching pairs, rhythm tapping + meadow, woodland, moonlit pond outings with collectible discoveries.
 - Decorate: 30 earned decorations, 12 earned accessories, sanctuary for retired friends, daily tasks + collection goals. Missing days never erases progress.
 - Walk Together (optional): count steps via Health Connect or on-device sensor for happiness + parcels. Fully playable without it; steps-only, no GPS.
-- Wear OS companion: glanceable pet, needs, care shortcuts, 20-sec rhythm game, walking milestones, tile + complication (needs connected phone).
+- Wear OS companion: glanceable pet, needs, care shortcuts, 20-sec rhythm game, walking milestones, optional heart-rate harmony (watch sensor permission), tile + complication (needs connected phone).
 - Cloud saves, family-friendly: parent gate, no chat, core care always free.
 
 Permanent cosmetic bundles only. Optional rewarded/interstitial ads never interrupt care.

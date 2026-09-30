@@ -1071,6 +1071,7 @@ func walk_page() -> void:
 	section("Every step, together", "Walk & Health Expedition", "Your steps and watch health give your pet energy and unlock joyful parcels.")
 	var content := card(body, Color("edf2e8"))
 	content.add_child(Art.image(Art.pet(World.data.pet.species, 4), Vector2(0, 190)))
+	paragraph("Pocket Kin counts steps for walking milestones, and a paired watch can share its step count and heart rate for the mood bonus. Health readings stay on your devices, are never uploaded, never used for ads, and you can revoke them anytime in Health Connect or your watch settings.", content, 19)
 
 	var total_steps: int = int(World.data.walking.get("steps", 0))
 	content.add_child(label("%d steps today" % total_steps, 43, INK, true))
@@ -1082,7 +1083,7 @@ func walk_page() -> void:
 		sync_row.add_child(sync_badge)
 
 		var hr: int = int(watch_info.get("heart_rate", 74))
-		var hr_text := "❤️ %d BPM · %s" % [hr, "Serene Harmony (+Friendship)" if hr in range(60, 83) else "Lively Pulse"]
+		var hr_text := "❤️ %d BPM (from your watch, stays on this device) · %s" % [hr, "Serene Harmony (+Friendship)" if hr in range(60, 83) else "Lively Pulse"]
 		paragraph(hr_text, content, 21)
 
 		var hydration: int = int(watch_info.get("hydration", 0))
@@ -1121,7 +1122,7 @@ func walk_page() -> void:
 		toast("Syncing with your Wear companion…")
 	, body, true)
 
-	button("Start phone walking session", func(): Platform.call_service("start_walk", {"activated": World.data.walking.activated}), body)
+	button("Start phone walking session (counts this phone's steps)", func(): Platform.call_service("start_walk", {"activated": World.data.walking.activated}), body)
 	button("Stop phone walking session", func(): Platform.call_service("stop_walk"), body)
 	paragraph("Watch step counting and health sync over Bluetooth or Internet fallback. Steps, heart rhythm, and hydration boost your pet's happiness and health safely on-device.", body, 20)
 

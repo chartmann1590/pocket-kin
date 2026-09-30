@@ -16,7 +16,7 @@ class KinWidget : AppWidgetProvider() {
     companion object {
         fun update(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
-            val prefs = context.getSharedPreferences("kin_native", 0)
+            val prefs = GamePrefs.game(context)
             val state = runCatching { JSONObject(prefs.getString("snapshot", "{}") ?: "{}") }.getOrDefault(JSONObject())
             val pet = state.optJSONObject("pet") ?: JSONObject()
             val walking = state.optJSONObject("walking") ?: JSONObject()

@@ -26,6 +26,8 @@ Play Console → App content → Target audience & content / Families.
 - [x] Neutral age screen (`AdsBridge.configureAge`) before first consent/ad flow.
 - [x] No collection of precise location, contacts, photos, microphone, phone number, or
       persistent identifiers beyond Firebase account ID needed for optional cloud saves.
+      Watch heart-rate readings (BODY_SENSORS, opt-in on the watch) stay on the device pair,
+      are shown only to the player, and never touch ads/analytics/servers.
 - [x] Data Safety form matches actual behavior (see DATA_SAFETY.md); steps never ads-linked.
 - [x] Google Play instant/verbose disclosure not required (no background health collection).
 

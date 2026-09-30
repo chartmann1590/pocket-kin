@@ -23,7 +23,7 @@ class WalkService : Service(), SensorEventListener {
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int { if (intent?.action=="stop") stopSelf(); return START_NOT_STICKY }
     override fun onSensorChanged(event: SensorEvent) {
-        val prefs = getSharedPreferences("kin_native",0)
+        val prefs = GamePrefs.game(this)
         val today = LocalDate.now().toString()
         val count = event.values[0]
         if (today != day) { day=today; baseline=count }

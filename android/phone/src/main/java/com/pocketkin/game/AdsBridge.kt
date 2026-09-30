@@ -13,11 +13,14 @@ import java.util.UUID
 import java.time.Year
 
 class AdsBridge(private val activity:Activity,private val reply:(String,JSONObject)->Unit) {
-    private val prefs=activity.getSharedPreferences("kin_native",0)
+    // Ad consent state lives in the un-backuped kin_private store (never leaves the device).
+    private val prefs=GamePrefs.private(activity)
     private var loading=false
     // MobileAds.initialize() must not run before a UMP consent choice exists
     // (Google Play Families ads policy). Ad requests stay blocked until
     // canRequestAds() is true, so this flag gates the very first initialize.
+    // Set inside the init callback so a re-entrant consent() while the async
+    // initialize is still running cannot skip it.
     private var initialized=false
     fun configureAge(after:()->Unit = {}) {
         if (prefs.contains("age_band")) { after(); return }
@@ -35,7 +38,7 @@ class AdsBridge(private val activity:Activity,private val reply:(String,JSONObje
         info.requestConsentInfoUpdate(activity,ConsentRequestParameters.Builder().setTagForUnderAgeOfConsent(child).build(),{
             UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity) { error ->
                 if (error==null && info.canRequestAds()) {
-                    if (!initialized) { initialized=true; MobileAds.initialize(activity) }
+                    if (!initialized) MobileAds.initialize(activity) { initialized=true }
                     activity.runOnUiThread(after)
                 }
                 else message("privacy","Ads are unavailable with the current privacy settings.")
@@ -63,9 +66,11 @@ class AdsBridge(private val activity:Activity,private val reply:(String,JSONObje
                 override fun onAdFailedToLoad(error:LoadAdError){loading=false}
                 override fun onAdLoaded(ad:InterstitialAd){
                     loading=false
-                    if(prefs.getString("screen","")!="Play")return
-                    ad.fullScreenContentCallback=object:FullScreenContentCallback(){override fun onAdShowedFullScreenContent(){prefs.edit().putLong("last_ad",System.currentTimeMillis()).apply();reply("interstitial",JSONObject().put("shown",true))}}
-                    ad.show(activity)
+                    // Interstitials only fire on the mini-game hub screen (gameplay prefs).
+                    if(GamePrefs.game(activity).getString("screen","")=="Play") {
+                        ad.fullScreenContentCallback=object:FullScreenContentCallback(){override fun onAdShowedFullScreenContent(){prefs.edit().putLong("last_ad",System.currentTimeMillis()).apply();reply("interstitial",JSONObject().put("shown",true))}}
+                        ad.show(activity)
+                    }
                 }
             })
         }

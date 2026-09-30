@@ -39,16 +39,23 @@ the features below are optional.</p>
   <li><strong>Steps (optional, opt-in only).</strong> If you turn on Walk Together, the game reads today's
       and yesterday's step totals from Health Connect (preferred) or the on-device step sensor during a
       walking session. Steps are used only for walking milestones that grant in-game rewards. Raw step
-      data stays on your device; only milestone claim records sync. No GPS, no routes, no heart rate on
-      the phone, and no health data is written.</li>
+      data stays on your device; only milestone claim records sync. No GPS, no routes, and no health
+      data is written.</li>
+  <li><strong>Watch heart rate (optional, opt-in only).</strong> On a paired Wear OS watch, the companion
+      can read your current heart rate (BPM) from the watch's sensor after you grant the body-sensors
+      permission on the watch. It powers the "Heartbeat Harmony" mood bonus and the live watch/phone
+      dashboard. Readings stay on the watch and phone, are never uploaded to any server, and are never
+      used for advertising or analytics. Skip or revoke the permission and the game stays fully
+      playable.</li>
   <li><strong>Diagnostics.</strong> Crash logs are collected via Firebase Crashlytics. They contain
       technical information only — never health data, step counts or gameplay content — and are used to
       fix bugs.</li>
 </ul>
 
 <h2>Data we never collect or share</h2>
-<p>We do not collect contacts, location, photos, microphone audio or precise health information, and we
-never sell data. Step counts and health information are never used for advertising or analytics.</p>
+<p>We do not collect contacts, location, photos, microphone audio or any health data beyond the step
+counts and watch heart-rate readings described above, and we never sell data. Health values are never
+used for advertising or analytics.</p>
 
 <h2>Ads &amp; purchases</h2>
 <p>Pocket Kin shows optional rewarded video ads (a small bonus you choose to watch) and occasional
@@ -72,6 +79,8 @@ child-directed.</p>
       them, respecting your quiet hours.</li>
   <li><strong>Activity recognition / Health Connect steps</strong> — the optional Walk Together feature,
       after explicit permission you can revoke anytime.</li>
+  <li><strong>Body sensors (watch only)</strong> — current heart rate on a paired Wear OS watch, after
+      explicit permission on the watch; revoke anytime.</li>
   <li><strong>Foreground service (health)</strong> — keeps optional phone walking sessions alive with a
       persistent notification you can stop with one tap.</li>
   <li><strong>Vibration</strong> — gentle haptics you can turn off in Settings.</li>
