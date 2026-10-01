@@ -23,9 +23,29 @@ android {
         targetSdk = 36
         versionCode = 3
         versionName = "0.2.0"
-        manifestPlaceholders["admobAppId"] = providers.gradleProperty("admobAppId").getOrElse("ca-app-pub-3940256099942544~3347511713")
-        buildConfigField("String", "REWARDED_AD_UNIT", "\"${providers.gradleProperty("rewardedAdUnit").getOrElse("ca-app-pub-3940256099942544/5224354917")}\"")
-        buildConfigField("String", "INTERSTITIAL_AD_UNIT", "\"${providers.gradleProperty("interstitialAdUnit").getOrElse("ca-app-pub-3940256099942544/1033173712")}\"")
+        val admobApp = providers.environmentVariable("ADMOB_APP_ID")
+            .orElse(providers.gradleProperty("admobAppId"))
+            .getOrElse("ca-app-pub-3940256099942544~3347511713")
+        val rewardedUnit = providers.environmentVariable("REWARDED_AD_UNIT")
+            .orElse(providers.gradleProperty("rewardedAdUnit"))
+            .orElse(providers.environmentVariable("REWARDED_INTERSTITIAL_AD_UNIT"))
+            .orElse(providers.gradleProperty("rewardedInterstitialAdUnit"))
+            .getOrElse("ca-app-pub-3940256099942544/5224354917")
+        val interstitialUnit = providers.environmentVariable("INTERSTITIAL_AD_UNIT")
+            .orElse(providers.gradleProperty("interstitialAdUnit"))
+            .getOrElse("ca-app-pub-3940256099942544/1033173712")
+        val bannerUnit = providers.environmentVariable("BANNER_AD_UNIT")
+            .orElse(providers.gradleProperty("bannerAdUnit"))
+            .getOrElse("ca-app-pub-3940256099942544/6300978111")
+        val rewardedInterstitialUnit = providers.environmentVariable("REWARDED_INTERSTITIAL_AD_UNIT")
+            .orElse(providers.gradleProperty("rewardedInterstitialAdUnit"))
+            .getOrElse("ca-app-pub-3940256099942544/5354046379")
+
+        manifestPlaceholders["admobAppId"] = admobApp
+        buildConfigField("String", "REWARDED_AD_UNIT", "\"$rewardedUnit\"")
+        buildConfigField("String", "INTERSTITIAL_AD_UNIT", "\"$interstitialUnit\"")
+        buildConfigField("String", "BANNER_AD_UNIT", "\"$bannerUnit\"")
+        buildConfigField("String", "REWARDED_INTERSTITIAL_AD_UNIT", "\"$rewardedInterstitialUnit\"")
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
     buildFeatures { buildConfig = true }
