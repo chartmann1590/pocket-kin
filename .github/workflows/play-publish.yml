@@ -75,12 +75,12 @@ jobs:
       - name: Decode Upload Keystore
         if: env.HAS_PLAY_KEYSTORE == 'true'
         run: |
-          echo "$PLAY_KEYSTORE_BASE64" | base64 -d > android/pocket-kin-upload.keystore
+          python3 -c "import base64, os; open('android/pocket-kin-upload.keystore', 'wb').write(base64.b64decode(os.environ['PLAY_KEYSTORE_BASE64']))"
 
       - name: Decode Firebase Google Services JSON
         if: env.HAS_GOOGLE_SERVICES == 'true'
         run: |
-          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/phone/google-services.json
+          python3 -c "import base64, os; open('android/phone/google-services.json', 'wb').write(base64.b64decode(os.environ['GOOGLE_SERVICES_JSON_BASE64']))"
 
       - name: Grant Execute Permission to Gradle Wrapper
         run: chmod +x android/gradlew || true
