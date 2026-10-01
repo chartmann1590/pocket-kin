@@ -160,7 +160,19 @@ def setup_onetime_products(service):
         ).execute()
         print("Successfully created/updated one-time in-app products!")
         for item in res.get("oneTimeProducts", []):
-            print(f"  [OK] Product: {item.get('productId')}")
+            prod_id = item.get("productId")
+            print(f"  [OK] Product created/updated: {prod_id}")
+            try:
+                service.monetization().onetimeproducts().purchaseOptions().activate(
+                    packageName=PACKAGE_NAME,
+                    productId=prod_id,
+                    purchaseOptionId="default-option",
+                    body={"packageName": PACKAGE_NAME, "productId": prod_id, "purchaseOptionId": "default-option"}
+                ).execute()
+                print(f"  [ACTIVE] Purchase option active: {prod_id}")
+            except Exception as e:
+                # May already be active or auto-activated
+                pass
         return True
     except Exception as e:
         err = str(e)
@@ -221,6 +233,18 @@ def setup_subscriptions(service):
                 print(f"  [NOTE] Requires uploaded build with billing permission first.")
             else:
                 print(f"  [ERR] Subscription {s['productId']}: {e}")
+
+        # Activate the base plan
+        try:
+            service.monetization().subscriptions().basePlans().activate(
+                packageName=PACKAGE_NAME,
+                productId=s["productId"],
+                basePlanId=s["basePlanId"],
+                body={"packageName": PACKAGE_NAME, "productId": s["productId"], "basePlanId": s["basePlanId"]}
+            ).execute()
+            print(f"  [ACTIVE] Base plan activated: {s['productId']} / {s['basePlanId']}")
+        except Exception as e:
+            pass
 
 
 def main():
