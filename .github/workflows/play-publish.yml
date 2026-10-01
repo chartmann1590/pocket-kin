@@ -23,6 +23,11 @@ on:
           - draft
           - inProgress
           - halted
+      changesNotSentForReview:
+        description: 'Do not automatically submit for review (recommended for drafts & first release)'
+        required: false
+        default: true
+        type: boolean
   push:
     tags:
       - 'v*'
@@ -105,8 +110,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: com.pocketkin.game
-          releaseFiles: |
-            android/phone/build/outputs/bundle/release/*.aab
-            android/wear/build/outputs/bundle/release/*.aab
+          releaseFiles: 'android/phone/build/outputs/bundle/release/*.aab,android/wear/build/outputs/bundle/release/*.aab'
           track: ${{ inputs.track || 'internal' }}
           status: ${{ inputs.status || 'completed' }}
+          changesNotSentForReview: ${{ github.event_name == 'workflow_dispatch' && inputs.changesNotSentForReview || true }}
