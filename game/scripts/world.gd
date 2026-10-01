@@ -165,14 +165,27 @@ func activity(kind: String) -> void:
 		keys.sort()
 		data.daily.erase(keys[0])
 
+var last_game_reward := 0
+
+func daily_chores() -> Array:
+	return [
+		{"id": "care", "title": "💖 Snuggle & Groom", "desc": "Snuggle, feed, or wash your pet 3 times", "req": 3, "reward": 15},
+		{"id": "play", "title": "🎮 Mini-Game Master", "desc": "Play any 2 games with your companion", "req": 2, "reward": 20},
+		{"id": "explore", "title": "🌿 Wandering Explorer", "desc": "Embark on 1 wild outing", "req": 1, "reward": 15},
+		{"id": "tidy", "title": "🧹 Room Tidying & Care", "desc": "Sweep room dust or tend houseplant", "req": 1, "reward": 15},
+		{"id": "walk", "title": "👟 Stride Champion", "desc": "Reach 500+ daily steps together", "req": 500, "reward": 25}
+	]
+
 func task_progress(kind: String) -> int:
+	if kind == "walk":
+		return int(data.walking.get("steps", 0))
 	return int(data.daily.get(day_key(), {}).get(kind, 0))
 
-func claim_task(kind: String, required: int) -> bool:
+func claim_task(kind: String, required: int, reward: int = 25) -> bool:
 	var id := "task:" + day_key() + ":" + kind
 	if id in data.claims or task_progress(kind) < required: return false
 	data.claims.append(id)
-	data.coins += 25
+	data.coins += reward
 	save()
 	return true
 
@@ -180,6 +193,7 @@ func game_reward(kind: String, score: int) -> int:
 	if data.pet.is_empty(): return 0
 	var reward := clampi(5 + score / 3, 5, 30)
 	data.coins += reward
+	last_game_reward = reward
 	data.pet.happiness = minf(100, data.pet.happiness + 12)
 	data.pet.bond += 2
 	data.lifetime_bond += 2
@@ -211,9 +225,177 @@ func catalog() -> Array:
 	var colors := ["Peach", "Sage", "Honey", "Lavender", "Cloud"]
 	for i in range(30):
 		out.append({"id":"decor_%d" % i,"name":colors[i / 6] + " " + types[i % 6],"slot":types[i % 6].to_lower(),"cost":30 + (i / 6) * 15,"color":["eab29b","9eae8b","e3c17f","bcaacb","b1c8d2"][i / 6]})
-	for i in range(12):
-		out.append({"id":"accessory_%d" % i,"name":["Peach bow","Sage scarf","Sun crown","Moon ribbon","Berry bow","Cloud scarf","Daisy crown","Leaf ribbon","Honey bow","Lilac scarf","Star crown","Sky ribbon"][i],"slot":"accessory","cost":40+i*5,"color":["eab29b","9eae8b","e3c17f","bcaacb"][i%4]})
+	var acc_names := [
+		"Peach bow","Sage scarf","Sun crown","Moon ribbon","Berry bow","Cloud scarf",
+		"Daisy crown","Leaf ribbon","Honey bow","Lilac scarf","Star crown","Sky ribbon",
+		"Golden Tiara", "Wizard Star Hat", "Detective Cap", "Sakura Crown",
+		"Dapper Bowtie", "Cosmic Halo", "Winter Beanie", "Velvet Cape"
+	]
+	for i in range(acc_names.size()):
+		out.append({"id":"accessory_%d" % i,"name":acc_names[i],"slot":"accessory","cost":40+i*5,"color":["eab29b","9eae8b","e3c17f","bcaacb"][i%4]})
 	return out
+
+func treats_catalog() -> Array:
+	return [
+		{"id": "treat_honeycomb", "name": "Golden Honeycomb", "icon": "🍯", "cost": 25, "desc": "Sweet mountain honey. +25 Happiness, +20 Hunger."},
+		{"id": "treat_starberry", "name": "Starberry Tart", "icon": "🥧", "cost": 35, "desc": "Baked with starlight. Restores Hunger to 100% and +2 Friendship!"},
+		{"id": "treat_macaron", "name": "Sparkle Macaron Box", "icon": "🧁", "cost": 45, "desc": "Glittering pastries. +35 Happiness, +25 Cleanliness!"},
+		{"id": "treat_cotton_candy", "name": "Sweet Cloud Sugar", "icon": "☁️", "cost": 30, "desc": "Light, fluffy sweetness. +40 Happiness and joyful dance!"},
+		{"id": "treat_elixir", "name": "Herbal Vitality Elixir", "icon": "🧪", "cost": 40, "desc": "Soothes sniffles instantly, restores 100% Cleanliness & Energy!"},
+		{"id": "treat_parfait", "name": "Rainbow Fruit Parfait", "icon": "🍨", "cost": 60, "desc": "Decadent feast. Restores Hunger, Happiness, and Energy to 100%!"}
+	]
+
+func toys_catalog() -> Array:
+	return [
+		{"id": "toy_mouse", "name": "Clockwork Mouse", "icon": "🐭", "cost": 55, "desc": "Scurrying wind-up toy for lively room play!"},
+		{"id": "toy_bell", "name": "Golden Bell Rattle", "icon": "🔔", "cost": 45, "desc": "Playful jingling toy for smiles and bonding."},
+		{"id": "toy_pipe", "name": "Enchanted Bubble Wand", "icon": "🫧", "cost": 65, "desc": "Blowing pastel floating bubbles around the room!"},
+		{"id": "toy_musicbox", "name": "Campfire Music Box", "icon": "📻", "cost": 95, "desc": "Plays peaceful melodies to comfort your companion."},
+		{"id": "toy_projector", "name": "Starry Nebula Projector", "icon": "🌌", "cost": 110, "desc": "Cosmic ceiling projection for enchanting cozy evenings."}
+	]
+
+func buy_treat(treat_id: String) -> bool:
+	var treat: Dictionary = {}
+	for t in treats_catalog():
+		if t.id == treat_id:
+			treat = t
+			break
+	if treat.is_empty() or data.coins < treat.cost or data.pet.is_empty():
+		return false
+	data.coins -= treat.cost
+	match treat_id:
+		"treat_honeycomb":
+			data.pet.happiness = minf(100.0, data.pet.happiness + 25.0)
+			data.pet.hunger = minf(100.0, data.pet.hunger + 20.0)
+		"treat_starberry":
+			data.pet.hunger = 100.0
+			data.pet.bond += 2
+			data.lifetime_bond += 2
+		"treat_macaron":
+			data.pet.happiness = minf(100.0, data.pet.happiness + 35.0)
+			data.pet.cleanliness = minf(100.0, data.pet.cleanliness + 25.0)
+		"treat_cotton_candy":
+			data.pet.happiness = minf(100.0, data.pet.happiness + 40.0)
+		"treat_elixir":
+			data.pet.ill = false
+			data.pet.cleanliness = 100.0
+			data.pet.energy = 100.0
+		"treat_parfait":
+			data.pet.hunger = 100.0
+			data.pet.happiness = 100.0
+			data.pet.energy = 100.0
+			data.pet.bond += 3
+			data.lifetime_bond += 3
+	activity("care")
+	save()
+	notice.emit("Delightful treat! %s loved the %s!" % [data.pet.name, treat.name])
+	return true
+
+func buy_toy(toy_id: String) -> bool:
+	var toy: Dictionary = {}
+	for t in toys_catalog():
+		if t.id == toy_id:
+			toy = t
+			break
+	if toy.is_empty(): return false
+	if toy_id not in data.inventory:
+		if data.coins < toy.cost: return false
+		data.coins -= toy.cost
+		data.inventory.append(toy_id)
+	data.room["toy"] = toy_id
+	if not data.pet.is_empty():
+		data.pet.happiness = minf(100.0, data.pet.happiness + 15.0)
+		data.pet.bond += 2
+		data.lifetime_bond += 2
+	activity("play")
+	save()
+	notice.emit("New toy placed in the room: %s!" % toy.name)
+	return true
+
+func open_mystery_box(tier: String, is_free_ad := false) -> Dictionary:
+	if not is_free_ad:
+		var cost := 40 if tier == "lucky" else 140
+		if data.coins < cost: return {"ok": false, "message": "Not enough petals."}
+		data.coins -= cost
+	var prize := {}
+	if tier == "lucky":
+		var roll := randi() % 100
+		if roll < 40:
+			var petals := randi_range(50, 90)
+			data.coins += petals
+			prize = {"type": "petals", "amount": petals, "text": "+%d Petals!" % petals, "icon": "🌸"}
+		elif roll < 70:
+			var treats := ["treat_honeycomb", "treat_starberry", "treat_cotton_candy"]
+			var t_id: String = treats[randi() % treats.size()]
+			for t in treats_catalog():
+				if t.id == t_id:
+					prize = {"type": "treat", "id": t_id, "text": "A fresh " + t.name + "!", "icon": t.icon}
+					if not data.pet.is_empty(): data.pet.happiness = minf(100.0, data.pet.happiness + 20.0)
+					break
+		elif roll < 85:
+			var petals := randi_range(100, 150)
+			data.coins += petals
+			prize = {"type": "petals", "amount": petals, "text": "🎉 JACKPOT! +%d Petals!" % petals, "icon": "✨"}
+		else:
+			var unowned := []
+			for acc in catalog():
+				if acc.id not in data.inventory: unowned.append(acc)
+			if not unowned.is_empty():
+				var won: Dictionary = unowned[randi() % unowned.size()]
+				data.inventory.append(won.id)
+				prize = {"type": "item", "id": won.id, "text": "Unlocked " + won.name + "!", "icon": "🎀"}
+			else:
+				data.coins += 100
+				prize = {"type": "petals", "amount": 100, "text": "Bonus +100 Petals!", "icon": "🌸"}
+	else:
+		# Royal Golden Trunk
+		var roll := randi() % 100
+		if roll < 50:
+			var petals := randi_range(200, 350)
+			data.coins += petals
+			prize = {"type": "petals", "amount": petals, "text": "Royal Treasury! +%d Petals!" % petals, "icon": "👑"}
+		else:
+			var unowned := []
+			for item in catalog():
+				if item.id not in data.inventory: unowned.append(item)
+			if not unowned.is_empty():
+				var won: Dictionary = unowned[randi() % unowned.size()]
+				data.inventory.append(won.id)
+				prize = {"type": "item", "id": won.id, "text": "Royal Treasure! Unlocked " + won.name + "!", "icon": "🎁"}
+			else:
+				data.coins += 300
+				prize = {"type": "petals", "amount": 300, "text": "Royal Blessing! +300 Petals!", "icon": "👑"}
+	save()
+	return {"ok": true, "prize": prize}
+
+func claim_rewarded_ad(reward_type: String) -> void:
+	match reward_type:
+		"mystery_box":
+			var res := open_mystery_box("lucky", true)
+			if res.get("ok", false):
+				var p: Dictionary = res.get("prize", {})
+				notice.emit("🎁 Lucky Mystery Box! " + p.get("text", "+35 Petals"))
+		"double_game":
+			if last_game_reward > 0:
+				data.coins += last_game_reward
+				notice.emit("🎬 Double Rewards! Added +%d extra petals!" % last_game_reward)
+				last_game_reward = 0
+			else:
+				data.coins += 35
+				notice.emit("🎬 Sponsor Bonus! +35 Petals added!")
+		"spa":
+			if not data.pet.is_empty():
+				data.pet.hunger = 100.0
+				data.pet.happiness = 100.0
+				data.pet.cleanliness = 100.0
+				data.pet.energy = 100.0
+				data.pet.ill = false
+				data.coins += 15
+				notice.emit("🫧 Super Vitality Spa! %s is fully restored & joyful!" % data.pet.name)
+		_:
+			data.coins += 35
+			notice.emit("🌸 Sponsor Bonus! +35 Petals added to your pouch!")
+	save()
 
 func buy_equip(item: Dictionary) -> bool:
 	if item.id not in data.inventory:
@@ -233,6 +415,64 @@ func retire() -> bool:
 	save()
 	return true
 
+func is_cozy_pass_active() -> bool:
+	return "kin_cozy_pass" in data.get("entitlements", [])
+
+func grant_purchase(product_id: String) -> String:
+	match product_id:
+		"kin_petals_small":
+			data.coins += 250
+			save(true)
+			notice.emit("🌸 Handful of Petals! +250 Petals added.")
+			return "Added 250 petals to your pouch!"
+		"kin_petals_medium":
+			data.coins += 750
+			save(true)
+			notice.emit("🧺 Basket of Petals! +750 Petals added.")
+			return "Added 750 petals to your pouch!"
+		"kin_petals_large":
+			data.coins += 2000
+			save(true)
+			notice.emit("✨ Treasure Chest of Petals! +2,000 Petals added.")
+			return "Added 2,000 petals to your treasure chest!"
+		"kin_treat_basket":
+			data.coins += 100
+			if not data.pet.is_empty():
+				data.pet.hunger = 100.0
+				data.pet.energy = 100.0
+				var foods: Dictionary = data.pet.get("foods", {})
+				for fi in range(6):
+					foods[str(fi)] = int(foods.get(str(fi), 0)) + 5
+				data.pet.foods = foods
+			save(true)
+			notice.emit("🍓 Fruit Feast! Treats added & pet energized!")
+			return "Fruit Feast delivered! +100 petals and 5 of each fruit!"
+		"kin_cozy_pass":
+			var entitlements: Array = data.get("entitlements", [])
+			if "kin_cozy_pass" not in entitlements:
+				entitlements.append("kin_cozy_pass")
+				data.entitlements = entitlements
+			data.coins += 150
+			save(true)
+			notice.emit("👑 Cozy Caretaker Pass! Interstitial ads disabled & perks active!")
+			return "Cozy Caretaker Pass active! Enjoy ad-free care and bonus rewards!"
+		"kin_cottage", "kin_moonlight", "kin_blossom":
+			var entitlements: Array = data.get("entitlements", [])
+			if product_id not in entitlements:
+				entitlements.append(product_id)
+				data.entitlements = entitlements
+			data.premium_equipped = product_id
+			save(true)
+			notice.emit("🏡 Storybook Collection unlocked! Decorated your sanctuary.")
+			return "Collection unlocked and equipped!"
+		_:
+			var entitlements: Array = data.get("entitlements", [])
+			if product_id not in entitlements:
+				entitlements.append(product_id)
+				data.entitlements = entitlements
+			save(true)
+			return "Item unlocked!"
+
 func steps(total: int, date: String, source: String) -> void:
 	if not data.walking.enabled or total < 0: return
 	var now := Time.get_unix_time_from_system()
@@ -247,12 +487,13 @@ func steps(total: int, date: String, source: String) -> void:
 		var id := "walk:" + date + ":" + str(threshold)
 		if total >= threshold and id not in data.claims:
 			data.claims.append(id)
-			data.coins += 15
+			var petal_reward := 25 if is_cozy_pass_active() else 15
+			data.coins += petal_reward
 			if not data.pet.is_empty():
 				data.pet.happiness = minf(100, data.pet.happiness + 5)
 				data.pet.bond += 2
 				data.lifetime_bond += 2
-			notice.emit("A walking parcel! +15 petals and a little more friendship.")
+			notice.emit("A walking parcel! +%d petals and a little more friendship." % petal_reward)
 	save()
 
 func watch_health(payload: Dictionary) -> void:

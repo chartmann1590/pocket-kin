@@ -218,24 +218,33 @@ func show_page(next: String) -> void:
 
 	var pet_name: String = World.data.pet.get("name", "Pocket Kin")
 	var stage_name: String = str(World.data.pet.get("stage", "friend")).capitalize()
-	var brand := label("🐾 %s · %s" % [pet_name, stage_name], 23, INK, true)
+	var brand_icon := "👑 " if World.is_cozy_pass_active() else "🐾 "
+	var brand := label(brand_icon + "%s · %s" % [pet_name, stage_name], 23, INK, true)
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_row.add_child(brand)
 
-	# Golden Petals Pill Badge
+	# Golden Petals Pill Badge with Quick Shop Add Button
 	var petal_badge := PanelContainer.new()
-	petal_badge.add_theme_stylebox_override("panel", box(Color("fdf7ea"), 16, Color("eeddb6"), 1))
+	petal_badge.add_theme_stylebox_override("panel", box(Color("fdf7ea"), 18, Color("eeddb6"), 1, 2))
 	header_row.add_child(petal_badge)
 	var petal_box := HBoxContainer.new()
 	petal_box.add_theme_constant_override("separation", 6)
 	petal_badge.add_child(petal_box)
-	coin_label = label("🌸 ✦ %d" % World.data.coins, 21, Color("8f6534"))
+	coin_label = label("🌸 %d" % World.data.coins, 21, Color("8f6534"), true)
 	petal_box.add_child(coin_label)
+
+	var add_petal_btn := Button.new()
+	add_petal_btn.text = "＋"
+	add_petal_btn.custom_minimum_size = Vector2(34, 30)
+	add_petal_btn.add_theme_font_size_override("font_size", 18)
+	add_petal_btn.add_theme_stylebox_override("normal", box(Color("ffeedb"), 10, Color("e5a968"), 1))
+	add_petal_btn.pressed.connect(func(): sound(); show_page("Shop"))
+	petal_box.add_child(add_petal_btn)
 
 	# Settings Button
 	var menu := Button.new()
 	menu.text = "⚙️"
-	menu.custom_minimum_size = Vector2(58, 52)
+	menu.custom_minimum_size = Vector2(56, 50)
 	menu.add_theme_font_size_override("font_size", 22)
 	menu.add_theme_stylebox_override("normal", box(Color("f3ebe0"), 16, WARM_BORDER, 1, 2))
 	menu.pressed.connect(func(): sound(); show_page("Settings"))
@@ -260,6 +269,7 @@ func show_page(next: String) -> void:
 			"Play": play_page()
 			"Explore": explore_page()
 			"Walk": walk_page()
+			"Shop": shop_page()
 			"Room": room_page()
 			"Album": album_page()
 			"Sanctuary": sanctuary_page()
@@ -271,7 +281,7 @@ func show_page(next: String) -> void:
 	shell.add_child(nav_panel)
 
 	var nav_row := HBoxContainer.new()
-	nav_row.add_theme_constant_override("separation", 6)
+	nav_row.add_theme_constant_override("separation", 4)
 	nav_panel.add_child(nav_row)
 
 	var nav_items := [
@@ -279,6 +289,7 @@ func show_page(next: String) -> void:
 		["Play", "🎮 Play"],
 		["Explore", "🌿 Explore"],
 		["Walk", "👟 Walk"],
+		["Shop", "🛍️ Shop"],
 		["Room", "🪑 Room"]
 	]
 	for item in nav_items:
@@ -287,15 +298,15 @@ func show_page(next: String) -> void:
 		var b := Button.new()
 		b.text = item_text
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size.y = 68
-		b.add_theme_font_size_override("font_size", 19)
+		b.custom_minimum_size.y = 66
+		b.add_theme_font_size_override("font_size", 17)
 		if item_name == page:
-			b.add_theme_stylebox_override("normal", box(SAGE, 20, SAGE_DARK, 1, 3))
-			b.add_theme_stylebox_override("hover", box(SAGE, 20, SAGE_DARK, 1, 3))
+			b.add_theme_stylebox_override("normal", box(SAGE, 18, SAGE_DARK, 1, 3))
+			b.add_theme_stylebox_override("hover", box(SAGE, 18, SAGE_DARK, 1, 3))
 			b.add_theme_color_override("font_color", Color.WHITE)
 		else:
-			b.add_theme_stylebox_override("normal", box(Color(0,0,0,0), 20))
-			b.add_theme_stylebox_override("hover", box(Color("ede6d8"), 20))
+			b.add_theme_stylebox_override("normal", box(Color(0,0,0,0), 18))
+			b.add_theme_stylebox_override("hover", box(Color("ede6d8"), 18))
 			b.add_theme_color_override("font_color", INK)
 		b.pressed.connect(func(): sound(); show_page(item_name))
 		nav_row.add_child(b)
@@ -614,10 +625,10 @@ func home() -> void:
 		pet_roam_state = "walk"
 		spawn_sparkles_2d(plant_btn.position + Vector2(75, 45))
 		World.data.pet.happiness = minf(100.0, World.data.pet.happiness + 1.0)
-		World.data.petals = World.data.get("petals", 0) + 1
+		World.data.coins += 1
 		World.save(true)
 		if is_instance_valid(coin_label):
-			coin_label.text = "✦ %d" % World.data.petals
+			coin_label.text = "🌸 %d" % World.data.coins
 		if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
 			thought_box.get_child(0).text = "Sniffing the fresh mint leaves! 🌿"
 		toast("🌿 You tended the houseplant! Found +1 🌸 petal!")
@@ -639,6 +650,33 @@ func home() -> void:
 		toast("💡 Lamp switched on! Cozy amber glow." if lamp_lit else "💡 Lamp switched off.")
 	)
 	stage.add_child(lamp_btn)
+
+	# Room Dusting / Tidying Chore (Effort-based free petals)
+	var dust_count := [3]
+	var dust_positions := [Vector2(110, 310), Vector2(330, 325), Vector2(540, 290)]
+	for di in range(3):
+		var dust_btn := Button.new()
+		dust_btn.text = "🧹"
+		dust_btn.position = dust_positions[di]
+		dust_btn.custom_minimum_size = Vector2(48, 44)
+		dust_btn.add_theme_font_size_override("font_size", 22)
+		dust_btn.add_theme_stylebox_override("normal", box(Color(1, 1, 1, 0.75), 14, Color("dcd5c7"), 1))
+		dust_btn.pressed.connect(func():
+			dust_btn.queue_free()
+			dust_count[0] -= 1
+			play_sound("bubble")
+			spawn_sparkles_2d(dust_btn.position + Vector2(24, 22))
+			if dust_count[0] <= 0:
+				World.activity("tidy")
+				World.data.coins += 8
+				if not World.data.pet.is_empty():
+					World.data.pet.cleanliness = minf(100.0, World.data.pet.cleanliness + 15.0)
+				World.save(true)
+				toast("✨ Room swept clean! +8 petals and a fresh room!")
+				play_sound("reward")
+				if is_instance_valid(coin_label): coin_label.text = "🌸 %d" % World.data.coins
+		)
+		stage.add_child(dust_btn)
 
 	# 4. Cozy Cushion / Music Zone (Left side: dance spin)
 	var cushion_btn := Button.new()
@@ -823,6 +861,48 @@ func home() -> void:
 	if pet.ill:
 		button("Feeling poorly · give free treatment 🩹", func(): do_care("treat"), body, true)
 
+	# --- Daily Care Chores & Tasks (Effort-based rewards) ---
+	var chores_card := card(body, Color("f9fcf8"))
+	chores_card.add_child(label("DAILY CARE CHORES", 17, SAGE))
+	var ch_header := row(chores_card)
+	ch_header.add_child(label("Earn Daily Petals Through Care", 26, INK, true))
+
+	for chore in World.daily_chores():
+		var ch_row := card(chores_card, Color("ffffff"))
+		var cr := row(ch_row)
+		var c_info := VBoxContainer.new()
+		c_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cr.add_child(c_info)
+
+		var prog: int = World.task_progress(chore.id)
+		var is_done: bool = prog >= chore.req
+		var id := "task:" + World.day_key() + ":" + chore.id
+		var is_claimed: bool = id in World.data.claims
+
+		c_info.add_child(label(chore.title, 20, INK, true))
+		c_info.add_child(label("%s (%d/%d)" % [chore.desc, mini(prog, chore.req), chore.req], 17, MUTED))
+
+		if is_claimed:
+			var done_lbl := label("✓ Claimed (+%d 🌸)" % chore.reward, 18, SAGE)
+			cr.add_child(done_lbl)
+		elif is_done:
+			var claim_btn := Button.new()
+			claim_btn.text = "Claim +%d 🌸" % chore.reward
+			claim_btn.custom_minimum_size = Vector2(140, 48)
+			claim_btn.add_theme_font_size_override("font_size", 18)
+			claim_btn.add_theme_stylebox_override("normal", box(Color("fdf0ed"), 14, Color("ff7043"), 2, 2))
+			claim_btn.add_theme_color_override("font_color", INK)
+			claim_btn.pressed.connect(func():
+				if World.claim_task(chore.id, chore.req, chore.reward):
+					play_sound("reward")
+					toast("Claimed +%d petals for %s!" % [chore.reward, chore.title])
+					show_page("Home")
+			)
+			cr.add_child(claim_btn)
+		else:
+			var inprog_lbl := label("+%d 🌸" % chore.reward, 18, MUTED)
+			cr.add_child(inprog_lbl)
+
 	var note := card(body, Color("edf2e8"))
 	note.add_child(label("Little things, together", 27, INK, true))
 	paragraph("%s loves %s. %s and always happy to be with you." % [pet.name, World.favorite_food().to_lower(), World.personality()], note, 22)
@@ -948,7 +1028,7 @@ func do_care(action: String) -> void:
 
 func refresh() -> void:
 	if is_instance_valid(coin_label):
-		coin_label.text = "🌸 ✦ %d" % World.data.coins
+		coin_label.text = "🌸 %d" % World.data.coins
 	if World.data.pet.is_empty(): return
 	for key in needs:
 		if is_instance_valid(needs[key]):
@@ -956,7 +1036,8 @@ func refresh() -> void:
 			needs[key].value = val
 			if need_labels.has(key) and is_instance_valid(need_labels[key]):
 				var icon_name: String = str({"hunger":"🍗 Fed","happiness":"💖 Joy","cleanliness":"🫧 Clean","energy":"⚡ Rest"}.get(key, ""))
-				need_labels[key].text = "%s %d%%" % [icon_name, val]
+				var note: String = " ⚠️" if val < 25 else ""
+				need_labels[key].text = "%s %d%%%s" % [icon_name, val, note]
 	if is_instance_valid(pet_image):
 		pet_image.texture = Art.pet(World.data.pet.species, pose())
 	if is_instance_valid(mood_label):
@@ -972,16 +1053,20 @@ func tasks_page() -> void:
 		body.remove_child(child)
 		child.queue_free()
 
-	section("A little every day", "Today's little wishes", "Small moments make the best memories. Each wish earns 25 petals.")
-	for task in [["care", 3, "Share three moments of care"], ["play", 1, "Play a game together"], ["explore", 1, "Discover something outside"]]:
+	section("A little every day", "Today's Care Chores", "Complete daily care tasks with your companion to earn generous Petals!")
+	for chore in World.daily_chores():
 		var content := card(body)
-		content.add_child(label(task[2], 26))
-		paragraph("%d / %d complete" % [mini(World.task_progress(task[0]), task[1]), task[1]], content)
-		var claimed: bool = "task:" + World.day_key() + ":" + task[0] in World.data.claims
-		var b := button("Collected" if claimed else "Collect 25 petals", func():
-			if World.claim_task(task[0], task[1]): tasks_page()
-		, content, true)
-		b.disabled = claimed or World.task_progress(task[0]) < task[1]
+		content.add_child(label(chore.title, 26, INK, true))
+		var prog: int = World.task_progress(chore.id)
+		paragraph("%s — %d / %d complete" % [chore.desc, mini(prog, chore.req), chore.req], content)
+		var claimed: bool = "task:" + World.day_key() + ":" + chore.id in World.data.claims
+		var is_done: bool = prog >= chore.req
+		var b := button("✓ Collected (+%d 🌸)" % chore.reward if claimed else "Collect %d petals" % chore.reward, func():
+			if World.claim_task(chore.id, chore.req, chore.reward):
+				play_sound("reward")
+				tasks_page()
+		, content, is_done and not claimed)
+		b.disabled = claimed or not is_done
 
 # --- REVAMPED PLAY PAGE SHOWCASING 3D ARCADE MINIGAMES ---
 func play_page() -> void:
@@ -1029,11 +1114,56 @@ func start_game(kind: String) -> void:
 		var reward := World.game_reward(kind, score)
 		show_page("Play")
 		play_sound("reward")
-		toast("Awesome game! Score %d · +%d petals 🌸" % [score, reward])
-		if World.data.ad.games % 3 == 0 and Time.get_unix_time_from_system() - World.data.ad.last >= 600:
-			Platform.call_service("interstitial")
+		_show_game_over_dialog(reward, score)
 	)
 	game.cancelled.connect(func(): game_layer.queue_free())
+
+func _show_game_over_dialog(reward: int, score: int) -> void:
+	var veil := ColorRect.new()
+	veil.color = Color(0, 0, 0, 0.45)
+	veil.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	veil.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(veil)
+
+	var modal := PanelContainer.new()
+	modal.add_theme_stylebox_override("panel", box(Color("fffdf7"), 24, WARM_BORDER, 2, 4))
+	modal.custom_minimum_size = Vector2(580, 360)
+	modal.position = Vector2(70, 420)
+	veil.add_child(modal)
+
+	var m_box := VBoxContainer.new()
+	m_box.add_theme_constant_override("separation", 14)
+	modal.add_child(m_box)
+
+	m_box.add_child(label("GAME COMPLETE! 🌟", 20, SAGE, true))
+	m_box.add_child(label("Score: %d points" % score, 32, INK, true))
+	m_box.add_child(label("Earned: +%d Petals 🌸" % reward, 26, Color("8f6534"), true))
+	paragraph("Double your petals with a quick sponsor video?", m_box, 19)
+
+	var btn_double := Button.new()
+	btn_double.text = "🎬 Double to +%d Petals!" % (reward * 2)
+	btn_double.custom_minimum_size.y = 66
+	btn_double.add_theme_font_size_override("font_size", 20)
+	btn_double.add_theme_stylebox_override("normal", box(Color("fdf0ed"), 18, Color("ff7043"), 2, 3))
+	btn_double.add_theme_color_override("font_color", INK)
+	btn_double.pressed.connect(func():
+		veil.queue_free()
+		parent_gate(func(): Platform.call_service("rewarded", {"reward_type": "double_game"}))
+	)
+	m_box.add_child(btn_double)
+
+	var btn_cont := Button.new()
+	btn_cont.text = "Collect +%d & Continue" % reward
+	btn_cont.custom_minimum_size.y = 58
+	btn_cont.add_theme_font_size_override("font_size", 19)
+	btn_cont.add_theme_stylebox_override("normal", box(Color("f3ebe0"), 16, WARM_BORDER, 1))
+	btn_cont.add_theme_color_override("font_color", INK)
+	btn_cont.pressed.connect(func():
+		veil.queue_free()
+		if not World.is_cozy_pass_active() and Time.get_unix_time_from_system() - World.data.ad.last >= 120:
+			Platform.call_service("interstitial")
+	)
+	m_box.add_child(btn_cont)
 
 func explore_page() -> void:
 	section("A world of little wonders", "Let's wander.", "Follow your curiosity. Bring a little treasure home.")
@@ -1065,6 +1195,8 @@ func outing(destination: int) -> void:
 			var found := World.explore(destination, i)
 			show_page("Explore")
 			toast("Found a %s! +8 petals" % found.to_lower())
+			if not World.is_cozy_pass_active() and Time.get_unix_time_from_system() - World.data.ad.last >= 120:
+				Platform.call_service("interstitial")
 		, body, true)
 
 func walk_page() -> void:
@@ -1126,8 +1258,326 @@ func walk_page() -> void:
 	button("Stop phone walking session", func(): Platform.call_service("stop_walk"), body)
 	paragraph("Watch step counting and health sync over Bluetooth or Internet fallback. Steps, heart rhythm, and hydration boost your pet's happiness and health safely on-device.", body, 20)
 
+func shop_page() -> void:
+	section("The Petal Boutique", "Sunny Treats & Magic 🌸", "Delightful treasures, fresh pantry delicacies, novelty toys, and cozy perks.")
+
+	# --- Balance Pill Card ---
+	var balance_card := card(body, Color("fdf7ea"))
+	var bal_row := row(balance_card)
+	bal_row.add_child(label("Your Petal Pouch:", 23, INK, true))
+	var bal_amt := label("🌸 %d Petals" % World.data.coins, 25, Color("8f6534"), true)
+	bal_amt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bal_amt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	bal_row.add_child(bal_amt)
+
+	# --- 🎁 Daily Free Sponsor Rewards (AdMob Rewarded Video Ads) ---
+	var free_ad_card := card(body, Color("f0f8fa"))
+	free_ad_card.add_child(label("DAILY FREE REWARDS", 17, Color("00838f")))
+	free_ad_card.add_child(label("🎁 Free Sponsor Crates", 27, INK, true))
+	paragraph("Watch a short sponsor video to open a free Lucky Mystery Box, pamper your pet in the Vitality Spa, or earn extra petals.", free_ad_card, 20)
+
+	var free_grid := GridContainer.new()
+	free_grid.columns = 2
+	free_grid.add_theme_constant_override("h_separation", 12)
+	free_grid.add_theme_constant_override("v_separation", 12)
+	free_ad_card.add_child(free_grid)
+
+	# Free Box 1: Lucky Mystery Box
+	var ad_box1 := card(free_grid, Color("ffffff"))
+	ad_box1.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ad_box1.add_child(label("🎁 Free Lucky Box", 21, INK, true))
+	paragraph("Chance for 50-150 Petals, bakery treats, or accessories!", ad_box1, 17)
+	button("Open Free (🎬)", func():
+		parent_gate(func(): Platform.call_service("rewarded", {"reward_type": "mystery_box"}))
+	, ad_box1, true)
+
+	# Free Box 2: Vitality Spa
+	var ad_box2 := card(free_grid, Color("ffffff"))
+	ad_box2.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ad_box2.add_child(label("🫧 Vitality Spa & Feast", 21, INK, true))
+	paragraph("Instantly restores all stats to 100% + 15 Petals!", ad_box2, 17)
+	button("Pamper Pet (🎬)", func():
+		parent_gate(func(): Platform.call_service("rewarded", {"reward_type": "spa"}))
+	, ad_box2)
+
+	# --- 🎁 Mystery Surprise Crates (Petals) ---
+	var mystery_card := card(body, Color("fcf5fb"))
+	mystery_card.add_child(label("SURPRISE MYSTERY CRATES", 17, Color("8e24aa")))
+	mystery_card.add_child(label("Unbox Secret Treasures", 27, INK, true))
+
+	var m_row := row(mystery_card, 12)
+	# Lucky Box
+	var lb_card := card(m_row, Color("ffffff"))
+	lb_card.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	lb_card.add_child(label("🌸 Lucky Petal Crate", 22, INK, true))
+	paragraph("Drops 50-150 Petals, gourmet snacks, or cute accessories.", lb_card, 18)
+	button("Open for ✦ 40 petals", func():
+		var res: Dictionary = World.open_mystery_box("lucky")
+		if res.get("ok", false):
+			var p: Dictionary = res.get("prize", {})
+			play_sound("reward")
+			toast("Opened Lucky Crate: " + p.get("text", "+50 Petals"))
+			show_page("Shop")
+		else: toast("Not enough petals! Complete daily chores or watch a sponsor video.")
+	, lb_card)
+
+	# Royal Golden Trunk
+	var rb_card := card(m_row, Color("ffffff"))
+	rb_card.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	rb_card.add_child(label("👑 Royal Golden Trunk", 22, INK, true))
+	paragraph("Guaranteed 200-350 Petals, rare decor, or luxury outfits.", rb_card, 18)
+	button("Open for ✦ 140 petals", func():
+		var res: Dictionary = World.open_mystery_box("royal")
+		if res.get("ok", false):
+			var p: Dictionary = res.get("prize", {})
+			play_sound("reward")
+			toast("Opened Royal Trunk: " + p.get("text", "+250 Petals"))
+			show_page("Shop")
+		else: toast("Not enough petals! Visit Petal Bundles or explore.")
+	, rb_card, true)
+
+	# --- 🍬 Gourmet Bakery & Delicacies (Buy with Petals) ---
+	var treats_card := card(body, Color("fff8f0"))
+	treats_card.add_child(label("GOURMET PANTRY", 17, Color("e65100")))
+	treats_card.add_child(label("Fresh Bakery Delicacies", 27, INK, true))
+	paragraph("Handcrafted treats made with mountain berries and sweet honey. Feeds and delights your companion.", treats_card, 20)
+
+	var treat_grid := GridContainer.new()
+	treat_grid.columns = 2
+	treat_grid.add_theme_constant_override("h_separation", 12)
+	treat_grid.add_theme_constant_override("v_separation", 12)
+	treats_card.add_child(treat_grid)
+
+	for tr in World.treats_catalog():
+		var tc := card(treat_grid, Color("ffffff"))
+		tc.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var trow := row(tc)
+		trow.add_child(label(tr.icon, 32))
+		var tinfo := VBoxContainer.new()
+		tinfo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		trow.add_child(tinfo)
+		tinfo.add_child(label(tr.name, 20, INK, true))
+		tinfo.add_child(label("✦ %d petals" % tr.cost, 18, Color("8f6534"), true))
+		paragraph(tr.desc, tc, 16)
+		button("Feed to %s" % World.data.pet.get("name", "Pet"), func():
+			if World.buy_treat(tr.id):
+				play_sound("munch")
+				toast("Fed %s! Vitality and happiness restored!" % tr.name)
+				show_page("Shop")
+			else: toast("Earn a few more petals to buy this treat!")
+		, tc)
+
+	# --- 🧸 Interactive Toys & Room Novelties (Buy with Petals) ---
+	var toys_card := card(body, Color("f3f7fa"))
+	toys_card.add_child(label("NOVELTIES & PLAY", 17, Color("1565c0")))
+	toys_card.add_child(label("Interactive Room Toys", 27, INK, true))
+	paragraph("Delightful playtime gadgets and calming ambiance pieces for your companion's sanctuary.", toys_card, 20)
+
+	var toy_grid := GridContainer.new()
+	toy_grid.columns = 2
+	toy_grid.add_theme_constant_override("h_separation", 12)
+	toy_grid.add_theme_constant_override("v_separation", 12)
+	toys_card.add_child(toy_grid)
+
+	for ty in World.toys_catalog():
+		var toy_c := card(toy_grid, Color("ffffff"))
+		toy_c.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var tyrow := row(toy_c)
+		tyrow.add_child(label(ty.icon, 32))
+		var tyinfo := VBoxContainer.new()
+		tyinfo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tyrow.add_child(tyinfo)
+		tyinfo.add_child(label(ty.name, 20, INK, true))
+		tyinfo.add_child(label("✦ %d petals" % ty.cost, 18, Color("8f6534"), true))
+		paragraph(ty.desc, toy_c, 16)
+		var owned: bool = ty.id in World.data.inventory
+		button("Equipped in Room" if owned else "Place in Room", func():
+			if World.buy_toy(ty.id):
+				play_sound("care")
+				toast("Equipped %s in your room!" % ty.name)
+				show_page("Shop")
+			else: toast("Earn a few more petals to buy this toy!")
+		, toy_c, owned)
+
+	# --- 👒 Boutique Wardrobe & Hats (Buy with Petals) ---
+	var wardrobe_card := card(body, Color("fdfbf5"))
+	wardrobe_card.add_child(label("BOUTIQUE WARDROBE", 17, Color("5d4037")))
+	wardrobe_card.add_child(label("Hats & Charming Accessories", 27, INK, true))
+	paragraph("Exclusive wearable fashion pieces to style your companion for walks and photos.", wardrobe_card, 20)
+
+	var ward_grid := GridContainer.new()
+	ward_grid.columns = 2
+	ward_grid.add_theme_constant_override("h_separation", 12)
+	ward_grid.add_theme_constant_override("v_separation", 12)
+	wardrobe_card.add_child(ward_grid)
+
+	var all_items := World.catalog()
+	for i in range(30, all_items.size()):
+		var acc: Dictionary = all_items[i]
+		var ac := card(ward_grid, Color("ffffff"))
+		ac.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var idx := int(acc.id.trim_prefix("accessory_"))
+		ac.add_child(Art.image(Art.atlas("res://assets/accessories-final.png", 4, 3, idx % 12), Vector2(180, 80)))
+		ac.add_child(label(acc.name, 20, INK, true))
+		var owned: bool = acc.id in World.data.inventory
+		var is_wearing: bool = World.data.accessory == acc.id
+		var btn_label := "Wearing" if is_wearing else ("Wear" if owned else "✦ %d petals" % acc.cost)
+		button(btn_label, func():
+			if World.buy_equip(acc):
+				play_sound("care")
+				toast("%s looks adorable in %s!" % [World.data.pet.get("name", "Companion"), acc.name])
+				show_page("Shop")
+			else: toast("Earn a few more petals to adopt this look!")
+		, ac, is_wearing)
+
+	# --- 🌸 Petal Currency Bundles (Play Store IAP) ---
+	var bundles_card := card(body, Color("fcf9f2"))
+	bundles_card.add_child(label("🌸 PETAL BUNDLES", 17, SAGE))
+	bundles_card.add_child(label("Pouch & Treasure Packs", 27, INK, true))
+	paragraph("Instantly add petals to your pouch for cozy room furnishings, charming accessories, and treats.", bundles_card, 21)
+
+	var petal_packs := [
+		{
+			"id": "kin_petals_small",
+			"name": "Handful of Petals",
+			"petals": 250,
+			"desc": "+250 Petals for charming decor & accessories",
+			"icon": "🌸",
+			"badge": "STARTER",
+			"badge_color": SAGE,
+			"fallback_price": "$0.99"
+		},
+		{
+			"id": "kin_petals_medium",
+			"name": "Basket of Petals",
+			"petals": 750,
+			"desc": "+750 Petals · Most popular choice!",
+			"icon": "🧺",
+			"badge": "MOST POPULAR",
+			"badge_color": Color("e67e22"),
+			"fallback_price": "$2.49"
+		},
+		{
+			"id": "kin_petals_large",
+			"name": "Treasure Chest",
+			"petals": 2000,
+			"desc": "+2,000 Petals · Best value for full rooms!",
+			"icon": "✨",
+			"badge": "BEST VALUE",
+			"badge_color": Color("9b59b6"),
+			"fallback_price": "$4.99"
+		}
+	]
+
+	for pack in petal_packs:
+		var item_card := card(bundles_card, Color("ffffff"))
+		var r1 := row(item_card)
+		var icon_lbl := label(pack.icon, 34)
+		r1.add_child(icon_lbl)
+
+		var title_box := VBoxContainer.new()
+		title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		r1.add_child(title_box)
+
+		var name_row := row(title_box, 8)
+		name_row.add_child(label(pack.name, 22, INK, true))
+		var badge := label(" " + pack.badge + " ", 14, Color.WHITE)
+		badge.add_theme_stylebox_override("normal", box(pack.badge_color, 8))
+		name_row.add_child(badge)
+
+		title_box.add_child(label(pack.desc, 18, MUTED))
+
+		var price_str: String = Platform.product_prices.get(pack.id, {}).get("price", pack.fallback_price)
+		if price_str.is_empty(): price_str = pack.fallback_price
+		button("Adopt for " + price_str, func():
+			parent_gate(func(): Platform.call_service("purchase", {"product": pack.id}))
+		, item_card, pack.badge == "MOST POPULAR")
+
+	# --- 👑 Cozy Caretaker Pass ---
+	var pass_card := card(body, Color("fbf3ea"))
+	pass_card.add_child(label("PERMANENT UPGRADE", 17, Color("d35400")))
+	pass_card.add_child(label("👑 Cozy Caretaker Pass", 28, INK, true))
+	paragraph("Never see an interstitial ad again! Includes an exclusive royal crown badge for your pet and +50% bonus petals on all daily walking milestones forever.", pass_card, 21)
+
+	var pass_owned: bool = World.is_cozy_pass_active()
+	if pass_owned:
+		var active_badge := label("✓ ACTIVE FOREVER · Thank you for your support!", 20, SAGE, true)
+		pass_card.add_child(active_badge)
+	else:
+		var pass_price: String = Platform.product_prices.get("kin_cozy_pass", {}).get("price", "$3.99")
+		if pass_price.is_empty(): pass_price = "$3.99"
+		button("Unlock Caretaker Pass · " + pass_price, func():
+			parent_gate(func(): Platform.call_service("purchase", {"product": "kin_cozy_pass"}))
+		, pass_card, true)
+
+	# --- 🧺 Deluxe Fruit Feast (IAP) ---
+	var feast_section := card(body, Color("f3f8f2"))
+	feast_section.add_child(label("CARE BUNDLE", 17, SAGE))
+	feast_section.add_child(label("🍓 Deluxe Fruit Feast", 27, INK, true))
+	var feast_card := card(feast_section, Color("ffffff"))
+	var fr := row(feast_card)
+	fr.add_child(label("🍓", 34))
+	var f_box := VBoxContainer.new()
+	f_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fr.add_child(f_box)
+	f_box.add_child(label("Deluxe Fruit Feast Basket", 22, INK, true))
+	f_box.add_child(label("+5 of every favorite fruit, instant full energy & +100 Petals", 18, MUTED))
+
+	var feast_price: String = Platform.product_prices.get("kin_treat_basket", {}).get("price", "$1.49")
+	if feast_price.is_empty(): feast_price = "$1.49"
+	button("Treat My Companion · " + feast_price, func():
+		parent_gate(func(): Platform.call_service("purchase", {"product": "kin_treat_basket"}))
+	, feast_card)
+
+	# --- 🏡 Storybook Cosmetic Sets ---
+	var collections_card := card(body, Color("f6f2f9"))
+	collections_card.add_child(label("COSMETIC ROOM SUITES", 17, Color("8e44ad")))
+	collections_card.add_child(label("Storybook Decor Suites", 27, INK, true))
+	paragraph("Original hand-painted artistic environments that transform your sanctuary room. Permanent cosmetic unlocks.", collections_card, 21)
+
+	var collections := [
+		["kin_cottage", "Cottage Mornings", "A warm, sunlit countryside morning with blooming wildflowers.", 0, "$2.99"],
+		["kin_moonlight", "Moonlight Dreams", "A quiet starry evening surrounded by fireflies and gentle blues.", 1, "$2.99"],
+		["kin_blossom", "Blossom Picnic", "Gentle sakura petals drifting in a soothing spring breeze.", 2, "$2.99"]
+	]
+
+	for col in collections:
+		var col_card := card(collections_card, Color("ffffff"))
+		col_card.add_child(Art.image(Art.atlas("res://assets/premium-final.png", 3, 1, col[3]), Vector2(0, 150)))
+		col_card.add_child(label(col[1], 23, INK, true))
+		paragraph(col[2], col_card, 19)
+
+		var owned: bool = col[0] in World.data.get("entitlements", [])
+		var is_equipped: bool = World.data.get("premium_equipped", "") == col[0]
+		if owned:
+			var btn_text: String = "✓ Currently Decorated" if is_equipped else "Apply to Room"
+			button(btn_text, func():
+				World.data.premium_equipped = col[0]
+				World.save()
+				show_page("Home")
+				toast("Room decorated with %s!" % col[1])
+			, col_card, not is_equipped)
+		else:
+			var c_price: String = Platform.product_prices.get(col[0], {}).get("price", col[4])
+			if c_price.is_empty(): c_price = col[4]
+			button("Unlock " + col[1] + " · " + c_price, func():
+				parent_gate(func(): Platform.call_service("purchase", {"product": col[0]}))
+			, col_card)
+
+	# --- Restore Purchases & Policy Footnote ---
+	button("🔄 Restore Prior Purchases", func():
+		parent_gate(func():
+			Platform.call_service("restore")
+			toast("Checking Google Play for previous purchases…")
+		)
+	, body)
+
+	var footer := paragraph("Pocket Kin respects your privacy and uses standard Google Play Billing with Family-Safe parent gates. All pet food, basic care, minigames, and growth are completely free forever.", body, 19)
+	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
 func room_page() -> void:
-	section("Make yourself at home", "A room full of you.", "Earn petals through play, then find something lovely.")
+	section("Make yourself at home", "A room full of you.", "Earn petals through play or the boutique, then decorate with something lovely.")
+	button("Visit the Petal Boutique & Decor Suites 🛍️", func(): show_page("Shop"), body, true)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 14)
@@ -1146,23 +1596,10 @@ func room_page() -> void:
 			if World.buy_equip(item):
 				show_page("Room")
 				toast("A lovely little choice. See it at home!")
-			else: toast("Earn a few more petals through play.")
+			else: toast("Earn a few more petals or visit the Boutique.")
 		, content, owned)
 
-	var premium := card(body, Color("f0eaf3"))
-	premium.add_child(label("A little extra magic", 29, INK, true))
-	paragraph("Optional permanent cosmetic collections. All pet care is always free.", premium)
-	for pack in [["kin_cottage", "Cottage mornings"], ["kin_moonlight", "Moonlight dreams"], ["kin_blossom", "Blossom picnic"]]:
-		premium.add_child(Art.image(Art.atlas("res://assets/premium-final.png", 3, 1, ["kin_cottage", "kin_moonlight", "kin_blossom"].find(pack[0])), Vector2(0, 150)))
-		var owned: bool = pack[0] in World.data.get("entitlements", [])
-		button("Decorate with " + pack[1] if owned else pack[1], func():
-			if owned:
-				World.data.premium_equipped = pack[0]
-				World.save()
-				show_page("Home")
-			else: parent_gate(func(): Platform.call_service("purchase", {"product": pack[0]}))
-		, premium)
-	button("Optional video · 20 bonus petals", func(): parent_gate(func(): Platform.call_service("rewarded")), body)
+	button("Visit the Petal Boutique 🌸", func(): show_page("Shop"), body)
 
 func album_page() -> void:
 	section("The story of us", "Little moments, forever.", "A growing collection of the days you shared.")

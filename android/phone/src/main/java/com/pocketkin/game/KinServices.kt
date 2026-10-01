@@ -50,6 +50,11 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
                 input.put("server_port", PhoneSyncServer.PORT)
                 val snapshotStr = input.toString()
                 PhoneSyncServer.latestSnapshot = input
+                input.optJSONArray("entitlements")?.let { ents ->
+                    for (i in 0 until ents.length()) {
+                        if (ents.optString(i) == "kin_cozy_pass") prefs.edit().putBoolean("cozy_pass", true).apply()
+                    }
+                }
                 prefs.edit().putString("snapshot", snapshotStr).apply()
                 input.optString("save_path").takeIf { it.isNotBlank() }?.let { prefs.edit().putString("save_path", it).apply() }
                 KinWidget.update(activity)
@@ -104,11 +109,12 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
             "cloud_save" -> cloud.save(input)
             "cloud_load" -> cloud.load()
             "delete_account" -> AlertDialog.Builder(activity).setTitle("Delete cloud account?").setMessage("This removes cloud saves and account data. Your on-device pet remains. Purchases can be restored with Google Play.").setNegativeButton("Cancel",null).setPositiveButton("Delete") { _,_ -> cloud.delete() }.show()
-            "rewarded" -> ads.rewarded()
+            "rewarded" -> ads.rewarded(input.optString("reward_type", "general"))
             "interstitial" -> ads.interstitial()
             "privacy" -> ads.privacy()
             "purchase" -> billing.purchase(input.optString("product"))
             "restore" -> billing.restore()
+            "query_products" -> billing.queryProducts()
             "watch_status" -> scope.launch {
                 val nodes = runCatching { Wearable.getNodeClient(activity).connectedNodes.await() }.getOrDefault(emptyList())
                 message(kind, if (nodes.isEmpty()) "Install Pocket Kin on your paired Wear OS watch, then open both apps." else "Connected to ${nodes.joinToString { it.displayName }}.")

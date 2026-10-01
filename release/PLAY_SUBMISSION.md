@@ -43,8 +43,20 @@ SHA1 `9D:85:2B:39:86:0F:03:FD:91:6C:CC:67:C1:24:2D:0A:7F:F9:D7:DE`.
    create a **rewarded** unit and an **interstitial** unit. Put the three IDs into
    `android/gradle.properties` (`admobAppId`, `rewardedAdUnit`, `interstitialAdUnit`) and
    rebuild. Test units remain the default for debug builds.
-5. **Play Monetization**: managed products `kin_cottage`, `kin_moonlight`, `kin_blossom`
-   (permanent cosmetic bundles), license testers, pending/refund/restore tests.
+   - **Rewarded Ads**: Voluntary user-initiated rewards with G-rated content filter (Free Lucky Mystery Box, Vitality Spa & Feast, and Double Minigame Petals). All rewarded ad prompts are gated behind parent gates for Families compliance.
+   - **Interstitial Ads**: Shown only at natural gameplay transition points (minigame completion, returning from exploration) with a family-friendly 120-second cooldown; permanently disabled when `kin_cozy_pass` is active.
+5. **Play Monetization**: configure the following managed in-app products in Play Console:
+   - **Consumables**:
+     - `kin_petals_small`: Pouch of Petals (+250 Petals)
+     - `kin_petals_medium`: Basket of Petals (+750 Petals)
+     - `kin_petals_large`: Treasury of Petals (+2,000 Petals)
+     - `kin_treat_basket`: Fruit Feast (+15 each of berry, peach, melon, starfruit)
+   - **Non-Consumables (Permanent)**:
+     - `kin_cozy_pass`: Cozy Caretaker Pass (Ad-free care forever, Golden Crown status, boosted daily walking petals, +50% friendship growth rate)
+     - `kin_cottage`: Cottage Decor Collection
+     - `kin_moonlight`: Moonlight Garden Set
+     - `kin_blossom`: Cherry Blossom Wardrobe
+   Set up license testers in Play Console. All real-money shop interactions are protected behind parent gates (arithmetic challenges) to strictly comply with Google Play Families Policy. Consumables are immediately consumed via `consumeAsync` so they can be repurchased, and non-consumables are acknowledged via `acknowledgePurchase` to prevent automatic refunds.
 6. **Service account** with *Android Publisher* role → JSON for Functions env
    (`GOOGLE_APPLICATION_CREDENTIALS`); set `ANDROID_PACKAGE`. Deploy
    `saveGame/loadGame/verifyPurchase/refreshPurchase/deleteAccount`; configure the

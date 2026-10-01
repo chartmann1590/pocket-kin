@@ -104,6 +104,23 @@ func _init() -> void:
 	w.steps(1600, yesterday, "health-connect")
 	check("walk:" + yesterday + ":500" in w.data.claims and "walk:" + yesterday + ":1500" in w.data.claims, "late yesterday sync claims both milestones")
 
+	# Microtransactions & purchases: consumable petals, bundles, and cozy pass
+	var coins_pre_iap: int = w.data.coins
+	w.grant_purchase("kin_petals_small")
+	check(w.data.coins == coins_pre_iap + 250, "small petal pack grants 250 petals")
+	w.grant_purchase("kin_petals_medium")
+	check(w.data.coins == coins_pre_iap + 250 + 750, "medium petal pack grants 750 petals")
+	check(not w.is_cozy_pass_active(), "cozy pass not active initially")
+	w.grant_purchase("kin_cozy_pass")
+	check(w.is_cozy_pass_active(), "cozy pass active after purchase")
+	w.grant_purchase("kin_cottage")
+	check("kin_cottage" in w.data.get("entitlements", []), "cosmetic room set unlocks in entitlements")
+	# Walking with cozy pass yields boosted 25 petals
+	var cw_cozy: int = w.data.coins
+	w.steps(1600, w.day_key(), "health-connect")
+	check("walk:" + w.day_key() + ":1500" in w.data.claims, "1500 milestone claimed")
+	check(w.data.coins == cw_cozy + 25, "cozy pass boosts walking milestone to 25 petals")
+
 	# Cloud snapshot keeps raw steps and tz offset local-only.
 	var snap: Dictionary = w.cloud_snapshot()
 	check(not snap.has("walking"), "raw steps excluded from cloud snapshot")
@@ -155,7 +172,23 @@ func _init() -> void:
 	var divergent := w.cloud_snapshot()
 	divergent.revision = w.data.cloud_revision + 10
 	check(w.apply_cloud_snapshot(divergent) == "kept-local", "newer remote still prompts when local is dirty")
-	w.resolve_cloud_conflict(false)
+	# Gourmet treats, toys, and mystery boxes
+	w.data.coins = 300
+	w.data.pet = {"id": "p", "name": "P", "species": 0, "hunger": 50.0, "happiness": 50.0, "cleanliness": 50.0, "energy": 50.0, "updated": Time.get_unix_time_from_system(), "care_age": 0.0, "bond": 0, "activities": {}}
+	check(w.buy_treat("treat_starberry"), "can purchase and feed treat")
+	check(w.data.pet.hunger == 100.0, "starberry restores full hunger")
+	check(w.buy_toy("toy_mouse"), "can purchase toy")
+	check("toy_mouse" in w.data.inventory, "toy added to inventory")
+
+	# Mystery box
+	var box_res := w.open_mystery_box("lucky")
+	check(box_res.get("ok", false), "can open lucky mystery box")
+
+	# Rewarded ad claiming
+	var coins_before_ad: int = w.data.coins
+	w.last_game_reward = 20
+	w.claim_rewarded_ad("double_game")
+	check(w.data.coins == coins_before_ad + 20, "double game rewarded ad doubles reward")
 
 	# Save round-trips through disk.
 	w.save()
