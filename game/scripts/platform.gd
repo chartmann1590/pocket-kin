@@ -67,9 +67,12 @@ func _result(kind: String, raw: String) -> void:
 	elif kind == "purchase":
 		if parsed.get("verified", false) or parsed.get("ok", false):
 			var prod_id: String = str(parsed.get("product", ""))
+			var token: String = str(parsed.get("purchase_token", ""))
 			if not prod_id.is_empty():
-				var grant_msg := World.grant_purchase(prod_id)
+				var grant_msg := World.grant_purchase(prod_id, token)
 				_publish()
+				if not token.is_empty():
+					call_service("confirm_grant", {"purchase_token": token, "product": prod_id})
 				result.emit(kind, {"ok": true, "product": prod_id, "message": grant_msg})
 				return
 		result.emit(kind, parsed)
@@ -77,9 +80,12 @@ func _result(kind: String, raw: String) -> void:
 	elif kind == "restore":
 		if parsed.get("verified", false) or parsed.get("ok", false):
 			var prod_id: String = str(parsed.get("product", ""))
+			var token: String = str(parsed.get("purchase_token", ""))
 			if not prod_id.is_empty():
-				World.grant_purchase(prod_id)
+				World.grant_purchase(prod_id, token)
 				_publish()
+				if not token.is_empty():
+					call_service("confirm_grant", {"purchase_token": token, "product": prod_id})
 				result.emit(kind, {"ok": true, "product": prod_id, "message": "Restored collection!"})
 				return
 		result.emit(kind, parsed)

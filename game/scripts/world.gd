@@ -298,18 +298,22 @@ func buy_toy(toy_id: String) -> bool:
 			toy = t
 			break
 	if toy.is_empty(): return false
-	if toy_id not in data.inventory:
+	var is_first_purchase: bool = toy_id not in data.inventory
+	if is_first_purchase:
 		if data.coins < toy.cost: return false
 		data.coins -= toy.cost
 		data.inventory.append(toy_id)
 	data.room["toy"] = toy_id
-	if not data.pet.is_empty():
+	if is_first_purchase and not data.pet.is_empty():
 		data.pet.happiness = minf(100.0, data.pet.happiness + 15.0)
 		data.pet.bond += 2
 		data.lifetime_bond += 2
-	activity("play")
+		activity("play")
 	save()
-	notice.emit("New toy placed in the room: %s!" % toy.name)
+	if is_first_purchase:
+		notice.emit("New toy placed in the room: %s!" % toy.name)
+	else:
+		notice.emit("Equipped %s in the room!" % toy.name)
 	return true
 
 func open_mystery_box(tier: String, is_free_ad := false) -> Dictionary:
@@ -418,7 +422,15 @@ func retire() -> bool:
 func is_cozy_pass_active() -> bool:
 	return "kin_cozy_pass" in data.get("entitlements", [])
 
-func grant_purchase(product_id: String) -> String:
+func grant_purchase(product_id: String, token: String = "") -> String:
+	if not token.is_empty():
+		var claim_id := "purchase:" + token
+		var claims: Array = data.get("claims", [])
+		if claim_id in claims:
+			return "Already credited!"
+		claims.append(claim_id)
+		data.claims = claims
+
 	match product_id:
 		"kin_petals_small":
 			data.coins += 250
@@ -449,10 +461,11 @@ func grant_purchase(product_id: String) -> String:
 			return "Fruit Feast delivered! +100 petals and 5 of each fruit!"
 		"kin_cozy_pass":
 			var entitlements: Array = data.get("entitlements", [])
-			if "kin_cozy_pass" not in entitlements:
+			var is_new: bool = "kin_cozy_pass" not in entitlements
+			if is_new:
 				entitlements.append("kin_cozy_pass")
 				data.entitlements = entitlements
-			data.coins += 150
+				data.coins += 150
 			save(true)
 			notice.emit("👑 Cozy Caretaker Pass! Interstitial ads disabled & perks active!")
 			return "Cozy Caretaker Pass active! Enjoy ad-free care and bonus rewards!"

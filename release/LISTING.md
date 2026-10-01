@@ -30,9 +30,10 @@ All-ages cartoon fantasy (mild — sick pet with compress), no violence/gambling
 Full questionnaire answers: release/CONTENT_RATING.md.
 
 ## Store contact
-- Support email: support@charleshartmann.com (support site: /support)
+- Support email: support@charleshartmann.com (support site: https://chartmann1590.github.io/pocket-kin/support.html)
 - Website: https://chartmann1590.github.io/pocket-kin/
-- Privacy policy: https://chartmann1590.github.io/pocket-kin/privacy
+- Privacy policy: https://chartmann1590.github.io/pocket-kin/privacy.html
+- Terms of service: https://chartmann1590.github.io/pocket-kin/terms.html
 
 ## What's new (0.2.0)
 First Play release: 6 species, 3 mini-games, 3 destinations, decorating + sanctuary, Walk Together, Wear OS companion + tile/complication, cloud saves.

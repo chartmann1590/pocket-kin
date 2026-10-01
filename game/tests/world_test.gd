@@ -113,6 +113,15 @@ func _init() -> void:
 	check(not w.is_cozy_pass_active(), "cozy pass not active initially")
 	w.grant_purchase("kin_cozy_pass")
 	check(w.is_cozy_pass_active(), "cozy pass active after purchase")
+	var coins_before_restore: int = w.data.coins
+	w.grant_purchase("kin_cozy_pass")
+	check(w.data.coins == coins_before_restore, "restoring cozy pass does not re-grant 150 petals")
+	# Idempotent consumable grant with token
+	var coins_pre_token: int = w.data.coins
+	w.grant_purchase("kin_petals_small", "token_abc_123")
+	check(w.data.coins == coins_pre_token + 250, "token purchase grants petals")
+	w.grant_purchase("kin_petals_small", "token_abc_123")
+	check(w.data.coins == coins_pre_token + 250, "duplicate purchase token does not re-grant petals")
 	w.grant_purchase("kin_cottage")
 	check("kin_cottage" in w.data.get("entitlements", []), "cosmetic room set unlocks in entitlements")
 	# Walking with cozy pass yields boosted 25 petals
@@ -179,6 +188,9 @@ func _init() -> void:
 	check(w.data.pet.hunger == 100.0, "starberry restores full hunger")
 	check(w.buy_toy("toy_mouse"), "can purchase toy")
 	check("toy_mouse" in w.data.inventory, "toy added to inventory")
+	var bond_before_reequip: int = w.data.pet.bond
+	check(w.buy_toy("toy_mouse"), "can re-equip owned toy")
+	check(w.data.pet.bond == bond_before_reequip, "re-equipping toy does not award extra bond or play activity")
 
 	# Mystery box
 	var box_res := w.open_mystery_box("lucky")

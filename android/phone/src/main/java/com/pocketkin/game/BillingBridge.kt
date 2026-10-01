@@ -133,23 +133,31 @@ class BillingBridge(
 
         for (id in purchase.products.filter { it in allProducts }) {
             if (id in consumables) {
+                val token = purchase.purchaseToken
+                val prefs = GamePrefs.game(activity)
+                // Durably persist the grant intent locally before consuming
+                prefs.edit().putString("pending_grant_$token", id).apply()
+
+                // Immediately dispatch the grant to Godot so the user's currency is safely credited
+                activity.runOnUiThread {
+                    reply(kind, JSONObject()
+                        .put("ok", true)
+                        .put("verified", true)
+                        .put("product", id)
+                        .put("consumable", true)
+                        .put("purchase_token", token)
+                        .put("order_id", purchase.orderId ?: token)
+                        .put("message", grantMessage(id))
+                    )
+                }
+
                 // Must consume consumable products so they can be purchased again
                 val consumeParams = ConsumeParams.newBuilder()
-                    .setPurchaseToken(purchase.purchaseToken)
+                    .setPurchaseToken(token)
                     .build()
                 client.consumeAsync(consumeParams) { billingResult, _ ->
-                    activity.runOnUiThread {
-                        if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                            reply(kind, JSONObject()
-                                .put("ok", true)
-                                .put("verified", true)
-                                .put("product", id)
-                                .put("consumable", true)
-                                .put("message", grantMessage(id))
-                            )
-                        } else {
-                            message(kind, "Could not finalize purchase. Please contact support.")
-                        }
+                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                        prefs.edit().remove("pending_grant_$token").apply()
                     }
                 }
             } else {
@@ -169,13 +177,18 @@ class BillingBridge(
                     scope.launch {
                         try {
                             val result = cloud.verify(id, purchase.purchaseToken)
-                            reply(kind, result.put("verified", result.optBoolean("ok")).put("product", id))
+                            reply(kind, result
+                                .put("verified", result.optBoolean("ok"))
+                                .put("product", id)
+                                .put("purchase_token", purchase.purchaseToken)
+                            )
                         } catch (e: Exception) {
                             // Resilient local unlock to prevent stranding verified payers
                             reply(kind, JSONObject()
                                 .put("ok", true)
                                 .put("verified", true)
                                 .put("product", id)
+                                .put("purchase_token", purchase.purchaseToken)
                                 .put("message", "Unlocked! Syncs to cloud when connected.")
                             )
                         }
@@ -185,6 +198,7 @@ class BillingBridge(
                         .put("ok", true)
                         .put("verified", true)
                         .put("product", id)
+                        .put("purchase_token", purchase.purchaseToken)
                         .put("message", "Unlocked! Enjoy your new addition.")
                     )
                 }
@@ -192,7 +206,30 @@ class BillingBridge(
         }
     }
 
+    fun confirmGrant(token: String) {
+        if (token.isNotBlank()) {
+            GamePrefs.game(activity).edit().remove("pending_grant_$token").apply()
+        }
+    }
+
     fun restore() = ready {
+        // Recover any pending unconsumed grants stored locally
+        val prefs = GamePrefs.game(activity)
+        for ((key, prodId) in prefs.all) {
+            if (key.startsWith("pending_grant_") && prodId is String) {
+                val token = key.removePrefix("pending_grant_")
+                activity.runOnUiThread {
+                    reply("purchase", JSONObject()
+                        .put("ok", true)
+                        .put("verified", true)
+                        .put("product", prodId)
+                        .put("consumable", true)
+                        .put("purchase_token", token)
+                        .put("message", grantMessage(prodId))
+                    )
+                }
+            }
+        }
         client.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder()
                 .setProductType(BillingClient.ProductType.INAPP)

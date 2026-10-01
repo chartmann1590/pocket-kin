@@ -114,6 +114,7 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
             "privacy" -> ads.privacy()
             "purchase" -> billing.purchase(input.optString("product"))
             "restore" -> billing.restore()
+            "confirm_grant" -> billing.confirmGrant(input.optString("purchase_token"))
             "query_products" -> billing.queryProducts()
             "watch_status" -> scope.launch {
                 val nodes = runCatching { Wearable.getNodeClient(activity).connectedNodes.await() }.getOrDefault(emptyList())
