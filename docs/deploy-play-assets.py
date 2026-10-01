@@ -17,6 +17,11 @@ COPIES = {
     "store-listing/phone-3.png": "phone-3.png",
     "store-listing/phone-4.png": "phone-4.png",
     "store-listing/phone-5.png": "phone-5.png",
+    "store-listing/tablet-1.png": "tablet-1.png",
+    "store-listing/tablet-2.png": "tablet-2.png",
+    "store-listing/wear-1.png": "wear-1.png",
+    "store-listing/wear-2.png": "wear-2.png",
+    "store-listing/wear-3.png": "wear-3.png",
 }
 
 os.makedirs(DST, exist_ok=True)
