@@ -192,7 +192,6 @@ def setup_subscriptions(service):
         sub_body = {
             "packageName": PACKAGE_NAME,
             "productId": s["productId"],
-            "regionsVersion": {"version": REGIONS_VERSION},
             "listings": [{
                 "languageCode": "en-US",
                 "title": s["title"],
@@ -204,7 +203,8 @@ def setup_subscriptions(service):
                     "billingPeriodDuration": "P1M",
                     "gracePeriodDuration": "P7D",
                     "accountHoldDuration": "P30D",
-                    "prorationMode": "IMMEDIATE_WITH_TIME_PRORATION"
+                    "prorationMode": "SUBSCRIPTION_PRORATION_MODE_CHARGE_FULL_PRICE_IMMEDIATELY",
+                    "legacyCompatible": True
                 },
                 "regionalConfigs": [{
                     "regionCode": "US",

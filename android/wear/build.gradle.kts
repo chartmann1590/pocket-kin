@@ -13,7 +13,7 @@ android {
             }
         }
     }
-    defaultConfig { applicationId="com.pocketkin.game"; minSdk=30; targetSdk=36; versionCode=20004; versionName="0.2.0" }
+    defaultConfig { applicationId="com.pocketkin.game"; minSdk=30; targetSdk=36; versionCode=20005; versionName="0.2.0" }
     buildTypes {
         getByName("release") {
             val ks = file("../pocket-kin-upload.keystore")
