@@ -51,6 +51,13 @@ jobs:
       KIN_KEY_ALIAS: ${{ secrets.KIN_KEY_ALIAS || 'pocketkin' }}
       KIN_KEY_PASSWORD: ${{ secrets.KIN_KEY_PASSWORD }}
 
+      # Secret presence indicators for conditional execution
+      HAS_PLAY_KEYSTORE: ${{ secrets.PLAY_KEYSTORE_BASE64 != '' }}
+      PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+      HAS_GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 != '' }}
+      GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+      HAS_PLAY_SERVICE_ACCOUNT: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -65,16 +72,12 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: Decode Upload Keystore
-        if: ${{ secrets.PLAY_KEYSTORE_BASE64 != '' }}
-        env:
-          PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+        if: env.HAS_PLAY_KEYSTORE == 'true'
         run: |
           echo "$PLAY_KEYSTORE_BASE64" | base64 -d > android/pocket-kin-upload.keystore
 
       - name: Decode Firebase Google Services JSON
-        if: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 != '' }}
-        env:
-          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        if: env.HAS_GOOGLE_SERVICES == 'true'
         run: |
           echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 -d > android/phone/google-services.json
 
@@ -105,7 +108,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish to Google Play Store (Phone & Wear)
-        if: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+        if: env.HAS_PLAY_SERVICE_ACCOUNT == 'true'
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
