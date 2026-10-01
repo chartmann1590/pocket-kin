@@ -45,7 +45,7 @@ class AdsBridge(private val activity:Activity,private val reply:(String,JSONObje
             }
         },{ message("privacy","Privacy settings could not load. Please try again later.") })
     }
-    fun rewarded() {
+    fun rewarded(rewardType: String = "general") {
         if(loading) return
         consent {
             loading=true
@@ -53,21 +53,22 @@ class AdsBridge(private val activity:Activity,private val reply:(String,JSONObje
                 override fun onAdFailedToLoad(error:LoadAdError){loading=false;message("rewarded","No video available right now. You can keep playing.")}
                 override fun onAdLoaded(ad:RewardedAd){loading=false; val id=UUID.randomUUID().toString(); ad.show(activity) {
                     prefs.edit().putLong("last_ad",System.currentTimeMillis()).apply()
-                    reply("rewarded",JSONObject().put("earned",true).put("id",id).put("message","A little bonus! +20 petals."))
+                    reply("rewarded",JSONObject().put("earned",true).put("id",id).put("reward_type",rewardType).put("message","A little bonus! +35 petals."))
                 }}
             })
         }
     }
     fun interstitial() {
-        if(loading || !prefs.contains("age_band") || System.currentTimeMillis()-prefs.getLong("last_ad",0)<600000) return
+        if(GamePrefs.game(activity).getBoolean("cozy_pass", false)) return
+        if(loading || !prefs.contains("age_band") || System.currentTimeMillis()-prefs.getLong("last_ad",0)<120000) return
         consent {
             loading=true
             InterstitialAd.load(activity,BuildConfig.INTERSTITIAL_AD_UNIT,AdRequest.Builder().build(),object:InterstitialAdLoadCallback(){
                 override fun onAdFailedToLoad(error:LoadAdError){loading=false}
                 override fun onAdLoaded(ad:InterstitialAd){
                     loading=false
-                    // Interstitials only fire on the mini-game hub screen (gameplay prefs).
-                    if(GamePrefs.game(activity).getString("screen","")=="Play") {
+                    val screen = GamePrefs.game(activity).getString("screen", "")
+                    if (screen.isNullOrEmpty() || screen in setOf("Play", "Explore", "Home", "Shop")) {
                         ad.fullScreenContentCallback=object:FullScreenContentCallback(){override fun onAdShowedFullScreenContent(){prefs.edit().putLong("last_ad",System.currentTimeMillis()).apply();reply("interstitial",JSONObject().put("shown",true))}}
                         ad.show(activity)
                     }

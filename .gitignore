@@ -16,3 +16,6 @@ artifacts/
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+.freebuff/
+graphify-out/
+**/graphify-out/

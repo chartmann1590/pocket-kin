@@ -20,8 +20,7 @@ Pocket Kin is an original cozy virtual pet game. Hatch a creature from three sta
 - Walk Together (optional): count steps via Health Connect or on-device sensor for happiness + parcels. Fully playable without it; steps-only, no GPS.
 - Wear OS companion: glanceable pet, needs, care shortcuts, 20-sec rhythm game, walking milestones, optional heart-rate harmony (watch sensor permission), tile + complication (needs connected phone).
 - Cloud saves, family-friendly: parent gate, no chat, core care always free.
-
-Permanent cosmetic bundles only. Optional rewarded/interstitial ads never interrupt care.
+- Fair monetization: Optional Petal Bundles, Cozy Caretaker Pass (ad-free care forever + golden crown), and seasonal cosmetic bundles. All purchases and external links are strictly protected behind parent gates. Optional rewarded ads never interrupt care.
 
 ## Category / tags
 Games > Casual / Simulation; single player; offline-capable.
@@ -31,9 +30,10 @@ All-ages cartoon fantasy (mild — sick pet with compress), no violence/gambling
 Full questionnaire answers: release/CONTENT_RATING.md.
 
 ## Store contact
-- Support email: support@charleshartmann.com (support site: /support)
+- Support email: support@charleshartmann.com (support site: https://chartmann1590.github.io/pocket-kin/support.html)
 - Website: https://chartmann1590.github.io/pocket-kin/
-- Privacy policy: https://chartmann1590.github.io/pocket-kin/privacy
+- Privacy policy: https://chartmann1590.github.io/pocket-kin/privacy.html
+- Terms of service: https://chartmann1590.github.io/pocket-kin/terms.html
 
 ## What's new (0.2.0)
 First Play release: 6 species, 3 mini-games, 3 destinations, decorating + sanctuary, Walk Together, Wear OS companion + tile/complication, cloud saves.

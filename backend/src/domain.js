@@ -1,5 +1,14 @@
 "use strict";
-const PRODUCTS = new Set(["kin_cottage", "kin_moonlight", "kin_blossom"]);
+const PRODUCTS = new Set([
+  "kin_cottage",
+  "kin_moonlight",
+  "kin_blossom",
+  "kin_cozy_pass",
+  "kin_petals_small",
+  "kin_petals_medium",
+  "kin_petals_large",
+  "kin_treat_basket"
+]);
 function validateSave(value) {
   if (!value || value.schema !== 1 || typeof value.pet !== "object" || !value.settings) throw new Error("Unsupported save format");
   if (!Number.isSafeInteger(value.coins) || value.coins < 0) throw new Error("Invalid currency");

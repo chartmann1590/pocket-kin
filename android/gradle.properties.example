@@ -1,13 +1,17 @@
 # Copy to android/gradle.properties (gitignored) for release builds.
 # Never commit real values.
 
-# --- AdMob (replace the Google test defaults with production units) ---
+# --- AdMob (Configured via GitHub Secrets in CI or android/gradle.properties locally) ---
+# GitHub Secrets: ADMOB_APP_ID, BANNER_AD_UNIT, INTERSTITIAL_AD_UNIT, REWARDED_INTERSTITIAL_AD_UNIT, REWARDED_AD_UNIT
 # Application ID from AdMob > Apps > Settings > App ID.
 admobAppId=ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY
-# Rewarded video unit (game bonuses).
-rewardedAdUnit=ca-app-pub-XXXXXXXXXXXXXXXX/RRRRRRRRRR
-# Interstitial unit (every 3rd mini-game, 10-minute minimum gap).
+# Banner unit (optional bottom banner).
+bannerAdUnit=ca-app-pub-XXXXXXXXXXXXXXXX/BBBBBBBBBB
+# Interstitial unit (mini-game completion / exploration return).
 interstitialAdUnit=ca-app-pub-XXXXXXXXXXXXXXXX/IIIIIIIIII
+# Rewarded interstitial / video unit (free mystery crates, vitality spa, double rewards).
+rewardedInterstitialAdUnit=ca-app-pub-XXXXXXXXXXXXXXXX/RRRRRRRRRR
+rewardedAdUnit=ca-app-pub-XXXXXXXXXXXXXXXX/RRRRRRRRRR
 
 # --- Upload keystore (see release/PLAY_SUBMISSION.md for rotation steps) ---
 KIN_STORE_PASSWORD=
