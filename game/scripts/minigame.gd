@@ -137,7 +137,7 @@ func _build_ui() -> void:
 	top_bar.add_child(bar_layout)
 
 	var title_lbl := Label.new()
-	title_lbl.text = {"catch": "🌟 Orchard Drop 3D", "hop": "☁️ Kin Cloud Hop 3D", "match": "💎 Treasure Match 3D"}.get(kind, "Play")
+	title_lbl.text = I18n.t({"catch": "🌟 Orchard Drop 3D", "hop": "☁️ Kin Cloud Hop 3D", "match": "💎 Treasure Match 3D"}.get(kind, "Play"))
 	title_lbl.add_theme_font_size_override("font_size", 28)
 	title_lbl.add_theme_color_override("font_color", Color("3d362d"))
 	if ResourceLoader.exists("res://assets/Lora.ttf"):
@@ -169,11 +169,11 @@ func _build_ui() -> void:
 
 	# Instructions card
 	instructions = Label.new()
-	instructions.text = {
+	instructions.text = I18n.t({
 		"catch": "Slide to aim & tap to drop fruits! Catch them in the basket!",
 		"hop": "Tap Left / Right or Drag to steer! Tap 🚀 BOOST or screen to flap sky-high!",
 		"match": "Tap cards to flip in 3D & find the matching pairs!"
-	}.get(kind, "")
+	}.get(kind, ""))
 	instructions.position = Vector2(40, 145)
 	instructions.size = Vector2(640, 52)
 	instructions.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -194,14 +194,14 @@ func _build_ui() -> void:
 		info_box.add_child(info_vbox)
 
 		var h_title := Label.new()
-		h_title.text = "☁️ HOW TO HOP ☁️"
+		h_title.text = I18n.T("game.hop.howto", "☁️ HOW TO HOP ☁️")
 		h_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		h_title.add_theme_font_size_override("font_size", 26)
 		h_title.add_theme_color_override("font_color", Color("1d3557"))
 		info_vbox.add_child(h_title)
 
 		var h_desc := Label.new()
-		h_desc.text = "• Land on clouds to bounce automatically upward!\n• Tap ◀ Left / Right ▶ or DRAG screen to steer\n• Tap 🚀 BOOST (or tap screen) for a mid-air flap!\n• Pink mushroom caps give SUPER springs! 🍄\n• You have 2 Rainbow Rescue Clouds if you fall!"
+		h_desc.text = I18n.T("game.hop.tutorial", "• Land on clouds to bounce automatically upward!\n• Tap ◀ Left / Right ▶ or DRAG screen to steer\n• Tap 🚀 BOOST (or tap screen) for a mid-air flap!\n• Pink mushroom caps give SUPER springs! 🍄\n• You have 2 Rainbow Rescue Clouds if you fall!")
 		h_desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		h_desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		h_desc.add_theme_font_size_override("font_size", 19)
@@ -211,7 +211,7 @@ func _build_ui() -> void:
 
 	# Ready / Start Overlay Button
 	start_button = Button.new()
-	start_button.text = "Ready? Tap to Play! 🚀"
+	start_button.text = I18n.T("game.start", "Ready? Tap to Play! 🚀")
 	start_button.position = Vector2(160, 600)
 	start_button.size = Vector2(400, 95)
 	start_button.add_theme_stylebox_override("normal", _box_style(Color("73856b"), 28))
@@ -227,16 +227,16 @@ func _build_ui() -> void:
 		if kind == "hop":
 			hop_vel.y = 13.8
 			play_sfx("spring", 1.25)
-			hud_combo.text = "🚀 LEAP OFF! Tap 🚀 BOOST or screen to flap!"
+			hud_combo.text = I18n.T("game.leap", "🚀 LEAP OFF! Tap 🚀 BOOST or screen to flap!")
 		else:
 			play_sfx("tap")
-		instructions.text = "Go! Go! Go!"
+		instructions.text = I18n.T("game.go", "Go! Go! Go!")
 	)
 	add_child(start_button)
 
 	if kind == "hop":
 		var left_btn := Button.new()
-		left_btn.text = "◀ Left"
+		left_btn.text = I18n.T("game.left", "◀ Left")
 		left_btn.position = Vector2(24, 1060)
 		left_btn.size = Vector2(196, 95)
 		left_btn.add_theme_stylebox_override("normal", _box_style(Color(1, 1, 1, 0.82), 24, Color("b0c4de"), 3))
@@ -251,7 +251,7 @@ func _build_ui() -> void:
 		add_child(left_btn)
 
 		var boost_btn := Button.new()
-		boost_btn.text = "🚀 BOOST"
+		boost_btn.text = I18n.T("game.boost", "🚀 BOOST")
 		boost_btn.position = Vector2(236, 1060)
 		boost_btn.size = Vector2(248, 95)
 		boost_btn.add_theme_stylebox_override("normal", _box_style(Color("64b5f6"), 24, Color("1e88e5"), 3))
@@ -264,7 +264,7 @@ func _build_ui() -> void:
 		add_child(boost_btn)
 
 		var right_btn := Button.new()
-		right_btn.text = "Right ▶"
+		right_btn.text = I18n.T("game.right", "Right ▶")
 		right_btn.position = Vector2(500, 1060)
 		right_btn.size = Vector2(196, 95)
 		right_btn.add_theme_stylebox_override("normal", _box_style(Color(1, 1, 1, 0.82), 24, Color("b0c4de"), 3))
@@ -280,7 +280,7 @@ func _build_ui() -> void:
 
 	# Bottom Back Button
 	back_button = Button.new()
-	back_button.text = "← Back"
+	back_button.text = I18n.T("game.back", "← Back")
 	back_button.position = Vector2(28, 1180)
 	back_button.size = Vector2(140, 68)
 	back_button.add_theme_stylebox_override("normal", _box_style(Color("eee7da"), 20, Color("dcd3c3"), 2))
@@ -468,7 +468,7 @@ func _update_orchard_drop_3d(delta: float) -> void:
 		fever_timer -= delta
 		if fever_timer <= 0:
 			is_fever = false
-			hud_combo.text = "Fever ended!"
+			hud_combo.text = I18n.T("game.fever.end", "Fever ended!")
 		elif drop_cooldown <= 0:
 			drop_cooldown = 0.16
 			dropper_x = randf_range(-2.5, 2.5)
@@ -550,7 +550,7 @@ func _update_orchard_drop_3d(delta: float) -> void:
 				play_sfx("spring", 1.2)
 				score += 15
 				fever += 8.0
-				hud_combo.text = "💥 BUMPER BLAST! +15"
+				hud_combo.text = I18n.T("game.bumper", "💥 BUMPER BLAST! +15")
 				_check_fever()
 
 		# Catcher Basket Catch check
@@ -562,10 +562,10 @@ func _update_orchard_drop_3d(delta: float) -> void:
 				fever += 12.0
 				play_sfx("coin", 1.0 + combo * 0.08)
 				if World.data.settings.haptics: Input.vibrate_handheld(30)
-				hud_combo.text = "✨ CATCH x%d! +%d" % [combo, pts]
+				hud_combo.text = I18n.T("game.catch", "✨ CATCH x%d! +%d") % [combo, pts]
 				if b.is_clock:
 					remaining += 4.0
-					hud_combo.text = "⏱ +4 SECONDS BONUS!"
+					hud_combo.text = I18n.T("game.time.bonus", "⏱ +4 SECONDS BONUS!")
 				_check_fever()
 				# Remove ball
 				b.mesh.queue_free()
@@ -587,7 +587,7 @@ func _check_fever() -> void:
 		is_fever = true
 		fever_timer = 8.0
 		play_sfx("fever")
-		hud_combo.text = "🌟 RAINBOW FEVER ACTIVATED! 🌟"
+		hud_combo.text = I18n.T("game.fever", "🌟 RAINBOW FEVER ACTIVATED! 🌟")
 		if World.data.settings.haptics: Input.vibrate_handheld(50)
 
 # -------------------------------------------------------------
@@ -810,7 +810,7 @@ func _hop_flap() -> void:
 	hop_flap_cooldown = 0.28
 	hop_vel.y = 13.5
 	play_sfx("spring", randf_range(1.2, 1.4))
-	hud_combo.text = "☁️ FLAP BOOST! 🚀"
+	hud_combo.text = I18n.T("game.flap", "☁️ FLAP BOOST! 🚀")
 	if World.data.settings.haptics: Input.vibrate_handheld(25)
 	if is_instance_valid(hop_pet):
 		hop_pet.scale = Vector3(0.78, 1.35, 0.78)
@@ -846,7 +846,7 @@ func _update_cloud_hop_3d(delta: float) -> void:
 				if p.type == "spring":
 					hop_vel.y = 19.5 # Super Jump!
 					play_sfx("spring", 1.35)
-					hud_combo.text = "🚀 SUPER SPRING JUMP! +50"
+					hud_combo.text = I18n.T("game.spring", "🚀 SUPER SPRING JUMP! +50")
 					score += 50
 					combo += 1
 				else:
@@ -854,7 +854,7 @@ func _update_cloud_hop_3d(delta: float) -> void:
 					play_sfx("bounce", randf_range(1.1, 1.3))
 					score += 15
 					combo += 1
-					hud_combo.text = "☁️ Hop streak x%d!" % combo
+					hud_combo.text = I18n.T("game.streak", "☁️ Hop streak x%d!") % combo
 
 				if p.type == "crumbly":
 					p.broken = true
@@ -873,7 +873,7 @@ func _update_cloud_hop_3d(delta: float) -> void:
 				s.mesh.queue_free()
 				score += 30
 				play_sfx("coin", 1.4)
-				hud_combo.text = "⭐ Star Jewel! +30"
+				hud_combo.text = I18n.T("game.star", "⭐ Star Jewel! +30")
 				if World.data.settings.haptics: Input.vibrate_handheld(25)
 
 	# Update Moving platforms
@@ -887,7 +887,7 @@ func _update_cloud_hop_3d(delta: float) -> void:
 	# Camera follow
 	if hop_pos.y > hop_highest_y:
 		hop_highest_y = hop_pos.y
-		instructions.text = "Altitude: %dm" % int(hop_highest_y * 10)
+		instructions.text = I18n.T("game.altitude", "Altitude: %dm") % int(hop_highest_y * 10)
 
 		# Altitude milestones
 		var current_tier: int = int(hop_highest_y / 15.0)
@@ -895,7 +895,7 @@ func _update_cloud_hop_3d(delta: float) -> void:
 			hop_last_milestone = current_tier
 			var alt_m: int = current_tier * 150
 			score += 50
-			hud_combo.text = "🌤 ALTITUDE %dm REACHED! +50 PTS" % alt_m
+			hud_combo.text = I18n.T("game.altitude.reached", "🌤 ALTITUDE %dm REACHED! +50 PTS") % alt_m
 			play_sfx("fever", 1.2)
 			if World.data.settings.haptics: Input.vibrate_handheld(40)
 
@@ -936,7 +936,7 @@ func _update_cloud_hop_3d(delta: float) -> void:
 			hop_pos.x = 0.0
 			hop_target_x = 0.0
 			play_sfx("fever", 1.25)
-			hud_combo.text = "🌈 RESCUE CLOUD BOUNCE! (%d left) ✨" % hop_rescues_left
+			hud_combo.text = I18n.T("game.rescue", "🌈 RESCUE CLOUD BOUNCE! (%d left) ✨") % hop_rescues_left
 			if World.data.settings.haptics: Input.vibrate_handheld(45)
 		else:
 			finish()
@@ -1030,7 +1030,7 @@ func _flip_card(index: int) -> void:
 			remaining += 3.0 # Time bonus!
 			var pts := 25 * combo
 			score += pts
-			hud_combo.text = "💎 MATCH x%d! +%d PTS & +3s!" % [combo, pts]
+			hud_combo.text = I18n.T("game.match", "💎 MATCH x%d! +%d PTS & +3s!") % [combo, pts]
 			play_sfx("coin", 1.1 + combo * 0.1)
 			if World.data.settings.haptics: Input.vibrate_handheld(35)
 			spawn_sparkles(c1.btn.global_position + Vector2(100, 100))
@@ -1050,11 +1050,11 @@ func _flip_card(index: int) -> void:
 				score += clear_pts
 				remaining += 12.0
 				match_level += 1
-				hud_combo.text = "🎉 MEADOW CLEARED! +%d & +12s!" % clear_pts
+				hud_combo.text = I18n.T("game.meadow", "🎉 MEADOW CLEARED! +%d & +12s!") % clear_pts
 				await get_tree().create_timer(1.0).timeout
 				if not ended:
 					_setup_match_board()
-					instructions.text = "Meadow %d: Keep the streak alive!" % match_level
+					instructions.text = I18n.T("game.meadow.next", "Meadow %d: Keep the streak alive!") % match_level
 		else:
 			# Mismatch
 			combo = 0
@@ -1144,7 +1144,7 @@ func finish() -> void:
 	if ended: return
 	ended = true
 	play_sfx("reward")
-	instructions.text = "🎉 Awesome! Final Score: %d" % score
-	hud_combo.text = "Petals Earned: +%d 🌸" % World.game_reward(kind, score)
+	instructions.text = I18n.T("game.final", "🎉 Awesome! Final Score: %d") % score
+	hud_combo.text = I18n.T("game.petals", "Petals Earned: +%d 🌸") % World.game_reward(kind, score)
 	await get_tree().create_timer(1.4).timeout
 	finished.emit(score)

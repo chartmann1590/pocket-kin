@@ -12,6 +12,7 @@ config/icon="res://assets/launcher-final.png"
 [autoload]
 World="*res://scripts/world.gd"
 Platform="*res://scripts/platform.gd"
+I18n="*res://scripts/i18n.gd"
 
 [display]
 window/size/viewport_width=720
