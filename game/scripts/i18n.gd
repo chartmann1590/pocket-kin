@@ -89,6 +89,18 @@ func _spec_count(text: String) -> int:
 	if re.compile("%[ds]") != OK: return 0
 	return re.search_all(text).size()
 
+func _braces(text: String) -> int:
+	var re := RegEx.new()
+	if re.compile("[{}]") != OK: return 0
+	return re.search_all(text).size()
+
+## True when a translation was damaged by MT: placeholder count changed, or
+## braces added/removed (ML Kit sometimes emits a stray '}' after a token).
+func _damaged(english: String, translated: String) -> bool:
+	if _spec_count(english) > 0 and _spec_count(translated) != _spec_count(english):
+		return true
+	return _braces(translated) != _braces(english)
+
 ## Replace printf specifiers with numbered "{n}" tokens ML Kit preserves.
 func _tokenize(text: String) -> String:
 	var re := RegEx.new()
@@ -128,6 +140,7 @@ func _restore(english: String, translated: String) -> String:
 		out += found[n - 1].get_string(0)
 		last = m.get_end()
 	out += translated.substr(last)
+	if _braces(out) != _braces(english): return ""  # stray brace from MT
 	var bare := RegEx.new()
 	if bare.compile("%(?![ds%])") == OK:
 		out = bare.sub(out, "%%", true)
@@ -141,8 +154,8 @@ func T(key: String, english: String) -> String:
 	var cache: Dictionary = world.data.get("i18n", {})
 	if cache.has(english):
 		var translated := str(cache[english])
-		# Self-heal legacy entries saved before placeholder protection.
-		if _spec_count(english) > 0 and _spec_count(translated) != _spec_count(english):
+		# Self-heal entries saved before placeholder protection or damaged by MT.
+		if _damaged(english, translated):
 			cache.erase(english)
 			world.data.i18n = cache
 		else:

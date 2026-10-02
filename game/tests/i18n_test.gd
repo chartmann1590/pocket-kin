@@ -25,6 +25,9 @@ func _init() -> void:
 	check(i._restore("%d x %d", "solo {1}").is_empty(), "restore rejects missing token")
 	check(i._restore("%d x %d", "{2} y {2}").is_empty(), "restore rejects duplicated token")
 	check(i._restore("Claim +%d 🌸", "Reclamar +{5} 🌸").is_empty(), "restore rejects out-of-range token")
+	# Stray braces that ML Kit sometimes appends after a token are rejected.
+	check(i._restore("Claim +%d 🌸", "Reclamar +{1}} 🌸").is_empty(), "restore rejects stray brace")
+	check(i._restore("Home", "Ho{gar").is_empty(), "restore rejects added braces")
 	# Bare percent in the translated body is escaped for later %-formatting.
 	var esc: String = i._restore("%d petals", "50{1} de descuento")
 	check(esc == "50%d de descuento" or esc == "50%%d de descuento", "restore escapes bare percent safely, got: " + esc)
@@ -34,6 +37,12 @@ func _init() -> void:
 	check(i._spec_count("a %% b") == 0, "spec count ignores %% literal")
 	check(i._spec_count("100% happy") == 0, "bare % is not a format slot")
 	check(i._spec_count("50%% + %d") == 1, "escaped literal plus real slot")
+
+	# Damage detection used for self-heal and post-restore validation.
+	check(i._damaged("Claim +%d 🌸", "Reclamar + %d}"), "damaged detects stray brace")
+	check(i._damaged("Claim +%d 🌸", "Reclamar +{ D 🌸"), "damaged detects mangled token")
+	check(i._damaged("Home", "Hogar") == false, "damaged passes clean pair")
+	check(i._damaged("a {b} c", "x {b} y") == false, "damaged tolerates source braces")
 
 	if failures == 0:
 		print("I18n tests: PASS (0 failures)")
