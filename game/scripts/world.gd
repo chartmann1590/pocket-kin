@@ -92,7 +92,7 @@ func save(increment := true) -> void:
 	var file := FileAccess.open(SAVE + ".tmp", FileAccess.WRITE)
 	if not file:
 		save_error = true
-		notice.emit("Couldn't save. Please check your device storage.")
+		notice_msg("Couldn't save. Please check your device storage.")
 		return
 	file.store_string(JSON.stringify(data))
 	file.close()
@@ -127,7 +127,7 @@ func feed_food(index: int) -> bool:
 	var foods: Dictionary = data.pet.get("foods",{})
 	foods[str(index)]=int(foods.get(str(index),0))+1
 	data.pet.foods=foods
-	if int(foods[str(index)])==3: memory("A new favorite",data.pet.name+" really loves "+favorite_food().to_lower()+".")
+	if int(foods[str(index)])==3:			memory("A new favorite",data.pet.name+" really loves "+favorite_food().to_lower()+".")
 	save()
 	return true
 
@@ -148,8 +148,17 @@ func personality() -> String:
 	if int(activities.get("sleep",0))>=3:return "A dreamy little friend"
 	return "Curious about everything"
 
+## Null-safe I18n lookup: headless tests run World detached from the autoloads.
+func tr_text(text: String) -> String:
+	var i18n := get_node_or_null("/root/I18n")
+	return i18n.t(text) if i18n else text
+
+func notice_msg(message: String) -> void:
+	notice.emit(tr_text(message))
+
 func memory(title: String, description: String) -> void:
-	data.memories.push_front({"title":title,"body":description,"date":Time.get_date_string_from_system()})
+	# Memories are stored translated so the album reads naturally later.
+	data.memories.push_front({"title":tr_text(title),"body":tr_text(description),"date":Time.get_date_string_from_system()})
 	if data.memories.size() > 250: data.memories.resize(250)
 
 func day_key() -> String:
@@ -169,11 +178,11 @@ var last_game_reward := 0
 
 func daily_chores() -> Array:
 	return [
-		{"id": "care", "title": "💖 Snuggle & Groom", "desc": "Snuggle, feed, or wash your pet 3 times", "req": 3, "reward": 15},
-		{"id": "play", "title": "🎮 Mini-Game Master", "desc": "Play any 2 games with your companion", "req": 2, "reward": 20},
-		{"id": "explore", "title": "🌿 Wandering Explorer", "desc": "Embark on 1 wild outing", "req": 1, "reward": 15},
-		{"id": "tidy", "title": "🧹 Room Tidying & Care", "desc": "Sweep room dust or tend houseplant", "req": 1, "reward": 15},
-		{"id": "walk", "title": "👟 Stride Champion", "desc": "Reach 500+ daily steps together", "req": 500, "reward": 25}
+		{"id": "care", "title": tr_text("💖 Snuggle & Groom"), "desc": tr_text("Snuggle, feed, or wash your pet 3 times"), "req": 3, "reward": 15},
+		{"id": "play", "title": tr_text("🎮 Mini-Game Master"), "desc": tr_text("Play any 2 games with your companion"), "req": 2, "reward": 20},
+		{"id": "explore", "title": tr_text("🌿 Wandering Explorer"), "desc": tr_text("Embark on 1 wild outing"), "req": 1, "reward": 15},
+		{"id": "tidy", "title": tr_text("🧹 Room Tidying & Care"), "desc": tr_text("Sweep room dust or tend houseplant"), "req": 1, "reward": 15},
+		{"id": "walk", "title": tr_text("👟 Stride Champion"), "desc": tr_text("Reach 500+ daily steps together"), "req": 500, "reward": 25}
 	]
 
 func task_progress(kind: String) -> int:
@@ -205,7 +214,7 @@ func game_reward(kind: String, score: int) -> int:
 	return reward
 
 func explore(destination: int, choice: int) -> String:
-	if data.pet.is_empty() or destination < 0 or destination > 2 or data.lifetime_bond < [0, 20, 60][destination]: return "Grow your friendship to unlock this place."
+	if data.pet.is_empty() or destination < 0 or destination > 2 or data.lifetime_bond < [0, 20, 60][destination]: return tr_text("Grow your friendship to unlock this place.")
 	var names := [["Daisy crown", "Smooth pebble", "Four-leaf clover"], ["Amber acorn", "Fern print", "Robin feather"], ["Moon shell", "Star lily", "Silver reed"]]
 	var item: String = names[destination][posmod(choice, 3)]
 	if item not in data.discoveries:
@@ -288,7 +297,7 @@ func buy_treat(treat_id: String) -> bool:
 			data.lifetime_bond += 3
 	activity("care")
 	save()
-	notice.emit("Delightful treat! %s loved the %s!" % [data.pet.name, treat.name])
+	notice_msg("Delightful treat! %s loved the %s!" % [data.pet.name, treat.name])
 	return true
 
 func buy_toy(toy_id: String) -> bool:
@@ -311,9 +320,9 @@ func buy_toy(toy_id: String) -> bool:
 		activity("play")
 	save()
 	if is_first_purchase:
-		notice.emit("New toy placed in the room: %s!" % toy.name)
+		notice_msg("New toy placed in the room: %s!" % toy.name)
 	else:
-		notice.emit("Equipped %s in the room!" % toy.name)
+		notice_msg("Equipped %s in the room!" % toy.name)
 	return true
 
 func open_mystery_box(tier: String, is_free_ad := false) -> Dictionary:
@@ -378,15 +387,15 @@ func claim_rewarded_ad(reward_type: String) -> void:
 			var res := open_mystery_box("lucky", true)
 			if res.get("ok", false):
 				var p: Dictionary = res.get("prize", {})
-				notice.emit("🎁 Lucky Mystery Box! " + p.get("text", "+35 Petals"))
+				notice_msg("🎁 Lucky Mystery Box! " + tr_text(p.get("text", "+35 Petals")))
 		"double_game":
 			if last_game_reward > 0:
 				data.coins += last_game_reward
-				notice.emit("🎬 Double Rewards! Added +%d extra petals!" % last_game_reward)
+				notice_msg("🎬 Double Rewards! Added +%d extra petals!" % last_game_reward)
 				last_game_reward = 0
 			else:
 				data.coins += 35
-				notice.emit("🎬 Sponsor Bonus! +35 Petals added!")
+				notice_msg("🎬 Sponsor Bonus! +35 Petals added!")
 		"spa":
 			if not data.pet.is_empty():
 				data.pet.hunger = 100.0
@@ -395,10 +404,10 @@ func claim_rewarded_ad(reward_type: String) -> void:
 				data.pet.energy = 100.0
 				data.pet.ill = false
 				data.coins += 15
-				notice.emit("🫧 Super Vitality Spa! %s is fully restored & joyful!" % data.pet.name)
+				notice_msg("🫧 Super Vitality Spa! %s is fully restored & joyful!" % data.pet.name)
 		_:
 			data.coins += 35
-			notice.emit("🌸 Sponsor Bonus! +35 Petals added to your pouch!")
+			notice_msg("🌸 Sponsor Bonus! +35 Petals added to your pouch!")
 	save()
 
 func buy_equip(item: Dictionary) -> bool:
@@ -435,17 +444,17 @@ func grant_purchase(product_id: String, token: String = "") -> String:
 		"kin_petals_small":
 			data.coins += 250
 			save(true)
-			notice.emit("🌸 Handful of Petals! +250 Petals added.")
+			notice_msg("🌸 Handful of Petals! +250 Petals added.")
 			return "Added 250 petals to your pouch!"
 		"kin_petals_medium":
 			data.coins += 750
 			save(true)
-			notice.emit("🧺 Basket of Petals! +750 Petals added.")
+			notice_msg("🧺 Basket of Petals! +750 Petals added.")
 			return "Added 750 petals to your pouch!"
 		"kin_petals_large":
 			data.coins += 2000
 			save(true)
-			notice.emit("✨ Treasure Chest of Petals! +2,000 Petals added.")
+			notice_msg("✨ Treasure Chest of Petals! +2,000 Petals added.")
 			return "Added 2,000 petals to your treasure chest!"
 		"kin_treat_basket":
 			data.coins += 100
@@ -457,7 +466,7 @@ func grant_purchase(product_id: String, token: String = "") -> String:
 					foods[str(fi)] = int(foods.get(str(fi), 0)) + 5
 				data.pet.foods = foods
 			save(true)
-			notice.emit("🍓 Fruit Feast! Treats added & pet energized!")
+			notice_msg("🍓 Fruit Feast! Treats added & pet energized!")
 			return "Fruit Feast delivered! +100 petals and 5 of each fruit!"
 		"kin_cozy_pass":
 			var entitlements: Array = data.get("entitlements", [])
@@ -467,7 +476,7 @@ func grant_purchase(product_id: String, token: String = "") -> String:
 				data.entitlements = entitlements
 				data.coins += 150
 			save(true)
-			notice.emit("👑 Cozy Caretaker Pass! Interstitial ads disabled & perks active!")
+			notice_msg("👑 Cozy Caretaker Pass! Interstitial ads disabled & perks active!")
 			return "Cozy Caretaker Pass active! Enjoy ad-free care and bonus rewards!"
 		"kin_cottage", "kin_moonlight", "kin_blossom":
 			var entitlements: Array = data.get("entitlements", [])
@@ -476,7 +485,7 @@ func grant_purchase(product_id: String, token: String = "") -> String:
 				data.entitlements = entitlements
 			data.premium_equipped = product_id
 			save(true)
-			notice.emit("🏡 Storybook Collection unlocked! Decorated your sanctuary.")
+			notice_msg("🏡 Storybook Collection unlocked! Decorated your sanctuary.")
 			return "Collection unlocked and equipped!"
 		_:
 			var entitlements: Array = data.get("entitlements", [])
@@ -506,7 +515,7 @@ func steps(total: int, date: String, source: String) -> void:
 				data.pet.happiness = minf(100, data.pet.happiness + 5)
 				data.pet.bond += 2
 				data.lifetime_bond += 2
-			notice.emit("A walking parcel! +%d petals and a little more friendship." % petal_reward)
+			notice_msg("A walking parcel! +%d petals and a little more friendship." % petal_reward)
 	save()
 
 func watch_health(payload: Dictionary) -> void:
@@ -540,7 +549,7 @@ func watch_health(payload: Dictionary) -> void:
 			data.lifetime_bond += 3
 			data.coins += 10
 			memory("Heartbeat Harmony", "%s felt your calm heartbeat and curled up beside you." % data.pet.name)
-			notice.emit("Heartbeat Harmony! Your calm pulse gave %s peace (+10 petals)." % data.pet.name)
+			notice_msg("Heartbeat Harmony! Your calm pulse gave %s peace (+10 petals)." % data.pet.name)
 
 	if hydration >= 3 and not data.pet.is_empty():
 		var claim_id := "hydration:" + day_key()
@@ -549,7 +558,7 @@ func watch_health(payload: Dictionary) -> void:
 			data.pet.cleanliness = minf(100, data.pet.cleanliness + 15)
 			data.pet.energy = minf(100, data.pet.energy + 10)
 			memory("Fresh and hydrated", "%s enjoyed fresh water along with you." % data.pet.name)
-			notice.emit("Hydration shared! %s feels refreshed and glowing." % data.pet.name)
+			notice_msg("Hydration shared! %s feels refreshed and glowing." % data.pet.name)
 
 	save(false)
 	changed.emit()
@@ -564,7 +573,7 @@ func pet_stroke() -> void:
 	if count == 15:
 		memory("Sweet cuddles", "%s loves being gently stroked and purred softly." % data.pet.name)
 		data.coins += 10
-		notice.emit("Warm cuddles! +10 petals from %s." % data.pet.name)
+		notice_msg("Warm cuddles! +10 petals from %s." % data.pet.name)
 	save(true)
 	changed.emit()
 
@@ -576,7 +585,7 @@ func pop_bath_bubble() -> bool:
 		data.pet.bath_memory = true
 		memory("Bubble bath fun", "%s splashed joyfully and is squeaky clean!" % data.pet.name)
 		data.coins += 15
-		notice.emit("Squeaky clean! +15 petals.")
+		notice_msg("Squeaky clean! +15 petals.")
 	save(true)
 	changed.emit()
 	return true

@@ -21,7 +21,7 @@ android {
         applicationId = "com.pocketkin.game"
         minSdk = 28
         targetSdk = 36
-        versionCode = 10005
+        versionCode = 10006
         versionName = "0.2.0"
         val admobApp = providers.environmentVariable("ADMOB_APP_ID")
             .orElse(providers.gradleProperty("admobAppId"))
@@ -72,6 +72,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-auth:21.3.0")
     implementation("com.google.android.gms:play-services-ads:24.9.0")
     implementation("com.google.android.ump:user-messaging-platform:3.2.0")
+    implementation("com.google.mlkit:translate:17.0.3")
     implementation("com.android.billingclient:billing-ktx:8.0.0")
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation("com.google.firebase:firebase-auth")

@@ -87,6 +87,7 @@ func _ready() -> void:
 
 	World.changed.connect(refresh)
 	World.notice.connect(toast)
+	I18n.strings_updated.connect(func(): show_page_raw(page))
 	Platform.result.connect(platform_result)
 
 	music = AudioStreamPlayer.new()
@@ -100,8 +101,7 @@ func _ready() -> void:
 		music.finished.connect(func(): music.play() if World.data.settings.music else music.stop())
 		if World.data.settings.music: music.play()
 
-	show_page("Home")
-
+	show_page(I18n.T("nav.home", "Home"))
 	if Platform.native:
 		Platform.call_service("fullscreen", {"enabled": World.data.settings.get("fullscreen", false)})
 		Platform.call_deferred("_publish")
@@ -122,11 +122,18 @@ func box(color: Color, radius := 24, border := Color.TRANSPARENT, border_width :
 		style.border_width_bottom = bottom_shadow
 	return style
 
+func nav_icon(text: String) -> int:
+	var s := text.to_lower()
+	for key in ["feed", "cuddle", "wash", "sleep", "home", "play", "explore", "walk", "room", "album", "sanctuary"]:
+		if s.contains(key): return {"feed":0,"cuddle":1,"wash":2,"sleep":3,"home":4,"play":8,"explore":4,"walk":4,"room":7,"album":9,"sanctuary":4}[key]
+	return -1
+
 func label(text: String, font_size := 24, color := INK, serif := false) -> Label:
 	var node := Label.new()
 	node.text = text
 	node.add_theme_font_size_override("font_size", font_size)
 	node.add_theme_color_override("font_color", color)
+	if I18n.is_pending(text): node.modulate = Color(1, 1, 1, 0.55)
 	if serif and ResourceLoader.exists("res://assets/Lora.ttf"):
 		node.add_theme_font_override("font", load("res://assets/Lora.ttf"))
 	return node
@@ -138,11 +145,12 @@ func paragraph(text: String, parent: Node, font_size := 23) -> Label:
 	return node
 
 func button(text: String, callback: Callable, parent: Node, accent := false) -> Button:
+	var btn_icon: int = nav_icon(text)
 	var node := Button.new()
 	node.text = text
 	var icon_map := {"Feed":0,"Cuddle":1,"Wash":2,"Sleep":3,"Home":4,"Play":8,"Explore":4,"Walk":4,"Room":7,"Memory album":9,"Sanctuary":4}
-	if icon_map.has(text):
-		node.icon = Art.atlas("res://assets/ui-icons-final.png", 6, 2, icon_map[text])
+	if btn_icon >= 0:
+		node.icon = Art.atlas("res://assets/ui-icons-final.png", 6, 2, btn_icon)
 		node.expand_icon = true
 		node.add_theme_constant_override("icon_max_width", 28)
 	node.custom_minimum_size.y = 66
@@ -171,7 +179,7 @@ func card(parent: Node, color := Color.WHITE) -> VBoxContainer:
 	panel.add_child(content)
 	return content
 
-func show_page(next: String) -> void:
+func show_page_raw(next: String) -> void:
 	page = next
 	pet_image = null
 	thought_box = null
@@ -217,10 +225,13 @@ func show_page(next: String) -> void:
 	header.add_child(header_row)
 
 	var pet_name: String = World.data.pet.get("name", "Pocket Kin")
+	if World.data.pet.is_empty(): pet_name = I18n.T("app.title", "Pocket Kin")
 	var stage_name: String = str(World.data.pet.get("stage", "friend")).capitalize()
 	var brand_icon := "👑 " if World.is_cozy_pass_active() else "🐾 "
 	var brand := label(brand_icon + "%s · %s" % [pet_name, stage_name], 23, INK, true)
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	brand.clip_text = true
+	brand.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	header_row.add_child(brand)
 
 	# Golden Petals Pill Badge with Quick Shop Add Button
@@ -234,11 +245,11 @@ func show_page(next: String) -> void:
 	petal_box.add_child(coin_label)
 
 	var add_petal_btn := Button.new()
-	add_petal_btn.text = "＋"
+	add_petal_btn.text = "+"
 	add_petal_btn.custom_minimum_size = Vector2(34, 30)
 	add_petal_btn.add_theme_font_size_override("font_size", 18)
 	add_petal_btn.add_theme_stylebox_override("normal", box(Color("ffeedb"), 10, Color("e5a968"), 1))
-	add_petal_btn.pressed.connect(func(): sound(); show_page("Shop"))
+	add_petal_btn.pressed.connect(func(): sound(); show_page(I18n.T("nav.shop", "Shop")))
 	petal_box.add_child(add_petal_btn)
 
 	# Settings Button
@@ -247,7 +258,7 @@ func show_page(next: String) -> void:
 	menu.custom_minimum_size = Vector2(56, 50)
 	menu.add_theme_font_size_override("font_size", 22)
 	menu.add_theme_stylebox_override("normal", box(Color("f3ebe0"), 16, WARM_BORDER, 1, 2))
-	menu.pressed.connect(func(): sound(); show_page("Settings"))
+	menu.pressed.connect(func(): sound(); show_page(I18n.T("nav.settings", "Settings")))
 	header_row.add_child(menu)
 
 	# Scroll Container for Content
@@ -256,24 +267,48 @@ func show_page(next: String) -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	shell.add_child(scroll)
 
+	var _drag_y := [0.0]
+	var _scroll_start := [0]
+	var _is_dragging := [false]
+	scroll.gui_input.connect(func(ev: InputEvent):
+		if ev is InputEventScreenTouch:
+			if ev.pressed:
+				_is_dragging[0] = true
+				_drag_y[0] = ev.position.y
+				_scroll_start[0] = scroll.scroll_vertical
+			else:
+				_is_dragging[0] = false
+		elif ev is InputEventScreenDrag and _is_dragging[0]:
+			scroll.scroll_vertical = _scroll_start[0] - int(ev.position.y - _drag_y[0])
+		elif ev is InputEventMouseButton and ev.button_index == MOUSE_BUTTON_LEFT:
+			if ev.pressed:
+				_is_dragging[0] = true
+				_drag_y[0] = ev.position.y
+				_scroll_start[0] = scroll.scroll_vertical
+			else:
+				_is_dragging[0] = false
+		elif ev is InputEventMouseMotion and _is_dragging[0]:
+			scroll.scroll_vertical = _scroll_start[0] - int(ev.position.y - _drag_y[0])
+	)
+
 	body = VBoxContainer.new()
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.add_theme_constant_override("separation", 18)
 	scroll.add_child(body)
 
-	if World.data.pet.is_empty() and next != "Settings":
+	if World.data.pet.is_empty() and next != "Settings" and next != I18n.T("nav.settings", "Settings"):
 		adoption()
 	else:
-		match next:
-			"Home": home()
-			"Play": play_page()
-			"Explore": explore_page()
-			"Walk": walk_page()
-			"Shop": shop_page()
-			"Room": room_page()
-			"Album": album_page()
-			"Sanctuary": sanctuary_page()
-			"Settings": settings_page()
+		if next == "Home" or next == I18n.T("nav.home", "Home"): home()
+		elif next == "Play" or next == I18n.T("nav.play", "Play"): play_page()
+		elif next == "Explore" or next == I18n.T("nav.explore", "Explore"): explore_page()
+		elif next == "Walk" or next == I18n.T("nav.walk", "Walk"): walk_page()
+		elif next == "Shop" or next == I18n.T("nav.shop", "Shop"): shop_page()
+		elif next == "Room" or next == I18n.T("nav.room", "Room"): room_page()
+		elif next == "Album" or next == "Memory album": album_page()
+		elif next == "Sanctuary": sanctuary_page()
+		elif next == "Settings" or next == I18n.T("nav.settings", "Settings"): settings_page()
+		else: home()
 
 	# --- Floating Modern Bottom Navigation Dock ---
 	var nav_panel := PanelContainer.new()
@@ -284,13 +319,12 @@ func show_page(next: String) -> void:
 	nav_row.add_theme_constant_override("separation", 4)
 	nav_panel.add_child(nav_row)
 
-	var nav_items := [
-		["Home", "🏠 Home"],
-		["Play", "🎮 Play"],
-		["Explore", "🌿 Explore"],
-		["Walk", "👟 Walk"],
-		["Shop", "🛍️ Shop"],
-		["Room", "🪑 Room"]
+	var nav_items := [			[I18n.T("nav.home", "Home"), "🏠 " + I18n.T("nav.home", "Home")],
+			[I18n.T("nav.play", "Play"), "🎮 " + I18n.T("nav.play", "Play")],
+			[I18n.T("nav.explore", "Explore"), "🌿 " + I18n.T("nav.explore", "Explore")],
+			[I18n.T("nav.walk", "Walk"), "👟 " + I18n.T("nav.walk", "Walk")],
+			[I18n.T("nav.shop", "Shop"), "🛍️ " + I18n.T("nav.shop", "Shop")],
+			[I18n.T("nav.settings", "Settings"), "⚙️ " + I18n.T("nav.settings", "Settings")]
 	]
 	for item in nav_items:
 		var item_name: String = item[0]
@@ -333,8 +367,25 @@ func section(kicker: String, title: String, description := "") -> void:
 	body.add_child(label(title, 37, INK, true))
 	if not description.is_empty(): paragraph(description, body)
 
+func show_page(name: String) -> void:
+	show_page_raw(I18n.t(name))
+	_apply_pending_fade()
+
+## Strings still awaiting their ML Kit translation render slightly faded so
+## players can tell them apart from translated text.
+func _apply_pending_fade() -> void:
+	if not I18n.active(): return
+	var stack: Array = [self]
+	while not stack.is_empty():
+		var node = stack.pop_back()
+		if node is Label:
+			var text: String = str(node.text)
+			if I18n.is_pending(text) and is_equal_approx(node.modulate.a, 1.0):
+				node.modulate = Color(1, 1, 1, 0.55)
+		for child in node.get_children(): stack.append(child)
+
 func adoption() -> void:
-	section("A little beginning", "Someone is waiting for you.", "Choose a tiny egg. Grow a very big friendship.")
+	section(I18n.T("adopt.kicker", "A little beginning"), I18n.T("adopt.title", "Someone is waiting for you."), I18n.T("adopt.desc", "Choose a tiny egg. Grow a very big friendship."))
 	var hero := card(body, Color("f1ebdf"))
 	var preview := Art.image(Art.pet(selected_egg, 0), Vector2(0, 250))
 	hero.add_child(preview)
@@ -348,20 +399,49 @@ func adoption() -> void:
 	for i in range(6):
 		var species: Dictionary = World.SPECIES[i]
 		var unlocked: bool = World.data.lifetime_bond >= species.unlock
-		var text: String = species.name if unlocked else "%d bond" % species.unlock
-		var b := button(text, func(): selected_egg = i; show_page("Home"), grid, selected_egg == i)
+		var text: String = species.name if unlocked else I18n.T("adopt.bond.locked", "%d bond") % species.unlock
+		var b := button(text, func(): selected_egg = i; show_page(I18n.T("nav.home", "Home")), grid, selected_egg == i)
 		b.disabled = not unlocked
 
-	paragraph(World.SPECIES[selected_egg].kind + " · Loves " + World.SPECIES[selected_egg].favorite.to_lower(), hero)
+	paragraph(World.SPECIES[selected_egg].kind + " · " + I18n.T("adopt.loves", "Loves") + " " + World.SPECIES[selected_egg].favorite.to_lower(), hero)
 	var input := LineEdit.new()
-	input.placeholder_text = "Your pet's name"
+	input.placeholder_text = I18n.T("adopt.name.hint", "Your pet's name")
 	input.text = World.SPECIES[selected_egg].name
 	input.max_length = 20
 	input.custom_minimum_size.y = 68
 	hero.add_child(input)
 
-	button("Meet my little friend", func(): hatch(selected_egg, input.text), hero, true)
-	paragraph("A gentle home. Free food and care. A friend for every kind of day.", body, 21)
+	add_language_section(hero)
+	button(I18n.T("adopt.cta", "Meet my little friend"), func(): hatch(selected_egg, input.text), hero, true)
+	paragraph(I18n.T("adopt.footnote", "A gentle home. Free food and care. A friend for every kind of day."), body, 21)
+
+func add_language_section(parent: Node) -> void:
+	parent.add_child(label(I18n.T("lang.section", "LANGUAGE"), 17, SAGE))
+	var picker := OptionButton.new()
+	for entry in I18n.LANGUAGES:
+		picker.add_item(str(entry[1]))
+		picker.set_item_metadata(picker.item_count - 1, str(entry[0]))
+		if str(entry[0]) == I18n.lang(): picker.select(picker.item_count - 1)
+	picker.custom_minimum_size = Vector2(0, 62)
+	picker.pressed.connect(sound)
+	parent.add_child(picker)
+	paragraph(I18n.T("lang.desc", "Translates everything in the app on your device with Google. Works offline after the first download."), parent, 17)
+	picker.item_selected.connect(func(index):
+		set_app_language(str(picker.get_item_metadata(index)))
+	)
+
+func set_app_language(code: String) -> void:
+	if code == I18n.lang(): return
+	var from_code := I18n.lang()
+	I18n.reset_for_language(code)
+	if I18n.active() and Platform.native:
+		Platform.call_service("download_language", {"lang": code})
+		toast(I18n.T("lang.downloading", "Downloading %s…") % I18n.language_name(code))
+	elif not I18n.active():
+		Platform.call_service("snapshot", {"revision": World.data.revision, "pet": World.data.pet, "walking": World.data.walking, "settings": World.data.settings, "entitlements": World.data.get("entitlements", []), "coins": World.data.coins, "i18n_lang": "en", "i18n_pairs": {}, "save_path": ProjectSettings.globalize_path(World.SAVE)}) if Platform.native else null
+	show_page_raw(page)
+	_apply_pending_fade()
+	if from_code != code: World.changed.emit()
 
 func spawn_heart(parent: Node, pos: Vector2) -> void:
 	var heart := Label.new()
@@ -410,8 +490,8 @@ func bubble_bath_modal() -> void:
 		body.remove_child(child)
 		child.queue_free()
 
-	button("← Back to Room", func(): show_page("Home"), body)
-	section("Bubble Bath Time", "Splish Splash! 🫧", "Tap the iridescent warm bubbles to give %s a joyful, sparkling bath." % World.data.pet.name)
+	button(I18n.T("nav.back.room", "← Back to Room"), func(): show_page(I18n.T("nav.home", "Home")), body)
+	section(I18n.T("bath.kicker", "Bubble Bath Time"), I18n.T("bath.title", "Splish Splash! 🫧"), I18n.T("bath.desc", "Tap the iridescent warm bubbles to give %s a joyful, sparkling bath.") % World.data.pet.name)
 	var stage := card(body, Color(0.91, 0.96, 0.95, 1.0))
 	var center_pet := Art.image(Art.pet(World.data.pet.species, 4), Vector2(0, 240))
 	stage.add_child(center_pet)
@@ -440,10 +520,10 @@ func bubble_bath_modal() -> void:
 			popped[0] += 1
 		)
 
-	button("All Squeaky Clean & Sparkling! 🧼✨", func():
+	button(I18n.T("bath.done", "All Squeaky Clean & Sparkling! 🧼✨"), func():
 		play_sound("care")
-		show_page("Home")
-		toast("Fluffy, fresh, and sparkling clean!")
+		show_page(I18n.T("nav.home", "Home"))
+		toast(I18n.T("bath.toast", "Fluffy, fresh, and sparkling clean!"))
 	, body, true)
 
 func _setup_3d_toy(stage: Control) -> void:
@@ -599,7 +679,7 @@ func home() -> void:
 		play_sound("coin")
 		toast("🌤️ A flock of birds flew past the window!")
 		if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
-			thought_box.get_child(0).text = "Watching birds soar past the window! 🕊️"
+			thought_box.get_child(0).text = I18n.T("home.birds", "Watching birds soar past the window! 🕊️")
 		for bi in range(3):
 			var bird := Label.new()
 			bird.text = "🕊️"
@@ -630,8 +710,8 @@ func home() -> void:
 		if is_instance_valid(coin_label):
 			coin_label.text = "🌸 %d" % World.data.coins
 		if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
-			thought_box.get_child(0).text = "Sniffing the fresh mint leaves! 🌿"
-		toast("🌿 You tended the houseplant! Found +1 🌸 petal!")
+			thought_box.get_child(0).text = I18n.T("home.plant", "Sniffing the fresh mint leaves! 🌿")
+		toast(I18n.T("home.plant.toast", "🌿 You tended the houseplant! Found +1 🌸 petal!"))
 	)
 	stage.add_child(plant_btn)
 
@@ -647,7 +727,7 @@ func home() -> void:
 		if is_instance_valid(lamp_glow_overlay):
 			lamp_glow_overlay.visible = lamp_lit
 		if World.data.settings.haptics: Input.vibrate_handheld(20)
-		toast("💡 Lamp switched on! Cozy amber glow." if lamp_lit else "💡 Lamp switched off.")
+		toast(I18n.T("home.lamp.on", "💡 Lamp switched on! Cozy amber glow.") if lamp_lit else I18n.T("home.lamp.off", "💡 Lamp switched off."))
 	)
 	stage.add_child(lamp_btn)
 
@@ -672,7 +752,7 @@ func home() -> void:
 				if not World.data.pet.is_empty():
 					World.data.pet.cleanliness = minf(100.0, World.data.pet.cleanliness + 15.0)
 				World.save(true)
-				toast("✨ Room swept clean! +8 petals and a fresh room!")
+				toast(I18n.T("home.dust.toast", "✨ Room swept clean! +8 petals and a fresh room!"))
 				play_sound("reward")
 				if is_instance_valid(coin_label): coin_label.text = "🌸 %d" % World.data.coins
 		)
@@ -690,8 +770,8 @@ func home() -> void:
 		World.data.pet.happiness = minf(100.0, World.data.pet.happiness + 3.0)
 		spawn_sparkles_2d(cushion_btn.position + Vector2(65, 50))
 		if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
-			thought_box.get_child(0).text = "Dancing to cozy room tunes! 🎵"
-		toast("🎶 Cozy melody plays! %s is doing a joyful dance!" % World.data.pet.name)
+			thought_box.get_child(0).text = I18n.T("home.dance", "Dancing to cozy room tunes! 🎵")
+		toast(I18n.T("home.dance.toast", "🎶 Cozy melody plays! %s is doing a joyful dance!") % World.data.pet.name)
 	)
 	stage.add_child(cushion_btn)
 
@@ -701,12 +781,12 @@ func home() -> void:
 	thought_box.position = Vector2(170, 44)
 	thought_box.custom_minimum_size = Vector2(320, 42)
 	var thought_text := Label.new()
-	var thought_msg := "Feeling super snuggly! 💕"
-	if pet.get("sleeping", false): thought_msg = "Dreaming of sweet peaches 🍑"
-	elif pet.get("ill", false): thought_msg = "Needs a gentle cuddle 🩹"
-	elif pet.get("hunger", 80) < 40: thought_msg = "Tummy is rumbling! 🍎"
-	elif pet.get("cleanliness", 80) < 40: thought_msg = "Ready for bubble bath! 🫧"
-	elif pet.get("happiness", 80) > 85: thought_msg = "Bouncing with pure joy! ✨"
+	var thought_msg := I18n.T("mood.snuggly", "Feeling super snuggly! 💕")
+	if pet.get("sleeping", false): thought_msg = I18n.T("mood.dreaming", "Dreaming of sweet peaches 🍑")
+	elif pet.get("ill", false): thought_msg = I18n.T("mood.cuddle", "Needs a gentle cuddle 🩹")
+	elif pet.get("hunger", 80) < 40: thought_msg = I18n.T("mood.hungry", "Tummy is rumbling! 🍎")
+	elif pet.get("cleanliness", 80) < 40: thought_msg = I18n.T("mood.bath", "Ready for bubble bath! 🫧")
+	elif pet.get("happiness", 80) > 85: thought_msg = I18n.T("mood.joy", "Bouncing with pure joy! ✨")
 	thought_text.text = thought_msg
 	thought_text.add_theme_font_size_override("font_size", 19)
 	thought_text.add_theme_color_override("font_color", INK)
@@ -756,8 +836,8 @@ func home() -> void:
 
 	# 3D Toy Selector / Toggle Button on Stage
 	var toy_btn := Button.new()
-	var toy_labels := ["🎾 Bouncy Ball", "🧶 Yarn Ball", "🦆 Squeaky Duck"]
-	toy_btn.text = toy_labels[toy_type] if toy_active else "🎾 3D Toy"
+	var toy_labels := [I18n.T("toy.ball", "🎾 Bouncy Ball"), I18n.T("toy.yarn", "🧶 Yarn Ball"), I18n.T("toy.duck", "🦆 Squeaky Duck")]
+	toy_btn.text = toy_labels[toy_type] if toy_active else I18n.T("toy.3d", "🎾 3D Toy")
 	toy_btn.position = Vector2(20, 18)
 	toy_btn.custom_minimum_size = Vector2(152, 48)
 	toy_btn.add_theme_font_size_override("font_size", 18)
@@ -768,7 +848,7 @@ func home() -> void:
 			toy_type = 0
 			_setup_3d_toy(stage)
 			toy_btn.text = toy_labels[toy_type]
-			toast("🎾 %s dropped in the room! Flick to throw!" % toy_labels[toy_type])
+			toast(I18n.T("toy.dropped", "🎾 %s dropped in the room! Flick to throw!") % toy_labels[toy_type])
 			play_sound("bounce")
 			pet_roam_state = "chase_toy"
 		else:
@@ -780,9 +860,9 @@ func home() -> void:
 					toy_vp_container.queue_free()
 				toy_vp_container = null
 				toy_ball = null
-				toy_btn.text = "🎾 3D Toy"
+				toy_btn.text = I18n.T("toy.3d", "🎾 3D Toy")
 				pet_roam_state = "idle"
-				toast("Toy put away in the toybox.")
+				toast(I18n.T("toy.away", "Toy put away in the toybox."))
 			else:
 				toy_btn.text = toy_labels[toy_type]
 				_create_toy_mesh()
@@ -790,7 +870,7 @@ func home() -> void:
 				toy_vel = Vector3(randf_range(-2.5, 2.5), 4.2, 0)
 				play_sound("bounce")
 				pet_roam_state = "chase_toy"
-				toast("Switched to %s! %s is chasing it!" % [toy_labels[toy_type], World.data.pet.name])
+				toast(I18n.T("toy.switched", "Switched to %s! %s is chasing it!") % [toy_labels[toy_type], World.data.pet.name])
 	)
 	stage.add_child(toy_btn)
 
@@ -812,10 +892,10 @@ func home() -> void:
 	# --- Vibrant Needs Dashboard (4 colorful pill cards) ---
 	var meters := row(body, 8)
 	var meter_info := {
-		"hunger": {"name": "🍗 Fed", "color": Color("ff7043"), "bg": Color("fff3e0")},
-		"happiness": {"name": "💖 Joy", "color": Color("ec407a"), "bg": Color("fce4ec")},
-		"cleanliness": {"name": "🫧 Clean", "color": Color("26a69a"), "bg": Color("e0f2f1")},
-		"energy": {"name": "⚡ Rest", "color": Color("ffa726"), "bg": Color("fff8e1")}
+		"hunger": {"name": I18n.T("stat.fed", "🍗 Fed"), "color": Color("ff7043"), "bg": Color("fff3e0")},
+		"happiness": {"name": I18n.T("stat.joy", "💖 Joy"), "color": Color("ec407a"), "bg": Color("fce4ec")},
+		"cleanliness": {"name": I18n.T("stat.clean", "🫧 Clean"), "color": Color("26a69a"), "bg": Color("e0f2f1")},
+		"energy": {"name": I18n.T("stat.rest", "⚡ Rest"), "color": Color("ffa726"), "bg": Color("fff8e1")}
 	}
 	for key in ["hunger", "happiness", "cleanliness", "energy"]:
 		var info = meter_info[key]
@@ -839,10 +919,10 @@ func home() -> void:
 	# --- Chunky Tactile Action Buttons ---
 	var actions := row(body, 8)
 	var action_configs := [
-		["Feed", "🍎 Feed", Color("fdf0ed"), Color("ff7043"), func(): feed_menu()],
-		["Cuddle", "💖 Cuddle", Color("fdf0f4"), Color("ec407a"), func(): do_care("love")],
-		["Bath", "🫧 Bath", Color("edf7f6"), Color("26a69a"), func(): bubble_bath_modal()],
-		["Sleep", "💤 Sleep", Color("f3f0fd"), Color("7e57c2"), func(): do_care("sleep")]
+		["feed", I18n.T("act.feed", "🍎 Feed"), Color("fdf0ed"), Color("ff7043"), func(): feed_menu()],
+		["love", I18n.T("act.cuddle", "💖 Cuddle"), Color("fdf0f4"), Color("ec407a"), func(): do_care("love")],
+		["bath", I18n.T("act.bath", "🫧 Bath"), Color("edf7f6"), Color("26a69a"), func(): bubble_bath_modal()],
+		["sleep", I18n.T("act.sleep", "💤 Sleep"), Color("f3f0fd"), Color("7e57c2"), func(): do_care("sleep")]
 	]
 	for act in action_configs:
 		var act_btn := Button.new()
@@ -859,13 +939,13 @@ func home() -> void:
 		actions.add_child(act_btn)
 
 	if pet.ill:
-		button("Feeling poorly · give free treatment 🩹", func(): do_care("treat"), body, true)
+		button(I18n.T("act.treat", "Feeling poorly · give free treatment 🩹"), func(): do_care("treat"), body, true)
 
 	# --- Daily Care Chores & Tasks (Effort-based rewards) ---
 	var chores_card := card(body, Color("f9fcf8"))
-	chores_card.add_child(label("DAILY CARE CHORES", 17, SAGE))
+	chores_card.add_child(label(I18n.T("chores.kicker", "DAILY CARE CHORES"), 17, SAGE))
 	var ch_header := row(chores_card)
-	ch_header.add_child(label("Earn Daily Petals Through Care", 26, INK, true))
+	ch_header.add_child(label(I18n.T("chores.title", "Earn Daily Petals Through Care"), 26, INK, true))
 
 	for chore in World.daily_chores():
 		var ch_row := card(chores_card, Color("ffffff"))
@@ -876,18 +956,18 @@ func home() -> void:
 
 		var prog: int = World.task_progress(chore.id)
 		var is_done: bool = prog >= chore.req
-		var id := "task:" + World.day_key() + ":" + chore.id
+		var id: String = "task:" + World.day_key() + ":" + str(chore.id)
 		var is_claimed: bool = id in World.data.claims
 
 		c_info.add_child(label(chore.title, 20, INK, true))
 		c_info.add_child(label("%s (%d/%d)" % [chore.desc, mini(prog, chore.req), chore.req], 17, MUTED))
 
 		if is_claimed:
-			var done_lbl := label("✓ Claimed (+%d 🌸)" % chore.reward, 18, SAGE)
+			var done_lbl := label(I18n.T("claim.claimed", "✓ Claimed (+%d 🌸)") % chore.reward, 18, SAGE)
 			cr.add_child(done_lbl)
 		elif is_done:
 			var claim_btn := Button.new()
-			claim_btn.text = "Claim +%d 🌸" % chore.reward
+			claim_btn.text = I18n.T("claim.button", "Claim +%d 🌸") % chore.reward
 			claim_btn.custom_minimum_size = Vector2(140, 48)
 			claim_btn.add_theme_font_size_override("font_size", 18)
 			claim_btn.add_theme_stylebox_override("normal", box(Color("fdf0ed"), 14, Color("ff7043"), 2, 2))
@@ -895,8 +975,8 @@ func home() -> void:
 			claim_btn.pressed.connect(func():
 				if World.claim_task(chore.id, chore.req, chore.reward):
 					play_sound("reward")
-					toast("Claimed +%d petals for %s!" % [chore.reward, chore.title])
-					show_page("Home")
+					toast(I18n.T("claim.toast", "Claimed +%d petals for %s!") % [chore.reward, chore.title])
+					show_page(I18n.T("nav.home", "Home"))
 			)
 			cr.add_child(claim_btn)
 		else:
@@ -904,15 +984,15 @@ func home() -> void:
 			cr.add_child(inprog_lbl)
 
 	var note := card(body, Color("edf2e8"))
-	note.add_child(label("Little things, together", 27, INK, true))
+	note.add_child(label(I18n.T("home.note.title", "Little things, together"), 27, INK, true))
 	paragraph("%s loves %s. %s and always happy to be with you." % [pet.name, World.favorite_food().to_lower(), World.personality()], note, 22)
 	if pet.bond >= 30:
-		button("Show me a little trick 🌟", perform_trick, note)
-	button("Today's little wishes   →", func(): tasks_page(), note)
+		button(I18n.T("home.trick", "Show me a little trick 🌟"), perform_trick, note)
+	button(I18n.T("home.wishes", "Today's little wishes   →"), func(): tasks_page(), note)
 
 	var links := row(body)
-	button("Memory album", func(): show_page("Album"), links)
-	button("Sanctuary", func(): show_page("Sanctuary"), links)
+	button(I18n.T("nav.album", "Memory album"), func(): show_page(I18n.T("nav.album", "Album")), links)
+	button(I18n.T("nav.sanctuary", "Sanctuary"), func(): show_page(I18n.T("nav.sanctuary", "Sanctuary")), links)
 
 func pose() -> int:
 	var p: Dictionary = World.data.pet
@@ -933,7 +1013,7 @@ func hatch(species: int, pet_name: String) -> void:
 	egg.pivot_offset = egg.size / 2
 	veil.add_child(egg)
 
-	var text := label("A tiny crack. A little wiggle…", 29, INK, true)
+	var text := label(I18n.T("hatch.waiting", "A tiny crack. A little wiggle…"), 29, INK, true)
 	text.position = Vector2(110, 790)
 	veil.add_child(text)
 
@@ -948,11 +1028,11 @@ func hatch(species: int, pet_name: String) -> void:
 	World.adopt(species, pet_name)
 	egg.rotation = 0
 	egg.texture = Art.pet(species, 1)
-	text.text = "Hello, " + World.data.pet.name + "."
+	text.text = I18n.T("hatch.hello", "Hello, %s.") % World.data.pet.name
 	play_sound("hatch")
 	await get_tree().create_timer(1.5).timeout
-	show_page("Home")
-	toast("Your story together starts here.")
+	show_page(I18n.T("nav.home", "Home"))
+	toast(I18n.T("hatch.toast", "Your story together starts here."))
 
 func feed_menu() -> void:
 	show_page("Home")
@@ -960,8 +1040,8 @@ func feed_menu() -> void:
 		body.remove_child(child)
 		child.queue_free()
 
-	button("← Back to Room", func(): show_page("Home"), body)
-	section("Something tasty", "A little picnic 🍎", "Fresh fruit, always free. Discover what your companion loves.")
+	button(I18n.T("nav.back.room", "← Back to Room"), func(): show_page(I18n.T("nav.home", "Home")), body)
+	section(I18n.T("feed.kicker", "Something tasty"), I18n.T("feed.title", "A little picnic 🍎"), I18n.T("feed.desc", "Fresh fruit, always free. Discover what your companion loves."))
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 12)
@@ -974,23 +1054,23 @@ func feed_menu() -> void:
 		content.add_child(Art.image(Art.atlas("res://assets/objects-final.png", 6, 4, i), Vector2(220, 130)))
 		var fruit_name: String = ["Peaches", "Berries", "Pears", "Apples", "Melon", "Plums"][i]
 		var btn_row := row(content, 6)
-		button("Eat " + fruit_name, func():
+		button(I18n.T("feed.eat", "Eat %s") % fruit_name, func():
 			if World.feed_food(i):
-				show_page("Home")
+				show_page(I18n.T("nav.home", "Home"))
 				play_sound("munch")
-				toast("Munch munch! %s loved the %s!" % [World.data.pet.name, fruit_name.to_lower()])
-			else: toast("Let's finish this bite first.")
+				toast(I18n.T("feed.eat.toast", "Munch munch! %s loved the %s!") % [World.data.pet.name, fruit_name.to_lower()])
+			else: toast(I18n.T("feed.busy", "Let's finish this bite first."))
 		, btn_row, true)
-		button("Toss 🎯", func():
+		button(I18n.T("feed.toss", "Toss 🎯"), func():
 			if World.toss_fruit(i):
-				show_page("Home")
+				show_page(I18n.T("nav.home", "Home"))
 				play_sound("munch")
 				if World.data.settings.haptics: Input.vibrate_handheld(30)
-				toast("Chomp! %s leaped and caught the %s! 🌟" % [World.data.pet.name, fruit_name.to_lower()])
-			else: toast("Let's finish this bite first.")
+				toast(I18n.T("feed.toss.toast", "Chomp! %s leaped and caught the %s! 🌟") % [World.data.pet.name, fruit_name.to_lower()])
+			else: toast(I18n.T("feed.busy", "Let's finish this bite first."))
 		, btn_row, false)
 
-	button("← Back to Room", func(): show_page("Home"), body)
+	button(I18n.T("nav.back.room", "← Back to Room"), func(): show_page(I18n.T("nav.home", "Home")), body)
 
 func perform_trick() -> void:
 	if not is_instance_valid(pet_image): return
@@ -1002,12 +1082,12 @@ func perform_trick() -> void:
 		tween.tween_property(pet_image, "rotation", angle, 0.8)
 		tween.tween_property(pet_image, "rotation", 0.0, 0.3)
 		await tween.finished
-	var trick: String = "A happy spin" if World.data.pet.bond >= 75 else "A little wave"
+	var trick: String = I18n.T("trick.spin", "A happy spin") if World.data.pet.bond >= 75 else I18n.T("trick.wave", "A little wave")
 	if not World.data.pet.get("trick_memory", false):
-		World.memory("Our first little trick", World.data.pet.name + " learned to wave just for you.")
+		World.memory(I18n.T("mem.trick.title", "Our first little trick"), I18n.T("mem.trick.body", "%s learned to wave just for you.") % World.data.pet.name)
 		World.data.pet.trick_memory = true
 		World.save()
-	toast(trick + ", just for you.")
+	toast(I18n.T("trick.toast", "%s, just for you.") % trick)
 
 func do_care(action: String) -> void:
 	if World.care(action):
@@ -1015,14 +1095,14 @@ func do_care(action: String) -> void:
 		if is_instance_valid(pet_image) and not World.data.pet.sleeping:
 			pet_image.texture = Art.pet(World.data.pet.species, 4)
 			get_tree().create_timer(2).timeout.connect(refresh)
-		toast({
+		toast(I18n.t({
 			"feed": "A full tummy and a happy little heart.",
 			"love": "Your favorite place is together.",
 			"clean": "Fresh, fluffy, and ready for the day.",
 			"sleep": "A little rest works wonders.",
 			"treat": "Feeling better. Thank you for looking after me."
-		}[action])
-		if action == "treat": show_page("Home")
+		}[action]))
+		if action == "treat": show_page(I18n.T("nav.home", "Home"))
 		if World.data.settings.haptics: Input.vibrate_handheld(35)
 		if World.task_progress("care") == 1: Platform.call_service("care_complete", World.data.settings)
 
@@ -1035,7 +1115,7 @@ func refresh() -> void:
 			var val: int = clampi(int(World.data.pet[key]), 0, 100)
 			needs[key].value = val
 			if need_labels.has(key) and is_instance_valid(need_labels[key]):
-				var icon_name: String = str({"hunger":"🍗 Fed","happiness":"💖 Joy","cleanliness":"🫧 Clean","energy":"⚡ Rest"}.get(key, ""))
+				var icon_name: String = str({"hunger":I18n.T("stat.fed", "🍗 Fed"),"happiness":I18n.T("stat.joy", "💖 Joy"),"cleanliness":I18n.T("stat.clean", "🫧 Clean"),"energy":I18n.T("stat.rest", "⚡ Rest")}.get(key, ""))
 				var note: String = " ⚠️" if val < 25 else ""
 				need_labels[key].text = "%s %d%%%s" % [icon_name, val, note]
 	if is_instance_valid(pet_image):
@@ -1044,7 +1124,7 @@ func refresh() -> void:
 		mood_label.text = "%s  ·  Friendship %d  ·  %s" % [
 			str(World.data.pet.stage).capitalize(),
 			World.data.pet.bond,
-			"Dreaming 💤" if World.data.pet.sleeping else ("Needs a little care 🩹" if World.data.pet.ill else "Happy to see you ✨")
+			(I18n.T("mood.dreaming.short", "Dreaming 💤") if World.data.pet.sleeping else (I18n.T("mood.needs.care", "Needs a little care 🩹") if World.data.pet.ill else I18n.T("mood.happy.see", "Happy to see you ✨")))
 		]
 
 func tasks_page() -> void:
@@ -1053,7 +1133,7 @@ func tasks_page() -> void:
 		body.remove_child(child)
 		child.queue_free()
 
-	section("A little every day", "Today's Care Chores", "Complete daily care tasks with your companion to earn generous Petals!")
+	section(I18n.T("tasks.kicker", "A little every day"), I18n.T("tasks.title", "Today's Care Chores"), I18n.T("tasks.desc", "Complete daily care tasks with your companion to earn generous Petals!"))
 	for chore in World.daily_chores():
 		var content := card(body)
 		content.add_child(label(chore.title, 26, INK, true))
@@ -1061,7 +1141,7 @@ func tasks_page() -> void:
 		paragraph("%s — %d / %d complete" % [chore.desc, mini(prog, chore.req), chore.req], content)
 		var claimed: bool = "task:" + World.day_key() + ":" + chore.id in World.data.claims
 		var is_done: bool = prog >= chore.req
-		var b := button("✓ Collected (+%d 🌸)" % chore.reward if claimed else "Collect %d petals" % chore.reward, func():
+		var b := button((I18n.T("claim.collected", "✓ Collected (+%d 🌸)") % chore.reward) if claimed else (I18n.T("claim.collect", "Collect %d petals") % chore.reward), func():
 			if World.claim_task(chore.id, chore.req, chore.reward):
 				play_sound("reward")
 				tasks_page()
@@ -1070,7 +1150,7 @@ func tasks_page() -> void:
 
 # --- REVAMPED PLAY PAGE SHOWCASING 3D ARCADE MINIGAMES ---
 func play_page() -> void:
-	section("Arcade & Adventures", "Play, laugh, repeat.", "Addictive 3D arcade games! Happy hearts and bonus petals.")
+	section(I18n.T("play.kicker", "Arcade & Adventures"), I18n.T("play.title", "Play, laugh, repeat."), I18n.T("play.desc", "Addictive 3D arcade games! Happy hearts and bonus petals."))
 	var games_meta := [
 		["catch", "🌟 Orchard Drop 3D", "3D PACHINKO ARCADE", "Aim, drop & bounce fruits through 3D pegs, bumpers, and catch combos into the moving basket! Trigger Rainbow Fever for jackpot cascades!", Color("fdf4e7"), Color("e28743")],
 		["hop", "☁️ Kin Sky Hop 3D", "3D CLOUD HOPPER", "Bounce your companion across floating 3D clouds, super mushroom springboards, and soaring star platforms! How high can you climb?", Color("edf7fd"), Color("3a86c8")],
@@ -1135,13 +1215,13 @@ func _show_game_over_dialog(reward: int, score: int) -> void:
 	m_box.add_theme_constant_override("separation", 14)
 	modal.add_child(m_box)
 
-	m_box.add_child(label("GAME COMPLETE! 🌟", 20, SAGE, true))
-	m_box.add_child(label("Score: %d points" % score, 32, INK, true))
-	m_box.add_child(label("Earned: +%d Petals 🌸" % reward, 26, Color("8f6534"), true))
-	paragraph("Double your petals with a quick sponsor video?", m_box, 19)
+	m_box.add_child(label(I18n.T("over.kicker", "GAME COMPLETE! 🌟"), 20, SAGE, true))
+	m_box.add_child(label(I18n.T("over.score", "Score: %d points") % score, 32, INK, true))
+	m_box.add_child(label(I18n.T("over.earned", "Earned: +%d Petals 🌸") % reward, 26, Color("8f6534"), true))
+	paragraph(I18n.T("over.double.prompt", "Double your petals with a quick sponsor video?"), m_box, 19)
 
 	var btn_double := Button.new()
-	btn_double.text = "🎬 Double to +%d Petals!" % (reward * 2)
+	btn_double.text = I18n.T("over.double", "🎬 Double to +%d Petals!") % (reward * 2)
 	btn_double.custom_minimum_size.y = 66
 	btn_double.add_theme_font_size_override("font_size", 20)
 	btn_double.add_theme_stylebox_override("normal", box(Color("fdf0ed"), 18, Color("ff7043"), 2, 3))
@@ -1153,7 +1233,7 @@ func _show_game_over_dialog(reward: int, score: int) -> void:
 	m_box.add_child(btn_double)
 
 	var btn_cont := Button.new()
-	btn_cont.text = "Collect +%d & Continue" % reward
+	btn_cont.text = I18n.T("over.collect", "Collect +%d & Continue") % reward
 	btn_cont.custom_minimum_size.y = 58
 	btn_cont.add_theme_font_size_override("font_size", 19)
 	btn_cont.add_theme_stylebox_override("normal", box(Color("f3ebe0"), 16, WARM_BORDER, 1))
@@ -1166,7 +1246,7 @@ func _show_game_over_dialog(reward: int, score: int) -> void:
 	m_box.add_child(btn_cont)
 
 func explore_page() -> void:
-	section("A world of little wonders", "Let's wander.", "Follow your curiosity. Bring a little treasure home.")
+	section(I18n.T("explore.kicker", "A world of little wonders"), I18n.T("explore.title", "Let's wander."), I18n.T("explore.desc", "Follow your curiosity. Bring a little treasure home."))
 	var names := ["Daisy meadow", "Whispering woods", "Moonlit pond"]
 	var files := ["meadow", "woodland", "pond"]
 	for i in range(3):
@@ -1175,56 +1255,56 @@ func explore_page() -> void:
 			content.add_child(Art.image(load("res://assets/" + files[i] + ".png"), Vector2(0, 160)))
 		content.add_child(label(names[i], 28, INK, true))
 		var locked: bool = World.data.lifetime_bond < [0, 20, 60][i]
-		var b := button("Unlocks at %d friendship" % [0, 20, 60][i] if locked else "Take a little trip   →", func(): outing(i), content, true)
+		var b := button((I18n.T("explore.locked", "Unlocks at %d friendship") % [0, 20, 60][i]) if locked else I18n.T("explore.go", "Take a little trip   →"), func(): outing(i), content, true)
 		b.disabled = locked
 
 func outing(destination: int) -> void:
 	for child in body.get_children():
 		body.remove_child(child)
 		child.queue_free()
-	section("Follow a little feeling", "Where shall we look?", "Choose a place to explore together.")
+	section(I18n.T("outing.kicker", "Follow a little feeling"), I18n.T("outing.title", "Where shall we look?"), I18n.T("outing.desc", "Choose a place to explore together."))
 	var file: String = ["meadow", "woodland", "pond"][destination]
 	if ResourceLoader.exists("res://assets/" + file + ".png"):
 		body.add_child(Art.image(load("res://assets/" + file + ".png"), Vector2(0, 350)))
 	for i in range(3):
 		button(["Among the flowers", "Beside the path", "Under a little leaf"][i], func():
 			if Time.get_unix_time_from_system() - last_explore < 15:
-				toast("Let's enjoy this little moment first.")
+				toast(I18n.T("outing.busy", "Let's enjoy this little moment first."))
 				return
 			last_explore = Time.get_unix_time_from_system()
 			var found := World.explore(destination, i)
-			show_page("Explore")
-			toast("Found a %s! +8 petals" % found.to_lower())
+			show_page(I18n.T("nav.explore", "Explore"))
+			toast(I18n.T("outing.found", "Found a %s! +8 petals") % found.to_lower())
 			if not World.is_cozy_pass_active() and Time.get_unix_time_from_system() - World.data.ad.last >= 120:
 				Platform.call_service("interstitial")
 		, body, true)
 
 func walk_page() -> void:
-	section("Every step, together", "Walk & Health Expedition", "Your steps and watch health give your pet energy and unlock joyful parcels.")
+	section(I18n.T("walk.kicker", "Every step, together"), I18n.T("walk.title", "Walk & Health Expedition"), I18n.T("walk.desc", "Your steps and watch health give your pet energy and unlock joyful parcels."))
 	var content := card(body, Color("edf2e8"))
 	content.add_child(Art.image(Art.pet(World.data.pet.species, 4), Vector2(0, 190)))
-	paragraph("Pocket Kin counts steps for walking milestones, and a paired watch can share its step count and heart rate for the mood bonus. Health readings stay on your devices, are never uploaded, never used for ads, and you can revoke them anytime in Health Connect or your watch settings.", content, 19)
+	paragraph(I18n.T("walk.privacy", "Pocket Kin counts steps for walking milestones, and a paired watch can share its step count and heart rate for the mood bonus. Health readings stay on your devices, are never uploaded, never used for ads, and you can revoke them anytime in Health Connect or your watch settings."), content, 19)
 
 	var total_steps: int = int(World.data.walking.get("steps", 0))
-	content.add_child(label("%d steps today" % total_steps, 43, INK, true))
+	content.add_child(label(I18n.T("walk.steps.today", "%d steps today") % total_steps, 43, INK, true))
 
 	var watch_info: Dictionary = World.data.walking.get("watch", {})
 	if not watch_info.is_empty():
 		var sync_row := row(content, 8)
-		var sync_badge := label("🟢 Wear Companion Synced", 19, Color("2e7d32"))
+		var sync_badge := label(I18n.T("walk.synced", "🟢 Wear Companion Synced"), 19, Color("2e7d32"))
 		sync_row.add_child(sync_badge)
 
 		var hr: int = int(watch_info.get("heart_rate", 74))
-		var hr_text := "❤️ %d BPM (from your watch, stays on this device) · %s" % [hr, "Serene Harmony (+Friendship)" if hr in range(60, 83) else "Lively Pulse"]
+		var hr_text := I18n.T("walk.hr", "❤️ %d BPM (from your watch, stays on this device) · %s") % [hr, I18n.T("walk.serene", "Serene Harmony (+Friendship)") if hr in range(60, 83) else I18n.T("walk.lively", "Lively Pulse")]
 		paragraph(hr_text, content, 21)
 
 		var hydration: int = int(watch_info.get("hydration", 0))
-		var hydro_text := "💧 Hydration: %d / 8 cups water logged" % hydration
+		var hydro_text := I18n.T("walk.hydration", "💧 Hydration: %d / 8 cups water logged") % hydration
 		paragraph(hydro_text, content, 20)
 
 		var cals: int = int(watch_info.get("calories", 0))
 		var mins: int = int(watch_info.get("active_minutes", 0))
-		paragraph("🔥 Active energy: %d kcal · %d active min" % [cals, mins], content, 19)
+		paragraph(I18n.T("walk.active", "🔥 Active energy: %d kcal · %d active min") % [cals, mins], content, 19)
 	else:
 		paragraph(World.data.walking.status, content)
 
@@ -1243,38 +1323,38 @@ func walk_page() -> void:
 		var m_row := row(milestone_card, 10)
 		var claimed: bool = "walk:" + World.day_key() + ":" + str(m[0]) in World.data.claims
 		var reached: bool = total_steps >= m[0]
-		var status_str := "Claimed ✦" if claimed else ("Ready to open! 🎁" if reached else "%d steps needed" % (m[0] - total_steps))
-		var item_label := label("%s (%s): %s" % [m[1], m[2], status_str], 20, Color("4a7043") if reached else MUTED)
+		var status_str := I18n.T("walk.claimed", "Claimed ✦") if claimed else (I18n.T("walk.ready", "Ready to open! 🎁") if reached else I18n.T("walk.needed", "%d steps needed") % (m[0] - total_steps))
+		var item_label := label(I18n.T("walk.milestone", "%s (%s): %s") % [I18n.t(m[1]), I18n.t(m[2]), I18n.t(status_str)], 20, Color("4a7043") if reached else MUTED)
 		item_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		m_row.add_child(item_label)
 
-	button("Sync watch & health now", func():
+	button(I18n.T("walk.sync.now", "Sync watch & health now"), func():
 		Platform.call_service("get_watch_health")
 		Platform.call_service("steps", {"activated": World.data.walking.activated})
-		toast("Syncing with your Wear companion…")
+		toast(I18n.T("walk.syncing", "Syncing with your Wear companion…"))
 	, body, true)
 
-	button("Start phone walking session (counts this phone's steps)", func(): Platform.call_service("start_walk", {"activated": World.data.walking.activated}), body)
-	button("Stop phone walking session", func(): Platform.call_service("stop_walk"), body)
-	paragraph("Watch step counting and health sync over Bluetooth or Internet fallback. Steps, heart rhythm, and hydration boost your pet's happiness and health safely on-device.", body, 20)
+	button(I18n.T("walk.start.phone", "Start phone walking session (counts this phone's steps)"), func(): Platform.call_service("start_walk", {"activated": World.data.walking.activated}), body)
+	button(I18n.T("walk.stop.phone", "Stop phone walking session"), func(): Platform.call_service("stop_walk"), body)
+	paragraph(I18n.T("walk.ondevice", "Watch step counting and health sync over Bluetooth or Internet fallback. Steps, heart rhythm, and hydration boost your pet's happiness and health safely on-device."), body, 20)
 
 func shop_page() -> void:
-	section("The Petal Boutique", "Sunny Treats & Magic 🌸", "Delightful treasures, fresh pantry delicacies, novelty toys, and cozy perks.")
+	section(I18n.T("shop.kicker", "The Petal Boutique"), I18n.T("shop.title", "Sunny Treats & Magic 🌸"), I18n.T("shop.desc", "Delightful treasures, fresh pantry delicacies, novelty toys, and cozy perks."))
 
 	# --- Balance Pill Card ---
 	var balance_card := card(body, Color("fdf7ea"))
 	var bal_row := row(balance_card)
-	bal_row.add_child(label("Your Petal Pouch:", 23, INK, true))
-	var bal_amt := label("🌸 %d Petals" % World.data.coins, 25, Color("8f6534"), true)
+	bal_row.add_child(label(I18n.T("shop.pouch", "Your Petal Pouch:"), 23, INK, true))
+	var bal_amt := label(I18n.T("shop.petals.count", "🌸 %d Petals") % World.data.coins, 25, Color("8f6534"), true)
 	bal_amt.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bal_amt.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	bal_row.add_child(bal_amt)
 
 	# --- 🎁 Daily Free Sponsor Rewards (AdMob Rewarded Video Ads) ---
 	var free_ad_card := card(body, Color("f0f8fa"))
-	free_ad_card.add_child(label("DAILY FREE REWARDS", 17, Color("00838f")))
-	free_ad_card.add_child(label("🎁 Free Sponsor Crates", 27, INK, true))
-	paragraph("Watch a short sponsor video to open a free Lucky Mystery Box, pamper your pet in the Vitality Spa, or earn extra petals.", free_ad_card, 20)
+	free_ad_card.add_child(label(I18n.T("shop.free.kicker", "DAILY FREE REWARDS"), 17, Color("00838f")))
+	free_ad_card.add_child(label(I18n.T("shop.free.title", "🎁 Free Sponsor Crates"), 27, INK, true))
+	paragraph(I18n.T("shop.free.desc", "Watch a short sponsor video to open a free Lucky Mystery Box, pamper your pet in the Vitality Spa, or earn extra petals."), free_ad_card, 20)
 
 	var free_grid := GridContainer.new()
 	free_grid.columns = 2
@@ -1285,62 +1365,62 @@ func shop_page() -> void:
 	# Free Box 1: Lucky Mystery Box
 	var ad_box1 := card(free_grid, Color("ffffff"))
 	ad_box1.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ad_box1.add_child(label("🎁 Free Lucky Box", 21, INK, true))
-	paragraph("Chance for 50-150 Petals, bakery treats, or accessories!", ad_box1, 17)
-	button("Open Free (🎬)", func():
+	ad_box1.add_child(label(I18n.T("shop.free.box", "🎁 Free Lucky Box"), 21, INK, true))
+	paragraph(I18n.T("shop.free.box.desc", "Chance for 50-150 Petals, bakery treats, or accessories!"), ad_box1, 17)
+	button(I18n.T("shop.free.open", "Open Free (🎬)"), func():
 		parent_gate(func(): Platform.call_service("rewarded", {"reward_type": "mystery_box"}))
 	, ad_box1, true)
 
 	# Free Box 2: Vitality Spa
 	var ad_box2 := card(free_grid, Color("ffffff"))
 	ad_box2.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ad_box2.add_child(label("🫧 Vitality Spa & Feast", 21, INK, true))
-	paragraph("Instantly restores all stats to 100% + 15 Petals!", ad_box2, 17)
-	button("Pamper Pet (🎬)", func():
+	ad_box2.add_child(label(I18n.T("shop.spa", "🫧 Vitality Spa & Feast"), 21, INK, true))
+	paragraph(I18n.T("shop.spa.desc", "Instantly restores all stats to 100% + 15 Petals!"), ad_box2, 17)
+	button(I18n.T("shop.pamper", "Pamper Pet (🎬)"), func():
 		parent_gate(func(): Platform.call_service("rewarded", {"reward_type": "spa"}))
 	, ad_box2)
 
 	# --- 🎁 Mystery Surprise Crates (Petals) ---
 	var mystery_card := card(body, Color("fcf5fb"))
-	mystery_card.add_child(label("SURPRISE MYSTERY CRATES", 17, Color("8e24aa")))
-	mystery_card.add_child(label("Unbox Secret Treasures", 27, INK, true))
+	mystery_card.add_child(label(I18n.T("shop.mystery.kicker", "SURPRISE MYSTERY CRATES"), 17, Color("8e24aa")))
+	mystery_card.add_child(label(I18n.T("shop.mystery.title", "Unbox Secret Treasures"), 27, INK, true))
 
 	var m_row := row(mystery_card, 12)
 	# Lucky Box
 	var lb_card := card(m_row, Color("ffffff"))
 	lb_card.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	lb_card.add_child(label("🌸 Lucky Petal Crate", 22, INK, true))
-	paragraph("Drops 50-150 Petals, gourmet snacks, or cute accessories.", lb_card, 18)
-	button("Open for ✦ 40 petals", func():
+	lb_card.add_child(label(I18n.T("shop.lucky.crate", "🌸 Lucky Petal Crate"), 22, INK, true))
+	paragraph(I18n.T("shop.lucky.desc", "Drops 50-150 Petals, gourmet snacks, or cute accessories."), lb_card, 18)
+	button(I18n.T("shop.open.40", "Open for ✦ 40 petals"), func():
 		var res: Dictionary = World.open_mystery_box("lucky")
 		if res.get("ok", false):
 			var p: Dictionary = res.get("prize", {})
 			play_sound("reward")
-			toast("Opened Lucky Crate: " + p.get("text", "+50 Petals"))
-			show_page("Shop")
-		else: toast("Not enough petals! Complete daily chores or watch a sponsor video.")
+			toast(I18n.T("shop.lucky.opened", "Opened Lucky Crate: ") + p.get("text", "+50 Petals"))
+			show_page(I18n.T("nav.shop", "Shop"))
+		else: toast(I18n.T("shop.need.petals", "Not enough petals! Complete daily chores or watch a sponsor video."))
 	, lb_card)
 
 	# Royal Golden Trunk
 	var rb_card := card(m_row, Color("ffffff"))
 	rb_card.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	rb_card.add_child(label("👑 Royal Golden Trunk", 22, INK, true))
-	paragraph("Guaranteed 200-350 Petals, rare decor, or luxury outfits.", rb_card, 18)
-	button("Open for ✦ 140 petals", func():
+	rb_card.add_child(label(I18n.T("shop.royal.trunk", "👑 Royal Golden Trunk"), 22, INK, true))
+	paragraph(I18n.T("shop.royal.desc", "Guaranteed 200-350 Petals, rare decor, or luxury outfits."), rb_card, 18)
+	button(I18n.T("shop.open.140", "Open for ✦ 140 petals"), func():
 		var res: Dictionary = World.open_mystery_box("royal")
 		if res.get("ok", false):
 			var p: Dictionary = res.get("prize", {})
 			play_sound("reward")
-			toast("Opened Royal Trunk: " + p.get("text", "+250 Petals"))
-			show_page("Shop")
-		else: toast("Not enough petals! Visit Petal Bundles or explore.")
+			toast(I18n.T("shop.royal.opened", "Opened Royal Trunk: ") + p.get("text", "+250 Petals"))
+			show_page(I18n.T("nav.shop", "Shop"))
+		else: toast(I18n.T("shop.need.petals2", "Not enough petals! Visit Petal Bundles or explore."))
 	, rb_card, true)
 
 	# --- 🍬 Gourmet Bakery & Delicacies (Buy with Petals) ---
 	var treats_card := card(body, Color("fff8f0"))
-	treats_card.add_child(label("GOURMET PANTRY", 17, Color("e65100")))
-	treats_card.add_child(label("Fresh Bakery Delicacies", 27, INK, true))
-	paragraph("Handcrafted treats made with mountain berries and sweet honey. Feeds and delights your companion.", treats_card, 20)
+	treats_card.add_child(label(I18n.T("shop.pantry.kicker", "GOURMET PANTRY"), 17, Color("e65100")))
+	treats_card.add_child(label(I18n.T("shop.pantry.title", "Fresh Bakery Delicacies"), 27, INK, true))
+	paragraph(I18n.T("shop.pantry.desc", "Handcrafted treats made with mountain berries and sweet honey. Feeds and delights your companion."), treats_card, 20)
 
 	var treat_grid := GridContainer.new()
 	treat_grid.columns = 2
@@ -1357,21 +1437,21 @@ func shop_page() -> void:
 		tinfo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		trow.add_child(tinfo)
 		tinfo.add_child(label(tr.name, 20, INK, true))
-		tinfo.add_child(label("✦ %d petals" % tr.cost, 18, Color("8f6534"), true))
+		tinfo.add_child(label(I18n.T("cost.petals", "✦ %d petals") % tr.cost, 18, Color("8f6534"), true))
 		paragraph(tr.desc, tc, 16)
-		button("Feed to %s" % World.data.pet.get("name", "Pet"), func():
+		button(I18n.T("shop.feed.to", "Feed to %s") % World.data.pet.get("name", "Pet"), func():
 			if World.buy_treat(tr.id):
 				play_sound("munch")
-				toast("Fed %s! Vitality and happiness restored!" % tr.name)
-				show_page("Shop")
-			else: toast("Earn a few more petals to buy this treat!")
+				toast(I18n.T("shop.treat.toast", "Fed %s! Vitality and happiness restored!") % tr.name)
+				show_page(I18n.T("nav.shop", "Shop"))
+			else: toast(I18n.T("shop.need.petals3", "Earn a few more petals to buy this treat!"))
 		, tc)
 
 	# --- 🧸 Interactive Toys & Room Novelties (Buy with Petals) ---
 	var toys_card := card(body, Color("f3f7fa"))
-	toys_card.add_child(label("NOVELTIES & PLAY", 17, Color("1565c0")))
-	toys_card.add_child(label("Interactive Room Toys", 27, INK, true))
-	paragraph("Delightful playtime gadgets and calming ambiance pieces for your companion's sanctuary.", toys_card, 20)
+	toys_card.add_child(label(I18n.T("shop.toys.kicker", "NOVELTIES & PLAY"), 17, Color("1565c0")))
+	toys_card.add_child(label(I18n.T("shop.toys.title", "Interactive Room Toys"), 27, INK, true))
+	paragraph(I18n.T("shop.toys.desc", "Delightful playtime gadgets and calming ambiance pieces for your companion's sanctuary."), toys_card, 20)
 
 	var toy_grid := GridContainer.new()
 	toy_grid.columns = 2
@@ -1388,22 +1468,22 @@ func shop_page() -> void:
 		tyinfo.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tyrow.add_child(tyinfo)
 		tyinfo.add_child(label(ty.name, 20, INK, true))
-		tyinfo.add_child(label("✦ %d petals" % ty.cost, 18, Color("8f6534"), true))
+		tyinfo.add_child(label(I18n.T("cost.petals", "✦ %d petals") % ty.cost, 18, Color("8f6534"), true))
 		paragraph(ty.desc, toy_c, 16)
 		var owned: bool = ty.id in World.data.inventory
-		button("Equipped in Room" if owned else "Place in Room", func():
+		button(I18n.T("shop.equipped", "Equipped in Room") if owned else I18n.T("shop.place", "Place in Room"), func():
 			if World.buy_toy(ty.id):
 				play_sound("care")
-				toast("Equipped %s in your room!" % ty.name)
-				show_page("Shop")
-			else: toast("Earn a few more petals to buy this toy!")
+				toast(I18n.T("shop.toy.toast", "Equipped %s in your room!") % ty.name)
+				show_page(I18n.T("nav.shop", "Shop"))
+			else: toast(I18n.T("shop.need.petals4", "Earn a few more petals to buy this toy!"))
 		, toy_c, owned)
 
 	# --- 👒 Boutique Wardrobe & Hats (Buy with Petals) ---
 	var wardrobe_card := card(body, Color("fdfbf5"))
-	wardrobe_card.add_child(label("BOUTIQUE WARDROBE", 17, Color("5d4037")))
-	wardrobe_card.add_child(label("Hats & Charming Accessories", 27, INK, true))
-	paragraph("Exclusive wearable fashion pieces to style your companion for walks and photos.", wardrobe_card, 20)
+	wardrobe_card.add_child(label(I18n.T("shop.wardrobe.kicker", "BOUTIQUE WARDROBE"), 17, Color("5d4037")))
+	wardrobe_card.add_child(label(I18n.T("shop.wardrobe.title", "Hats & Charming Accessories"), 27, INK, true))
+	paragraph(I18n.T("shop.wardrobe.desc", "Exclusive wearable fashion pieces to style your companion for walks and photos."), wardrobe_card, 20)
 
 	var ward_grid := GridContainer.new()
 	ward_grid.columns = 2
@@ -1421,27 +1501,28 @@ func shop_page() -> void:
 		ac.add_child(label(acc.name, 20, INK, true))
 		var owned: bool = acc.id in World.data.inventory
 		var is_wearing: bool = World.data.accessory == acc.id
-		var btn_label := "Wearing" if is_wearing else ("Wear" if owned else "✦ %d petals" % acc.cost)
+		var btn_label := I18n.T("shop.wearing", "Wearing") if is_wearing else (I18n.T("shop.wear", "Wear") if owned else I18n.T("cost.petals", "✦ %d petals") % acc.cost)
 		button(btn_label, func():
 			if World.buy_equip(acc):
 				play_sound("care")
-				toast("%s looks adorable in %s!" % [World.data.pet.get("name", "Companion"), acc.name])
-				show_page("Shop")
-			else: toast("Earn a few more petals to adopt this look!")
+				toast(I18n.T("shop.wearing.toast", "%s looks adorable in %s!") % [World.data.pet.get("name", "Companion"), acc.name])
+				show_page(I18n.T("nav.shop", "Shop"))
+			else:
+				toast(I18n.T("shop.need.petals5", "Earn a few more petals to adopt this look!"))
 		, ac, is_wearing)
 
 	# --- 🌸 Petal Currency Bundles (Play Store IAP) ---
 	var bundles_card := card(body, Color("fcf9f2"))
-	bundles_card.add_child(label("🌸 PETAL BUNDLES", 17, SAGE))
-	bundles_card.add_child(label("Pouch & Treasure Packs", 27, INK, true))
-	paragraph("Instantly add petals to your pouch for cozy room furnishings, charming accessories, and treats.", bundles_card, 21)
+	bundles_card.add_child(label(I18n.T("shop.bundles.kicker", "🌸 PETAL BUNDLES"), 17, SAGE))
+	bundles_card.add_child(label(I18n.T("shop.bundles.title", "Pouch & Treasure Packs"), 27, INK, true))
+	paragraph(I18n.T("shop.bundles.desc", "Instantly add petals to your pouch for cozy room furnishings, charming accessories, and treats."), bundles_card, 21)
 
 	var petal_packs := [
 		{
 			"id": "kin_petals_small",
-			"name": "Handful of Petals",
+			"name": I18n.T("iap.petals.small.name", "Handful of Petals"),
 			"petals": 250,
-			"desc": "+250 Petals for charming decor & accessories",
+			"desc": I18n.T("iap.petals.small.desc", "+250 Petals for charming decor & accessories"),
 			"icon": "🌸",
 			"badge": "STARTER",
 			"badge_color": SAGE,
@@ -1449,9 +1530,9 @@ func shop_page() -> void:
 		},
 		{
 			"id": "kin_petals_medium",
-			"name": "Basket of Petals",
+			"name": I18n.T("iap.petals.medium.name", "Basket of Petals"),
 			"petals": 750,
-			"desc": "+750 Petals · Most popular choice!",
+			"desc": I18n.T("iap.petals.medium.desc", "+750 Petals · Most popular choice!"),
 			"icon": "🧺",
 			"badge": "MOST POPULAR",
 			"badge_color": Color("e67e22"),
@@ -1459,9 +1540,9 @@ func shop_page() -> void:
 		},
 		{
 			"id": "kin_petals_large",
-			"name": "Treasure Chest",
+			"name": I18n.T("iap.petals.large.name", "Treasure Chest"),
 			"petals": 2000,
-			"desc": "+2,000 Petals · Best value for full rooms!",
+			"desc": I18n.T("iap.petals.large.desc", "+2,000 Petals · Best value for full rooms!"),
 			"icon": "✨",
 			"badge": "BEST VALUE",
 			"badge_color": Color("9b59b6"),
@@ -1481,7 +1562,7 @@ func shop_page() -> void:
 
 		var name_row := row(title_box, 8)
 		name_row.add_child(label(pack.name, 22, INK, true))
-		var badge := label(" " + pack.badge + " ", 14, Color.WHITE)
+		var badge := label(" " + I18n.t(pack.badge) + " ", 14, Color.WHITE)
 		badge.add_theme_stylebox_override("normal", box(pack.badge_color, 8))
 		name_row.add_child(badge)
 
@@ -1489,56 +1570,56 @@ func shop_page() -> void:
 
 		var price_str: String = Platform.product_prices.get(pack.id, {}).get("price", pack.fallback_price)
 		if price_str.is_empty(): price_str = pack.fallback_price
-		button("Adopt for " + price_str, func():
+		button(I18n.T("shop.adopt.for", "Adopt for ") + price_str, func():
 			parent_gate(func(): Platform.call_service("purchase", {"product": pack.id}))
 		, item_card, pack.badge == "MOST POPULAR")
 
 	# --- 👑 Cozy Caretaker Pass ---
 	var pass_card := card(body, Color("fbf3ea"))
-	pass_card.add_child(label("PERMANENT UPGRADE", 17, Color("d35400")))
-	pass_card.add_child(label("👑 Cozy Caretaker Pass", 28, INK, true))
-	paragraph("Never see an interstitial ad again! Includes an exclusive royal crown badge for your pet and +50% bonus petals on all daily walking milestones forever.", pass_card, 21)
+	pass_card.add_child(label(I18n.T("iap.pass.kicker", "PERMANENT UPGRADE"), 17, Color("d35400")))
+	pass_card.add_child(label(I18n.T("iap.pass.name", "👑 Cozy Caretaker Pass"), 28, INK, true))
+	paragraph(I18n.T("iap.pass.desc", "Never see an interstitial ad again! Includes an exclusive royal crown badge for your pet and +50% bonus petals on all daily walking milestones forever."), pass_card, 21)
 
 	var pass_owned: bool = World.is_cozy_pass_active()
 	if pass_owned:
-		var active_badge := label("✓ ACTIVE FOREVER · Thank you for your support!", 20, SAGE, true)
+		var active_badge := label(I18n.T("iap.pass.active", "✓ ACTIVE FOREVER · Thank you for your support!"), 20, SAGE, true)
 		pass_card.add_child(active_badge)
 	else:
 		var pass_price: String = Platform.product_prices.get("kin_cozy_pass", {}).get("price", "$3.99")
 		if pass_price.is_empty(): pass_price = "$3.99"
-		button("Unlock Caretaker Pass · " + pass_price, func():
+		button(I18n.T("iap.pass.unlock", "Unlock Caretaker Pass · ") + pass_price, func():
 			parent_gate(func(): Platform.call_service("purchase", {"product": "kin_cozy_pass"}))
 		, pass_card, true)
 
 	# --- 🧺 Deluxe Fruit Feast (IAP) ---
 	var feast_section := card(body, Color("f3f8f2"))
-	feast_section.add_child(label("CARE BUNDLE", 17, SAGE))
-	feast_section.add_child(label("🍓 Deluxe Fruit Feast", 27, INK, true))
+	feast_section.add_child(label(I18n.T("iap.feast.kicker", "CARE BUNDLE"), 17, SAGE))
+	feast_section.add_child(label(I18n.T("iap.feast.name", "🍓 Deluxe Fruit Feast"), 27, INK, true))
 	var feast_card := card(feast_section, Color("ffffff"))
 	var fr := row(feast_card)
 	fr.add_child(label("🍓", 34))
 	var f_box := VBoxContainer.new()
 	f_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	fr.add_child(f_box)
-	f_box.add_child(label("Deluxe Fruit Feast Basket", 22, INK, true))
-	f_box.add_child(label("+5 of every favorite fruit, instant full energy & +100 Petals", 18, MUTED))
+	f_box.add_child(label(I18n.T("iap.feast.title", "Deluxe Fruit Feast Basket"), 22, INK, true))
+	f_box.add_child(label(I18n.T("iap.feast.desc", "+5 of every favorite fruit, instant full energy & +100 Petals"), 18, MUTED))
 
 	var feast_price: String = Platform.product_prices.get("kin_treat_basket", {}).get("price", "$1.49")
 	if feast_price.is_empty(): feast_price = "$1.49"
-	button("Treat My Companion · " + feast_price, func():
+	button(I18n.T("iap.feast.cta", "Treat My Companion · ") + feast_price, func():
 		parent_gate(func(): Platform.call_service("purchase", {"product": "kin_treat_basket"}))
 	, feast_card)
 
 	# --- 🏡 Storybook Cosmetic Sets ---
 	var collections_card := card(body, Color("f6f2f9"))
-	collections_card.add_child(label("COSMETIC ROOM SUITES", 17, Color("8e44ad")))
-	collections_card.add_child(label("Storybook Decor Suites", 27, INK, true))
-	paragraph("Original hand-painted artistic environments that transform your sanctuary room. Permanent cosmetic unlocks.", collections_card, 21)
+	collections_card.add_child(label(I18n.T("shop.suites.kicker", "COSMETIC ROOM SUITES"), 17, Color("8e44ad")))
+	collections_card.add_child(label(I18n.T("shop.suites.title", "Storybook Decor Suites"), 27, INK, true))
+	paragraph(I18n.T("shop.suites.desc", "Original hand-painted artistic environments that transform your sanctuary room. Permanent cosmetic unlocks."), collections_card, 21)
 
 	var collections := [
-		["kin_cottage", "Cottage Mornings", "A warm, sunlit countryside morning with blooming wildflowers.", 0, "$2.99"],
-		["kin_moonlight", "Moonlight Dreams", "A quiet starry evening surrounded by fireflies and gentle blues.", 1, "$2.99"],
-		["kin_blossom", "Blossom Picnic", "Gentle sakura petals drifting in a soothing spring breeze.", 2, "$2.99"]
+		["kin_cottage", I18n.T("col.cottage.name", "Cottage Mornings"), I18n.T("col.cottage.desc", "A warm, sunlit countryside morning with blooming wildflowers."), 0, "$2.99"],
+		["kin_moonlight", I18n.T("col.moonlight.name", "Moonlight Dreams"), I18n.T("col.moonlight.desc", "A quiet starry evening surrounded by fireflies and gentle blues."), 1, "$2.99"],
+		["kin_blossom", I18n.T("col.blossom.name", "Blossom Picnic"), I18n.T("col.blossom.desc", "Gentle sakura petals drifting in a soothing spring breeze."), 2, "$2.99"]
 	]
 
 	for col in collections:
@@ -1550,34 +1631,34 @@ func shop_page() -> void:
 		var owned: bool = col[0] in World.data.get("entitlements", [])
 		var is_equipped: bool = World.data.get("premium_equipped", "") == col[0]
 		if owned:
-			var btn_text: String = "✓ Currently Decorated" if is_equipped else "Apply to Room"
+			var btn_text: String = I18n.T("col.decorated", "✓ Currently Decorated") if is_equipped else I18n.T("col.apply", "Apply to Room")
 			button(btn_text, func():
 				World.data.premium_equipped = col[0]
 				World.save()
-				show_page("Home")
-				toast("Room decorated with %s!" % col[1])
+				show_page(I18n.T("nav.home", "Home"))
+				toast(I18n.T("shop.room.toast", "Room decorated with %s!") % col[1])
 			, col_card, not is_equipped)
 		else:
 			var c_price: String = Platform.product_prices.get(col[0], {}).get("price", col[4])
 			if c_price.is_empty(): c_price = col[4]
-			button("Unlock " + col[1] + " · " + c_price, func():
+			button(I18n.T("col.unlock", "Unlock ") + col[1] + " · " + c_price, func():
 				parent_gate(func(): Platform.call_service("purchase", {"product": col[0]}))
 			, col_card)
 
 	# --- Restore Purchases & Policy Footnote ---
-	button("🔄 Restore Prior Purchases", func():
+	button(I18n.T("shop.restore", "🔄 Restore Prior Purchases"), func():
 		parent_gate(func():
 			Platform.call_service("restore")
-			toast("Checking Google Play for previous purchases…")
+			toast(I18n.T("shop.checking.play", "Checking Google Play for previous purchases…"))
 		)
 	, body)
 
-	var footer := paragraph("Pocket Kin respects your privacy and uses standard Google Play Billing with Family-Safe parent gates. All pet food, basic care, minigames, and growth are completely free forever.", body, 19)
+	var footer := paragraph(I18n.T("shop.footer", "Pocket Kin respects your privacy and uses standard Google Play Billing with Family-Safe parent gates. All pet food, basic care, minigames, and growth are completely free forever."), body, 19)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func room_page() -> void:
-	section("Make yourself at home", "A room full of you.", "Earn petals through play or the boutique, then decorate with something lovely.")
-	button("Visit the Petal Boutique & Decor Suites 🛍️", func(): show_page("Shop"), body, true)
+	section(I18n.T("room.kicker", "Make yourself at home"), I18n.T("room.title", "A room full of you."), I18n.T("room.desc", "Earn petals through play or the boutique, then decorate with something lovely."))
+	button(I18n.T("room.visit.boutique", "Visit the Petal Boutique & Decor Suites 🛍️"), func(): show_page(I18n.T("nav.shop", "Shop")), body, true)
 	var grid := GridContainer.new()
 	grid.columns = 2
 	grid.add_theme_constant_override("h_separation", 14)
@@ -1592,40 +1673,40 @@ func room_page() -> void:
 		content.add_child(Art.image(Art.atlas("res://assets/accessories-final.png" if accessory else "res://assets/decor-final.png", 4 if accessory else 6, 3 if accessory else 5, index), Vector2(230, 105)))
 		content.add_child(label(item.name, 21))
 		var owned: bool = item.id in World.data.inventory
-		button("Place / wear" if owned else "✦ %d petals" % item.cost, func():
+		button(I18n.T("room.place.wear", "Place / wear") if owned else I18n.T("cost.petals", "✦ %d petals") % item.cost, func():
 			if World.buy_equip(item):
-				show_page("Room")
-				toast("A lovely little choice. See it at home!")
-			else: toast("Earn a few more petals or visit the Boutique.")
+				show_page(I18n.T("nav.room", "Room"))
+				toast(I18n.T("room.placed.toast", "A lovely little choice. See it at home!"))
+			else: toast(I18n.T("room.need.petals", "Earn a few more petals or visit the Boutique."))
 		, content, owned)
 
-	button("Visit the Petal Boutique 🌸", func(): show_page("Shop"), body)
+	button(I18n.T("room.visit.boutique2", "Visit the Petal Boutique 🌸"), func(): show_page(I18n.T("nav.shop", "Shop")), body)
 
 func album_page() -> void:
-	section("The story of us", "Little moments, forever.", "A growing collection of the days you shared.")
+	section(I18n.T("album.kicker", "The story of us"), I18n.T("album.title", "Little moments, forever."), I18n.T("album.desc", "A growing collection of the days you shared."))
 	if World.data.memories.is_empty():
-		paragraph("Your first memory is just around the corner.", body)
+		paragraph(I18n.T("album.empty", "Your first memory is just around the corner."), body)
 	for memory in World.data.memories:
 		var content := card(body)
 		content.add_child(label(memory.date, 18, SAGE))
 		content.add_child(label(memory.title, 27, INK, true))
 		paragraph(memory.body, content)
 	if not World.data.discoveries.is_empty():
-		paragraph("Your discoveries: " + ", ".join(World.data.discoveries), body)
+		paragraph(I18n.T("album.discoveries", "Your discoveries: ") + ", ".join(World.data.discoveries), body)
 
 func sanctuary_page() -> void:
-	section("Always part of the family", "A softer place to stay.", "Grown friends can settle here whenever you're ready. There is no rush.")
+	section(I18n.T("sanctuary.kicker", "Always part of the family"), I18n.T("sanctuary.title", "A softer place to stay."), I18n.T("sanctuary.desc", "Grown friends can settle here whenever you're ready. There is no rush."))
 	if ResourceLoader.exists("res://assets/sanctuary.png"):
 		body.add_child(Art.image(load("res://assets/sanctuary.png"), Vector2(0, 250)))
 	for pet in World.data.sanctuary:
 		var content := card(body)
 		content.add_child(Art.image(Art.pet(pet.species, 3), Vector2(0, 130)))
-		content.add_child(label(pet.name + " · always loved", 27, INK, true))
+		content.add_child(label(pet.name + " · " + I18n.T("sanctuary.loved", "always loved"), 27, INK, true))
 	if World.data.sanctuary.is_empty():
-		paragraph("A peaceful garden for your future grown friends.", body)
-	var b := button("Settle my grown pet here", func():
+		paragraph(I18n.T("sanctuary.empty", "A peaceful garden for your future grown friends."), body)
+	var b := button(I18n.T("sanctuary.settle", "Settle my grown pet here"), func():
 		var dialog := ConfirmationDialog.new()
-		dialog.dialog_text = "Your grown friend stays in the sanctuary, and you can adopt a new egg. Move them now?"
+		dialog.dialog_text = I18n.T("sanctuary.confirm", "Your grown friend stays in the sanctuary, and you can adopt a new egg. Move them now?")
 		dialog.confirmed.connect(func(): World.retire(); show_page("Home"))
 		add_child(dialog)
 		dialog.popup_centered(Vector2i(580, 220))
@@ -1633,9 +1714,25 @@ func sanctuary_page() -> void:
 	b.disabled = World.data.pet.stage != "adult"
 
 func settings_page() -> void:
-	section("Just your kind of cozy", "Make it yours.")
+	section(I18n.T("set.kicker", "Just your kind of cozy"), I18n.T("set.title", "Make it yours."))
+
+	# Cloud Saves & Account card
+	var cloud_card := card(body)
+	cloud_card.add_child(label(I18n.T("set.cloud.section", "CLOUD SAVES & ACCOUNT"), 17, SAGE))
+	paragraph(Platform.status, cloud_card)
+	button(I18n.T("set.cloud.connect", "Connect cloud saves"), func(): parent_gate(func(): Platform.call_service("sign_in")), cloud_card, true)
+	button(I18n.T("set.cloud.backup", "Back up this pet"), func(): Platform.call_service("cloud_save", {"save": World.cloud_snapshot(), "revision": World.data.cloud_revision}), cloud_card)
+	button(I18n.T("set.cloud.restore", "Restore cloud save"), func(): Platform.call_service("cloud_load"), cloud_card)
+	if World.has_cloud_conflict():
+		button(I18n.T("set.cloud.conflict", "Review cloud save conflict"), func(): cloud_conflict_dialog(), cloud_card, true)
+	button(I18n.T("set.restore.purchases", "Restore cosmetic purchases"), func(): parent_gate(func(): Platform.call_service("restore")), cloud_card)
+	button(I18n.T("set.delete.account", "Delete cloud account"), func(): parent_gate(func(): Platform.call_service("delete_account")), cloud_card)
+
+	var lang_card := card(body)
+	add_language_section(lang_card)
+
 	var content := card(body)
-	for pair in [["music", "Ambient music"], ["effects", "Little sound effects"], ["haptics", "Gentle haptics"], ["reduced_motion", "Reduce motion"], ["fullscreen", "Full-screen mode"], ["reminders", "Friendly care reminders"]]:
+	for pair in [["music", I18n.T("set.music", "Ambient music")], ["effects", I18n.T("set.effects", "Little sound effects")], ["haptics", I18n.T("set.haptics", "Gentle haptics")], ["reduced_motion", I18n.T("set.reduced", "Reduce motion")], ["fullscreen", I18n.T("set.fullscreen", "Full-screen mode")], ["reminders", I18n.T("set.reminders", "Friendly care reminders")]]:
 		var toggle := CheckButton.new()
 		toggle.text = pair[1]
 		toggle.custom_minimum_size.y = 64
@@ -1648,7 +1745,7 @@ func settings_page() -> void:
 			if pair[0] == "reminders": Platform.call_service("reminders", World.data.settings)
 		)
 		content.add_child(toggle)
-	for pair in [["sleep_hour", "Bedtime hour"], ["wake_hour", "Wake-up hour"], ["quiet_start", "Quiet hours start"], ["quiet_end", "Quiet hours end"]]:
+	for pair in [["sleep_hour", I18n.T("set.bedtime", "Bedtime hour")], ["wake_hour", I18n.T("set.wake", "Wake-up hour")], ["quiet_start", I18n.T("set.quiet.start", "Quiet hours start")], ["quiet_end", I18n.T("set.quiet.end", "Quiet hours end")]]:
 		var line := row(content)
 		line.add_child(label(pair[1], 24))
 		var spin := SpinBox.new()
@@ -1659,51 +1756,52 @@ func settings_page() -> void:
 		spin.value_changed.connect(func(value): World.data.settings[pair[0]] = int(value); World.save())
 		line.add_child(spin)
 
-	paragraph(Platform.status, body)
-	button("Connect cloud saves", func(): parent_gate(func(): Platform.call_service("sign_in")), body, true)
-	button("Back up this pet", func(): Platform.call_service("cloud_save", {"save": World.cloud_snapshot(), "revision": World.data.cloud_revision}), body)
-	button("Restore cloud save", func(): Platform.call_service("cloud_load"), body)
-	if World.has_cloud_conflict():
-		button("Review cloud save conflict", func(): cloud_conflict_dialog(), body, true)
-	button("Restore cosmetic purchases", func(): parent_gate(func(): Platform.call_service("restore")), body)
-	button("Privacy and ad choices", func(): Platform.call_service("privacy"), body)
-	button("Connect a Wear OS watch", func(): Platform.call_service("watch_status"), body)
-	button("Add home-screen widget", func(): Platform.call_service("pin_widget"), body)
-	button("Delete cloud account", func(): parent_gate(func(): Platform.call_service("delete_account")), body)
-	paragraph("Pocket Kin · Original art and a little everyday magic.\nCloud services and purchases need a configured release. Your local pet is saved automatically.", body, 20)
+	button(I18n.T("set.privacy", "Privacy and ad choices"), func(): Platform.call_service("privacy"), body)
+	button(I18n.T("set.watch", "Connect a Wear OS watch"), func(): Platform.call_service("watch_status"), body)
+	button(I18n.T("set.widget", "Add home-screen widget"), func(): Platform.call_service("pin_widget"), body)
+	paragraph(I18n.T("set.footnote", "Pocket Kin · Original art and a little everyday magic.\nCloud services and purchases need a configured release. Your local pet is saved automatically."), body, 20)
 
 func cloud_conflict_dialog() -> void:
 	var dialog := ConfirmationDialog.new()
-	dialog.dialog_text = "The cloud has a different save that is not newer than yours. Use the cloud copy, or keep playing with this pet? Your choice is kept either way."
-	dialog.ok_button_text = "Use cloud"
-	dialog.cancel_button_text = "Keep mine"
+	dialog.dialog_text = I18n.T("dlg.cloud.conflict", "The cloud has a different save that is not newer than yours. Use the cloud copy, or keep playing with this pet? Your choice is kept either way.")
+	dialog.ok_button_text = I18n.T("dlg.use.cloud", "Use cloud")
+	dialog.cancel_button_text = I18n.T("dlg.keep.mine", "Keep mine")
 	dialog.confirmed.connect(func():
 		World.resolve_cloud_conflict(true)
-		show_page("Home")
-		toast("Cloud save applied.")
+		show_page(I18n.T("nav.home", "Home"))
+		toast(I18n.T("dlg.cloud.applied", "Cloud save applied."))
 	)
 	dialog.canceled.connect(func():
 		World.resolve_cloud_conflict(false)
-		show_page("Settings")
-		toast("Kept your local pet.")
+		show_page(I18n.T("nav.settings", "Settings"))
+		toast(I18n.T("dlg.cloud.kept", "Kept your local pet."))
 	)
 	add_child(dialog)
 	dialog.popup_centered(Vector2i(580, 260))
 
 func parent_gate(action: Callable) -> void:
 	var dialog := AcceptDialog.new()
-	dialog.title = "For a grown-up"
+	dialog.title = I18n.T("gate.title", "For a grown-up")
 	var layout := VBoxContainer.new()
 	dialog.add_child(layout)
-	layout.add_child(label("What is 7 × 8?", 27))
-	var answer := LineEdit.new()
-	answer.custom_minimum_size = Vector2(350, 60)
-	layout.add_child(answer)
-	dialog.confirmed.connect(func():
-		if answer.text.strip_edges() == "56": action.call()
-		else: toast("Please ask a grown-up to help.")
-		dialog.queue_free()
-	)
+	layout.add_child(label(I18n.T("gate.question", "What is 7 × 8?"), 27))
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	layout.add_child(row)
+	for opt in [48, 56, 64]:
+		var b := Button.new()
+		b.text = str(opt)
+		b.custom_minimum_size = Vector2(90, 50)
+		b.pressed.connect(func():
+			if opt == 56:
+				dialog.queue_free()
+				action.call()
+			else:
+				toast(I18n.T("gate.wrong", "Please ask a grown-up to help."))
+				dialog.queue_free()
+		)
+		row.add_child(b)
+	dialog.get_ok_button().hide()
 	add_child(dialog)
 	dialog.popup_centered(Vector2i(450, 220))
 
@@ -1712,11 +1810,12 @@ func platform_result(kind: String, payload: Dictionary) -> void:
 		var p: String = str(payload.get("page", "Home"))
 		if not World.data.pet.is_empty():
 			if p == "Feed": feed_menu()
-			elif p == "Walk": show_page("Walk")
+			elif p == "Walk": show_page(I18n.T("nav.walk", "Walk"))
 			elif p == "Love": do_care("love")
-			elif p == "Play": show_page("Play")
-			else: show_page("Home")
-		else: show_page("Home")
+			elif p == "Play": show_page(I18n.T("nav.play", "Play"))
+			else: show_page(I18n.T("nav.home", "Home"))
+		else:
+			show_page(I18n.T("nav.home", "Home"))
 	if kind == "insets":
 		var ratio := get_viewport_rect().size.x / maxf(1, DisplayServer.window_get_size().x)
 		safe_top = maxi(38, ceili(float(payload.get("top", 0)) * ratio) + 12)
@@ -1741,12 +1840,12 @@ func platform_result(kind: String, payload: Dictionary) -> void:
 		var outcome := World.apply_cloud_snapshot(payload.save)
 		if outcome == "applied":
 			show_page("Home")
-			toast("Cloud save restored. Welcome back!")
+			toast(I18n.T("cloud.restored", "Cloud save restored. Welcome back!"))
 		elif outcome == "kept-local":
 			cloud_conflict_dialog()
 		else:
-			toast("That cloud save could not be used. Your local pet is safe.")
-	if payload.has("message"): toast(payload.message)
+			toast(I18n.T("cloud.unusable", "That cloud save could not be used. Your local pet is safe."))
+	if payload.has("message"): toast(I18n.t(str(payload.message)))
 
 func toast(message: String) -> void:
 	if not is_instance_valid(toast_label): return
@@ -1886,10 +1985,10 @@ func _process(delta: float) -> void:
 
 				if is_instance_valid(thought_box) and thought_box.get_child_count() > 0:
 					var msgs: Array = [
-						"🎾 Boop! Great bounce!",
-						"✨ Pounced on the toy! Wheee!",
-						"🎾 Bounced it right back to you!",
-						"💖 Loving this game so much!"
+						I18n.T("toy.boop", "🎾 Boop! Great bounce!"),
+						I18n.T("toy.pounce", "✨ Pounced on the toy! Wheee!"),
+						I18n.T("toy.bounce.back", "🎾 Bounced it right back to you!"),
+						I18n.T("toy.love.game", "💖 Loving this game so much!")
 					]
 					thought_box.get_child(0).text = msgs[randi() % msgs.size()]
 
@@ -1964,5 +2063,5 @@ func _process(delta: float) -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_RESUMED:
 		World.reconcile()
-		if page == "Walk" and World.data.walking.enabled:
+		if page == I18n.T("nav.walk", "Walk") and World.data.walking.enabled:
 			Platform.call_service("steps", {"activated": World.data.walking.activated})
