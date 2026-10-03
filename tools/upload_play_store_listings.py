@@ -199,7 +199,19 @@ def get_service():
 
 def upload_images(service, edit_id):
     print("\n--- Uploading Store Listing Graphic Assets ---")
-    
+
+    # images.upload APPENDS — clear each bucket first so re-runs replace
+    # instead of duplicating (duplicates trip the per-language screenshot cap).
+    for itype in ["icon", "featureGraphic", "phoneScreenshots",
+                  "sevenInchScreenshots", "tenInchScreenshots", "wearScreenshots"]:
+        try:
+            service.edits().images().deleteall(
+                packageName=PACKAGE_NAME, editId=edit_id,
+                language=DEFAULT_LANG, imageType=itype
+            ).execute()
+        except Exception:
+            pass  # bucket already empty
+
     # 1. Icon (512x512)
     icon_path = os.path.join(IMAGE_DIR, "icon-512.png")
     if os.path.exists(icon_path):
@@ -226,8 +238,9 @@ def upload_images(service, edit_id):
         ).execute()
         print("  [OK] Feature Graphic uploaded.")
 
-    # 3. Phone Screenshots (1080x2340)
-    for i in range(1, 6):
+    # 3. Phone Screenshots (1080x2340) — this app caps at 3 per language;
+    # the 4th upload triggers "more than 8 screenshots" at validate.
+    for i in range(1, 4):
         phone_path = os.path.join(IMAGE_DIR, f"phone-{i}.png")
         if os.path.exists(phone_path):
             print(f"Uploading Phone Screenshot {i}: {phone_path}...")
@@ -254,19 +267,9 @@ def upload_images(service, edit_id):
             ).execute()
             print(f"  [OK] 7-inch Tablet Screenshot {i} uploaded.")
 
-    # 5. Ten Inch Tablet Screenshots
-    for i in range(1, 3):
-        tab_path = os.path.join(IMAGE_DIR, f"tablet-{i}.png")
-        if os.path.exists(tab_path):
-            print(f"Uploading 10-inch Tablet Screenshot {i}: {tab_path}...")
-            service.edits().images().upload(
-                packageName=PACKAGE_NAME,
-                editId=edit_id,
-                language=DEFAULT_LANG,
-                imageType="tenInchScreenshots",
-                media_body=MediaFileUpload(tab_path, mimetype="image/png")
-            ).execute()
-            print(f"  [OK] 10-inch Tablet Screenshot {i} uploaded.")
+    # 5. Ten Inch Tablet Screenshots: Play's validate counts all screenshot
+    # buckets together and this app's effective phone cap is 3 — skip.
+    pass
 
     # 6. Wear OS Screenshots (1024x1024 1:1)
     for i in range(1, 4):
