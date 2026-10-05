@@ -24,6 +24,7 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
     private val cloud by lazy { CloudBridge(activity, scope, reply) }
     private val ads by lazy { AdsBridge(activity, reply) }
     private val billing by lazy { BillingBridge(activity, scope, reply, cloud) }
+    private val translation by lazy { TranslationBridge(activity, reply) }
     private var walkRequest = JSONObject()
 
     fun request(kind: String, input: JSONObject) {
@@ -56,6 +57,12 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
                     }
                 }
                 prefs.edit().putString("snapshot", snapshotStr).apply()
+                // Native surfaces follow the in-game language: store the chosen
+                // language and the english->translated pairs for widget/notifications.
+                prefs.edit().putString("lang", input.optString("i18n_lang", "en")).apply()
+                input.optJSONObject("i18n_pairs")?.let { pairs ->
+                    prefs.edit().putString("i18n_pairs", pairs.toString()).apply()
+                }
                 input.optString("save_path").takeIf { it.isNotBlank() }?.let { prefs.edit().putString("save_path", it).apply() }
                 KinWidget.update(activity)
                 openWidget()
@@ -122,6 +129,7 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
             }
             "watch_ack" -> PhoneWatchService.acknowledge(activity,input)
             "age_setup" -> ads.configureAge()
+            "translate_batch", "download_language" -> scope.launch(Dispatchers.Default) { translation.request(kind, input) }
         }
     }
     private fun startWalk() {
@@ -154,6 +162,6 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
         if (code == 702 && grants.firstOrNull() == PackageManager.PERMISSION_GRANTED) startWalk()
         if (code == 703) CareScheduler.schedule(activity)
     }
-    fun close() { scope.cancel() }
+    fun close() { translation.release(); scope.cancel() }
     private fun message(kind: String, text: String) = reply(kind, JSONObject().put("message",text))
 }

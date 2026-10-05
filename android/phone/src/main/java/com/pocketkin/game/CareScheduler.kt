@@ -42,7 +42,7 @@ class CareReceiver : BroadcastReceiver() {
         val manager=context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(NotificationChannel("care","Friendly pet reminders",NotificationManager.IMPORTANCE_DEFAULT))
         val open=PendingIntent.getActivity(context,0,Intent(context,MainActivity::class.java),PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        manager.notify(20,NotificationCompat.Builder(context,"care").setSmallIcon(R.drawable.kin_launcher).setContentTitle("A little moment together?").setContentText("Your little friend would love some company.").setContentIntent(open).setAutoCancel(true).build())
+        manager.notify(20,NotificationCompat.Builder(context,"care").setSmallIcon(R.drawable.kin_launcher).setContentTitle(KinWidget.tr(context,"A little moment together?")).setContentText(KinWidget.tr(context,"Your little friend would love some company.")).setContentIntent(open).setAutoCancel(true).build())
         prefs.edit().putInt(key,prefs.getInt(key,0)+1).apply()
     }
 }

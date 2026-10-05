@@ -14,6 +14,15 @@ import org.json.JSONObject
 class KinWidget : AppWidgetProvider() {
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) = update(context)
     companion object {
+        /** Native widget strings follow the in-game language chosen in Settings.
+         *  English (the default and pre-download state) renders verbatim. */
+        fun tr(context: Context, english: String): String {
+            val lang = GamePrefs.game(context).getString("lang", "en") ?: "en"
+            if (lang == "en") return english
+            val cache = runCatching { JSONObject(GamePrefs.game(context).getString("i18n_pairs", "{}") ?: "{}") }.getOrDefault(JSONObject())
+            return cache.optString(english, english)
+        }
+
         fun update(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
             val prefs = GamePrefs.game(context)
@@ -30,7 +39,7 @@ class KinWidget : AppWidgetProvider() {
                 val name = if (hasPet) pet.optString("name", "Pocket Kin") else "Pocket Kin"
                 view.setTextViewText(R.id.kin_name, name)
 
-                val stage = if (hasPet) pet.optString("stage", "baby").replaceFirstChar { it.uppercase() } else "Egg"
+                val stage = if (hasPet) pet.optString("stage", "baby").replaceFirstChar { it.uppercase() } else tr(context, "Egg")
                 view.setTextViewText(R.id.kin_stage_badge, "✦ $stage")
 
                 val hunger = pet.optInt("hunger", 85)
@@ -39,19 +48,19 @@ class KinWidget : AppWidgetProvider() {
                 val ill = pet.optBoolean("ill", false)
 
                 val moodText = when {
-                    !hasPet -> "✨ Waiting"
-                    sleeping -> "💤 Sleeping"
-                    ill -> "🩹 Unwell"
-                    hunger < 30 -> "🍎 Hungry"
-                    happiness > 80 -> "💖 Joyful"
-                    else -> "🌿 Content"
+                    !hasPet -> "✨ " + tr(context, "Waiting")
+                    sleeping -> "💤 " + tr(context, "Sleeping")
+                    ill -> "🩹 " + tr(context, "Unwell")
+                    hunger < 30 -> "🍎 " + tr(context, "Hungry")
+                    happiness > 80 -> "💖 " + tr(context, "Joyful")
+                    else -> "🌿 " + tr(context, "Content")
                 }
                 view.setTextViewText(R.id.kin_mood_badge, moodText)
 
                 val statusText = when {
-                    !hasPet -> "An egg is waiting for you"
-                    sleeping -> "Dreaming sweet dreams"
-                    else -> "Fed $hunger% · Happy $happiness%"
+                    !hasPet -> tr(context, "An egg is waiting for you")
+                    sleeping -> tr(context, "Dreaming sweet dreams")
+                    else -> tr(context, "Fed") + " $hunger% · " + tr(context, "Happy") + " $happiness%"
                 }
                 view.setTextViewText(R.id.kin_status, statusText)
 

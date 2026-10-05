@@ -27,6 +27,10 @@ func call_service(kind: String, payload: Dictionary = {}) -> void:
 
 func _publish() -> void:
 	if native:
+		# Ship the i18n language + translation pairs so the native widget and
+		# care notifications can render in the same language as the game.
+		var i18n_pairs: Dictionary = World.data.get("i18n", {})
+		if i18n_pairs.size() > 400: i18n_pairs = {}
 		native.request("snapshot", JSON.stringify({
 			"revision": World.data.revision,
 			"pet": World.data.pet,
@@ -34,6 +38,8 @@ func _publish() -> void:
 			"settings": World.data.settings,
 			"entitlements": World.data.get("entitlements", []),
 			"coins": World.data.coins,
+			"i18n_lang": I18n.lang(),
+			"i18n_pairs": i18n_pairs,
 			"save_path": ProjectSettings.globalize_path(World.SAVE)
 		}))
 
