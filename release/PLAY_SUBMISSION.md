@@ -22,12 +22,13 @@ Upload key: `android/pocket-kin-upload.keystore` (gitignored), alias `pocketkin`
 SHA256 `81:57:C3:D6:E7:58:82:3D:DF:F3:F7:75:7C:D4:00:F7:B8:E1:B5:19:53:45:8F:41:99:64:4F:C8:61:B3:F7:6B`,
 SHA1 `9D:85:2B:39:86:0F:03:FD:91:6C:CC:67:C1:24:2D:0A:7F:F9:D7:DE`.
 
-> ROTATE NOW: passwords are still placeholder `changeit-SEE-RELEASE-NOTES`.
-> `keytool -storepasswd -keystore android/pocket-kin-upload.keystore` and
-> `-keypasswd -alias pocketkin`, then set `KIN_STORE_PASSWORD` / `KIN_KEY_PASSWORD` /
-> `KIN_KEY_ALIAS` as environment variables or in `android/gradle.properties`
-> (see `android/gradle.properties.example`; never commit). Back up the keystore offline.
+> ROTATED (2026-10-03): store + key passwords are the real release password, kept only in
+> `C:\Users\Charles\.gradle\gradle.properties` as `KIN_STORE_PASSWORD` / `KIN_KEY_PASSWORD`
+> (user-level Gradle properties; never commit). The old placeholder no longer opens this keystore.
+> Key material unchanged — SHA256 below still matches Play App Signing. Back up the keystore offline.
 > Enroll the SHA256 above in Play App Signing; keep the upload key separate from the app-signing key.
+> NOTE: `C:\Users\Charles\Key.jks` is a DIFFERENT key (SHA256 0C:D9:EA:45:...:37:C7) — do not sign
+> this app with it; Play will reject the upload.
 
 ## 2. Accounts, in order
 
@@ -74,6 +75,7 @@ SHA1 `9D:85:2B:39:86:0F:03:FD:91:6C:CC:67:C1:24:2D:0A:7F:F9:D7:DE`.
 | Ads declaration | Yes, contains ads (AdMob); UMP consent implemented |
 | Health apps declaration | steps (phone) + watch heart rate; demo video + `release/HEALTH_PERMISSIONS.md` |
 | Families policy | self-certification checklist in `release/FAMILIES.md` |
+| App access | **All functionality is available without special access** (no sign-on, credentials, or password required) |
 | App content → website | `https://chartmann1590.github.io/pocket-kin/` |
 
 ## 4. Pre-launch gates (all green before production)
