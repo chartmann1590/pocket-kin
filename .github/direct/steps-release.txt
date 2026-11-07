@@ -1,73 +1,65 @@
 launch
 wait 20
 shot 01-launch
-sh input swipe 600 1250 600 350 900
+sh input swipe 20 1400 20 500 1200
 wait 2
-sh input swipe 600 1250 600 350 900
+sh input swipe 20 1400 20 500 1200
+wait 2
+sh input swipe 20 1400 20 500 1200
 wait 2
 shot 02-adopt-bottom
+tapxy 500 745
+wait 8
+shot 03-try-a
+tapxy 500 700
+wait 8
+shot 04-try-b
+tapxy 500 790
+wait 8
+shot 05-try-c
+tapxy 500 650
+wait 8
+shot 06-try-d
+wait 5
 tapxy 723 854
-wait 3
-shot 03-shop
-sh input swipe 600 1250 600 650 900
+wait 4
+shot 07-shop
+sh input swipe 20 1400 20 500 1200
 wait 2
-shot 04-shop-01
-sh input swipe 600 1250 600 650 900
+shot 08-shop-1
+sh input swipe 20 1400 20 500 1200
 wait 2
-shot 04-shop-02
-sh input swipe 600 1250 600 650 900
+shot 08-shop-2
+sh input swipe 20 1400 20 500 1200
 wait 2
-shot 04-shop-03
-sh input swipe 600 1250 600 650 900
+shot 08-shop-3
+sh input swipe 20 1400 20 500 1200
 wait 2
-shot 04-shop-04
-sh input swipe 600 1250 600 650 900
+shot 08-shop-4
+sh input swipe 20 1400 20 500 1200
 wait 2
-shot 04-shop-05
-sh input swipe 600 1250 600 650 900
+shot 08-shop-5
+sh input swipe 20 1400 20 500 1200
 wait 2
-shot 04-shop-06
-sh input swipe 600 1250 600 650 900
+shot 08-shop-6
+sh input swipe 20 1400 20 500 1200
 wait 2
-shot 04-shop-07
-sh input swipe 600 1250 600 650 900
-wait 2
-shot 04-shop-08
-sh input swipe 600 1250 600 650 900
-wait 2
-shot 04-shop-09
-sh input swipe 600 1250 600 650 900
-wait 2
-shot 04-shop-10
-sh input swipe 600 1250 600 650 900
-wait 2
-shot 04-shop-11
-sh input swipe 600 1250 600 650 900
-wait 2
-shot 04-shop-12
+shot 08-shop-7
 tapxy 883 854
 wait 3
-shot 07-settings
-sh input swipe 600 1250 600 350 900
+shot 12-settings
+sh input swipe 20 1400 20 500 1200
 wait 2
-sh input swipe 600 1250 600 350 900
+sh input swipe 20 1400 20 500 1200
 wait 2
-shot 08-settings-2
-sh input swipe 600 1250 600 350 900
-wait 2
-sh input swipe 600 1250 600 350 900
-wait 2
-shot 09-settings-bottom
+shot 13-settings-bottom
 tapxy 273 854
 wait 3
-shot 10-play
+shot 14-play
 tapxy 423 854
 wait 3
-shot 11-explore
-tapxy 573 854
-wait 3
-shot 12-walk
+shot 15-explore
 tapxy 123 854
 wait 3
-shot 13-home
+shot 16-home
 sh logcat -d -s DirectBilling
