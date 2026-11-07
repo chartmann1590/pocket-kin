@@ -11,7 +11,8 @@ var direct := false
 func _ready() -> void:
 	if Engine.has_singleton("PocketKin"):
 		native = Engine.get_singleton("PocketKin")
-		if native.has_method("store"): direct = str(native.store()) == "direct"
+		# JNI singleton methods are not visible to has_method(); call() reaches them directly.
+		direct = str(native.call("store")) == "direct"
 		# Activity and Data Layer callbacks may arrive while rendering is paused.
 		# Apply scene changes on Godot's next main-loop frame.
 		native.connect("result", _result, CONNECT_DEFERRED)
