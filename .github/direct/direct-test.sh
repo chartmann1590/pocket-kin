@@ -41,7 +41,8 @@ while IFS= read -r -u 3 line || [ -n "$line" ]; do
     am) adb shell am $arg; log "am $arg"; sleep 3;;
     wheel) adb shell input mouse scroll $X50 $Y50 --axis VSCROLL,$arg 2>&1 | tee -a "$OUT/steps.log"; log "wheel $arg"; sleep 1;;
     tapcolor) xy=$(adb exec-out screencap 2>/dev/null | python3 "$KIT/findcolor.py" $arg 2>>"$OUT/steps.log"); if [ -n "$xy" ]; then adb shell input tap $xy; log "tapcolor $arg at $xy"; else log "tapcolor $arg: none"; fi; sleep 2;;
-    seekcolor) set -- $arg; n=$1; shift; found=0; for i in $(seq 1 $n); do xy=$(adb exec-out screencap 2>/dev/null | python3 "$KIT/findcolor.py" "$@" 2>>"$OUT/steps.log"); if [ -n "$xy" ]; then adb shell input tap $xy; log "seekcolor $* at $xy (after $i)"; found=1; break; fi; adb shell input mouse scroll $X50 $Y50 --axis VSCROLL,-2 >/dev/null 2>&1; sleep 1; done; [ $found = 0 ] && log "seekcolor $*: never found"; sleep 2;;
+    seekcolor) set -- $arg; n=$1; shift; found=0; for i in $(seq 1 $n); do xy=$(adb exec-out screencap 2>/dev/null | python3 "$KIT/findcolor.py" "$@" 2>>"$OUT/steps.log"); if [ -n "$xy" ]; then adb shell input tap $xy; log "seekcolor $* at $xy (after $i)"; found=1; break; fi; adb shell input tap $((WM_W*${SEEK_X:-962}/1000)) $((WM_H*${SEEK_Y:-790}/1000)); sleep 1; done; [ $found = 0 ] && log "seekcolor $*: never found"; sleep 2;;
+    fallbackkeys) if [ "${found:-1}" = 0 ]; then set -- $arg; adb shell input tap $((WM_W*$1/1000)) $((WM_H*$2/1000)); sleep 2; shift 2; for k in "$@"; do adb shell input keyevent $k; sleep 1; done; log "fallbackkeys $arg"; else log "fallbackkeys skipped (found)"; fi; sleep 2;;
     gate) set -- $arg; for y in "$@"; do adb shell input tap $X50 $((WM_H*y/1000)); sleep 3; dump; if grep -q 'you@example.com' "$OUT/ui.xml"; then log "gate passed at permille y=$y"; break; fi; log "gate: no email dialog after y=$y"; done;;
     sh) adb shell "$arg" 2>&1 | tee -a "$OUT/steps.log";;
     *) log "unknown step: $line";;
