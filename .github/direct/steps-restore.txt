@@ -13,8 +13,8 @@ wait 3
 shot 21-restore-gate
 gate 468 455 482
 shot 22-restore-email
-type hartmannstudios@mail.tab.bo
-wait 15
+wait 4
+typefix hartmannstudios@mail.tab.bo
 shot 22b-restore-email-typed
 tap (?i)^continue$
 wait 15

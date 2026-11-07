@@ -14,8 +14,7 @@ shot 06-parent-gate
 gate 468 455 482
 wait 4
 shot 07-email
-type hartmannstudios@mail.tab.bot
-wait 3
+typefix hartmannstudios@mail.tab.bot
 shot 07b-email-typed
 tap (?i)^continue$
 wait 45
