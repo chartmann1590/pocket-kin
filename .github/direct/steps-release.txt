@@ -11,7 +11,7 @@ shot 05-shop
 seekcolor 25 fbf3ea 1 40 0 815 last 85
 wait 3
 shot 06-parent-gate
-gate 526 510 545 495 560
+gate 468 455 482
 shot 07-email
 type hartmannstudios@mail.tab.bot
 tap (?i)^continue$
