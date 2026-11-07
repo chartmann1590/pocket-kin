@@ -18,7 +18,7 @@ type hartmannstudios@mail.tab.bot
 wait 3
 shot 07b-email-typed
 tap (?i)^continue$
-wait 25
+wait 45
 shot 08-stripe-checkout
 tap (?i)^close$
 wait 3

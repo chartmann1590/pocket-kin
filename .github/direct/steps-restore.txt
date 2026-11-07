@@ -1,0 +1,27 @@
+launch
+wait 25
+shot 01-launch
+seekcolor 8 627c59 3 500 0 815 last 0
+fallbackkeys 500 661 61 61 66
+wait 8
+shot 02-home
+tapxy 728 854
+wait 4
+shot 20-shop
+seekcolor 30 f6f2f9 1 40 0 740 last -85
+wait 3
+shot 21-restore-gate
+gate 468 455 482
+shot 22-restore-email
+type hartmannstudios@mail.tab.bo
+wait 15
+shot 22b-restore-email-typed
+tap (?i)^continue$
+wait 15
+shot 23-after-restore
+pageup 12
+wait 2
+shot 24-shop-top
+seekcolor 12 fbf3ea 1 40 0 815 last 0
+shot 25-pass-active
+sh logcat -d -s DirectBilling
