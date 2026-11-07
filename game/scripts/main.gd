@@ -1413,7 +1413,7 @@ func shop_page() -> void:
 			play_sound("reward")
 			toast(I18n.T("shop.royal.opened", "Opened Royal Trunk: ") + p.get("text", "+250 Petals"))
 			show_page(I18n.T("nav.shop", "Shop"))
-		else: toast(I18n.T("shop.need.petals2", "Not enough petals! Visit Petal Bundles or explore."))
+		else: toast(I18n.T("shop.need.petals2", "Not enough petals! Complete daily chores or explore."))
 	, rb_card, true)
 
 	# --- 🍬 Gourmet Bakery & Delicacies (Buy with Petals) ---
@@ -1510,6 +1510,12 @@ func shop_page() -> void:
 			else:
 				toast(I18n.T("shop.need.petals5", "Earn a few more petals to adopt this look!"))
 		, ac, is_wearing)
+
+	# Amazon Appstore build: no real-money items (no Google Play Billing). Free + ads.
+	if Platform.amazon:
+		var amz_footer := paragraph(I18n.T("shop.footer.amazon", "All pet food, basic care, minigames, and growth are completely free forever."), body, 19)
+		amz_footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		return
 
 	# --- 🌸 Petal Currency Bundles (Play Store IAP) ---
 	var bundles_card := card(body, Color("fcf9f2"))
@@ -1725,7 +1731,8 @@ func settings_page() -> void:
 	button(I18n.T("set.cloud.restore", "Restore cloud save"), func(): Platform.call_service("cloud_load"), cloud_card)
 	if World.has_cloud_conflict():
 		button(I18n.T("set.cloud.conflict", "Review cloud save conflict"), func(): cloud_conflict_dialog(), cloud_card, true)
-	button(I18n.T("set.restore.purchases", "Restore cosmetic purchases"), func(): parent_gate(func(): Platform.call_service("restore")), cloud_card)
+	if not Platform.amazon:
+		button(I18n.T("set.restore.purchases", "Restore cosmetic purchases"), func(): parent_gate(func(): Platform.call_service("restore")), cloud_card)
 	button(I18n.T("set.delete.account", "Delete cloud account"), func(): parent_gate(func(): Platform.call_service("delete_account")), cloud_card)
 
 	var lang_card := card(body)

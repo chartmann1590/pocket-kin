@@ -17,6 +17,8 @@ class KinPlugin(godot: Godot) : GodotPlugin(godot) {
     private val services by lazy { KinServices(requireNotNull(activity), ::reply) }
     override fun getPluginName() = "PocketKin"
     override fun getPluginSignals() = setOf(SignalInfo("result", String::class.java, String::class.java))
+    /** "play" or "amazon" (Amazon Appstore build: no Google Play purchases). */
+    @UsedByGodot fun store(): String = BuildConfig.STORE
     @UsedByGodot fun request(kind: String, raw: String) {
         activity?.runOnUiThread {
             try { 

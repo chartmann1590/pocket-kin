@@ -26,6 +26,7 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
     private val billing by lazy { BillingBridge(activity, scope, reply, cloud) }
     private val translation by lazy { TranslationBridge(activity, reply) }
     private var walkRequest = JSONObject()
+    private val AMAZON = com.pocketkin.game.BuildConfig.STORE == "amazon"
 
     fun request(kind: String, input: JSONObject) {
         when (kind) {
@@ -115,14 +116,17 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
             "sign_in" -> cloud.signIn()
             "cloud_save" -> cloud.save(input)
             "cloud_load" -> cloud.load()
-            "delete_account" -> AlertDialog.Builder(activity).setTitle("Delete cloud account?").setMessage("This removes cloud saves and account data. Your on-device pet remains. Purchases can be restored with Google Play.").setNegativeButton("Cancel",null).setPositiveButton("Delete") { _,_ -> cloud.delete() }.show()
+            "delete_account" -> AlertDialog.Builder(activity).setTitle("Delete cloud account?").setMessage("This removes cloud saves and account data. Your on-device pet remains." + (if (AMAZON) "" else " Purchases can be restored with Google Play.")).setNegativeButton("Cancel",null).setPositiveButton("Delete") { _,_ -> cloud.delete() }.show()
             "rewarded" -> ads.rewarded(input.optString("reward_type", "general"))
             "interstitial" -> ads.interstitial()
             "privacy" -> ads.privacy()
-            "purchase" -> billing.purchase(input.optString("product"))
-            "restore" -> billing.restore()
-            "confirm_grant" -> billing.confirmGrant(input.optString("purchase_token"))
-            "query_products" -> billing.queryProducts()
+            // Amazon Appstore build: Google Play Billing is never started (no purchases on Fire; free + ads).
+            "purchase", "restore", "confirm_grant", "query_products" -> if (!AMAZON) when (kind) {
+                "purchase" -> billing.purchase(input.optString("product"))
+                "restore" -> billing.restore()
+                "confirm_grant" -> billing.confirmGrant(input.optString("purchase_token"))
+                else -> billing.queryProducts()
+            }
             "watch_status" -> scope.launch {
                 val nodes = runCatching { Wearable.getNodeClient(activity).connectedNodes.await() }.getOrDefault(emptyList())
                 message(kind, if (nodes.isEmpty()) "Install Pocket Kin on your paired Wear OS watch, then open both apps." else "Connected to ${nodes.joinToString { it.displayName }}.")

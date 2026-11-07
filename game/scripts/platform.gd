@@ -4,14 +4,17 @@ var native: Object
 var status := "Local save • cloud not connected"
 
 var product_prices := {}
+# Amazon Appstore build (no Google Play Billing): real-money boutique items are hidden.
+var amazon := false
 
 func _ready() -> void:
 	if Engine.has_singleton("PocketKin"):
 		native = Engine.get_singleton("PocketKin")
+		if native.has_method("store"): amazon = str(native.store()) == "amazon"
 		# Activity and Data Layer callbacks may arrive while rendering is paused.
 		# Apply scene changes on Godot's next main-loop frame.
 		native.connect("result", _result, CONNECT_DEFERRED)
-		call_service("query_products")
+		if not amazon: call_service("query_products")
 	World.changed.connect(_publish)
 
 func call_service(kind: String, payload: Dictionary = {}) -> void:

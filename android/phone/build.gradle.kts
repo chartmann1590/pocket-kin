@@ -23,6 +23,9 @@ android {
         targetSdk = 36
         versionCode = 10006
         versionName = "0.2.0"
+        // Store this build is for: "play" (default) or "amazon" (./gradlew ... -Pstore=amazon).
+        // Amazon builds have no Google Play Billing: the boutique's real-money items are hidden (free + ads).
+        buildConfigField("String", "STORE", "\"${(project.findProperty("store") as String?) ?: "play"}\"")
         val admobApp = providers.environmentVariable("ADMOB_APP_ID")
             .orElse(providers.gradleProperty("admobAppId"))
             .getOrElse("ca-app-pub-3940256099942544~3347511713")

@@ -1,0 +1,105 @@
+name: Amazon Appstore build + emulator test
+# Amazon Appstore (Fire) build of Pocket Kin: same code, built with -Pstore=amazon. No Google Play Billing:
+# the boutique's real-money items (petal packs, Caretaker Pass, Fruit Feast, decor suites, restore) are hidden;
+# everything bought with in-game petals and the rewarded ads stay (free + ads). The Godot pack is re-exported
+# from game/ so the GDScript store check ships. Run on a tablet-size emulator without Google Play services
+# (like Fire). Branch builds only make a DRAFT release; nothing is uploaded to any store.
+on:
+  push:
+    branches: [amazon]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+concurrency:
+  group: amazon-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  amazon:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    env:
+      ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+      BANNER_AD_UNIT: ${{ secrets.BANNER_AD_UNIT }}
+      INTERSTITIAL_AD_UNIT: ${{ secrets.INTERSTITIAL_AD_UNIT }}
+      REWARDED_INTERSTITIAL_AD_UNIT: ${{ secrets.REWARDED_INTERSTITIAL_AD_UNIT }}
+      REWARDED_AD_UNIT: ${{ secrets.REWARDED_AD_UNIT }}
+      KIN_STORE_PASSWORD: ${{ secrets.KIN_STORE_PASSWORD }}
+      KIN_KEY_ALIAS: ${{ secrets.KIN_KEY_ALIAS || 'pocketkin' }}
+      KIN_KEY_PASSWORD: ${{ secrets.KIN_KEY_PASSWORD }}
+      PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: "17"
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        packages: platform-tools
+    - name: Re-export the Godot game pack (amazon store check in GDScript)
+      run: |
+        set -o pipefail
+        V=4.7.2-stable
+        curl -sSL -o /tmp/godot.zip "https://github.com/godotengine/godot/releases/download/$V/Godot_v${V}_linux.x86_64.zip" 2>&1 | tee -a /tmp/amz-build.log
+        unzip -q -o /tmp/godot.zip -d /tmp/godot
+        G=$(ls /tmp/godot/Godot_v*linux* | head -1); chmod +x "$G"
+        mkdir -p artifacts
+        ls -la android/phone/src/main/assets/pocket-kin.pck | tee -a /tmp/amz-build.log
+        (cd game && timeout -k 10 600 "$G" --headless --import . ) 2>&1 | tail -40 | tee -a /tmp/amz-build.log || true
+        (cd game && timeout -k 10 600 "$G" --headless --export-pack Pack ../artifacts/pocket-kin.pck) 2>&1 | tail -60 | tee -a /tmp/amz-build.log
+        test -s artifacts/pocket-kin.pck
+        ls -la artifacts/pocket-kin.pck | tee -a /tmp/amz-build.log
+        cp artifacts/pocket-kin.pck android/phone/src/main/assets/pocket-kin.pck
+    - name: Decode upload keystore
+      run: |
+        python3 -c "import base64, os; open('android/pocket-kin-upload.keystore', 'wb').write(base64.b64decode(os.environ['PLAY_KEYSTORE_BASE64']))"
+        chmod +x android/gradlew
+    - name: Build amazon APK (store=amazon)
+      run: |
+        set -o pipefail
+        cd android
+        ./gradlew --no-daemon :phone:assembleRelease -Pstore=amazon -x lintVitalRelease --stacktrace 2>&1 | tee -a /tmp/amz-build.log
+        cd ..
+        mkdir -p amz-apk
+        cp "$(ls android/phone/build/outputs/apk/release/*.apk | grep -v unsigned | head -1 || ls android/phone/build/outputs/apk/release/*.apk | head -1)" amz-apk/PocketKin-amazon-release.apk
+        ls -la amz-apk
+        BT=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+        $BT/apksigner verify --print-certs amz-apk/PocketKin-amazon-release.apk | head -3 || true
+        $BT/aapt2 dump badging amz-apk/PocketKin-amazon-release.apk | head -3 || true
+        echo "--- Play Store URL strings left in the amazon release dex:"; unzip -p amz-apk/PocketKin-amazon-release.apk 'classes*.dex' | strings | grep -E "play\.google\.com/store|market://" | head || true
+    - name: Ship build log tail to the private drop (on failure)
+      if: failure()
+      env:
+        DROP_KEY: ${{ secrets.DROP_KEY }}
+      run: |
+        tail -c 60000 /tmp/amz-build.log 2>/dev/null | curl -s -m 60 -X PUT -H "X-Key: $DROP_KEY" --data-binary @- "https://hs-apk-drop.charles-h-hartmann1.workers.dev/c/amzlog_${{ github.event.repository.name }}_r${{ github.run_number }}/0" || true
+    - name: Enable KVM
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+    - name: Emulator test (no Google Play services, like Fire)
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 30
+        profile: Nexus 7 2013
+        target: default
+        arch: x86_64
+        ram-size: 3072M
+        disk-size: 4096M
+        emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: bash .github/amazon/run-tests.sh
+    - name: Upload test results to Tab's private drop
+      if: always()
+      env:
+        DROP_KEY: ${{ secrets.DROP_KEY }}
+      run: bash .github/amazon/amazon-upload.sh /tmp/amz-out amz_PocketKin_r${{ github.run_number }}
+    - name: Draft release with the amazon APK (not published)
+      if: success()
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: amazon-${{ github.run_number }}
+        name: Amazon build ${{ github.run_number }} (${{ github.sha }})
+        draft: true
+        files: amz-apk/PocketKin-amazon-release.apk
