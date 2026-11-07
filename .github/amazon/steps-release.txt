@@ -1,55 +1,49 @@
 launch
-wait 30
+wait 20
 shot 01-launch
-adclose
-tap (?i)meet my little friend
+sh input swipe 600 1250 600 350 900
+wait 2
+sh input swipe 600 1250 600 350 900
+wait 2
+shot 02-adopt-bottom
+tapxy 723 854
 wait 3
-shot 02-adopt
-swipeup
-swipeup
-shot 03-adopt-bottom
-tap (?i)meet my little friend
-wait 5
-adclose
-shot 04-after-hatch
-tapxy 750 955
-wait 4
-adclose
-shot 05-shop-guess
-swipeup
-shot 06-shop-2
-swipeup
-shot 07-shop-3
-swipeup
-swipeup
-shot 08-shop-4
-swipeup
-swipeup
-swipeup
-shot 09-shop-bottom
-tapxy 917 955
-wait 4
-adclose
-shot 10-settings-guess
-swipeup
-swipeup
-shot 11-settings-2
-swipeup
-swipeup
-shot 12-settings-bottom
-tapxy 250 955
-wait 4
-adclose
-shot 13-play-guess
-tapxy 417 955
-wait 4
-adclose
-shot 14-explore-guess
-tapxy 583 955
-wait 4
-adclose
-shot 15-walk-guess
-tapxy 83 955
-wait 4
-adclose
-shot 16-home-guess
+shot 03-shop
+sh input swipe 600 1250 600 350 900
+wait 2
+shot 04-shop-2
+sh input swipe 600 1250 600 350 900
+wait 2
+sh input swipe 600 1250 600 350 900
+wait 2
+shot 05-shop-3
+sh input swipe 600 1250 600 350 900
+wait 2
+sh input swipe 600 1250 600 350 900
+wait 2
+shot 06-shop-bottom
+tapxy 883 854
+wait 3
+shot 07-settings
+sh input swipe 600 1250 600 350 900
+wait 2
+sh input swipe 600 1250 600 350 900
+wait 2
+shot 08-settings-2
+sh input swipe 600 1250 600 350 900
+wait 2
+sh input swipe 600 1250 600 350 900
+wait 2
+shot 09-settings-bottom
+tapxy 273 854
+wait 3
+shot 10-play
+tapxy 423 854
+wait 3
+shot 11-explore
+tapxy 573 854
+wait 3
+shot 12-walk
+tapxy 123 854
+wait 3
+shot 13-home

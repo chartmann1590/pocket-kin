@@ -250,6 +250,8 @@ func show_page_raw(next: String) -> void:
 	add_petal_btn.add_theme_font_size_override("font_size", 18)
 	add_petal_btn.add_theme_stylebox_override("normal", box(Color("ffeedb"), 10, Color("e5a968"), 1))
 	add_petal_btn.pressed.connect(func(): sound(); show_page(I18n.T("nav.shop", "Shop")))
+	# Amazon build: petals are earned only (no purchases), so no "+" next to the balance.
+	add_petal_btn.visible = not Platform.amazon
 	petal_box.add_child(add_petal_btn)
 
 	# Settings Button
