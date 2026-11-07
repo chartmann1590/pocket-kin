@@ -115,7 +115,7 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
             "sign_in" -> cloud.signIn()
             "cloud_save" -> cloud.save(input)
             "cloud_load" -> cloud.load()
-            "delete_account" -> AlertDialog.Builder(activity).setTitle("Delete cloud account?").setMessage("This removes cloud saves and account data. Your on-device pet remains. Purchases can be restored with Google Play.").setNegativeButton("Cancel",null).setPositiveButton("Delete") { _,_ -> cloud.delete() }.show()
+            "delete_account" -> AlertDialog.Builder(activity).setTitle("Delete cloud account?").setMessage("This removes cloud saves and account data. Your on-device pet remains. " + (if (com.hartmannstudios.direct.DirectBilling.isDirect) "Purchases can be restored with your checkout email (Restore)." else "Purchases can be restored with Google Play.")).setNegativeButton("Cancel",null).setPositiveButton("Delete") { _,_ -> cloud.delete() }.show()
             "rewarded" -> ads.rewarded(input.optString("reward_type", "general"))
             "interstitial" -> ads.interstitial()
             "privacy" -> ads.privacy()

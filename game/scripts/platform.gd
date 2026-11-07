@@ -4,10 +4,14 @@ var native: Object
 var status := "Local save • cloud not connected"
 
 var product_prices := {}
+# Direct-download build (GitHub / charleshartmann.com): Stripe Checkout instead of Google Play Billing;
+# petal packs and the Fruit Feast (consumables) are not sold there.
+var direct := false
 
 func _ready() -> void:
 	if Engine.has_singleton("PocketKin"):
 		native = Engine.get_singleton("PocketKin")
+		if native.has_method("store"): direct = str(native.store()) == "direct"
 		# Activity and Data Layer callbacks may arrive while rendering is paused.
 		# Apply scene changes on Godot's next main-loop frame.
 		native.connect("result", _result, CONNECT_DEFERRED)

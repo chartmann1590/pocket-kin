@@ -4,6 +4,7 @@ import android.app.Activity
 import com.android.billingclient.api.*
 import kotlinx.coroutines.*
 import org.json.JSONObject
+import com.hartmannstudios.direct.DirectBilling
 
 class BillingBridge(
     private val activity: Activity,
@@ -28,11 +29,40 @@ class BillingBridge(
 
     private val allProducts = consumables + nonConsumables
 
-    private val client = BillingClient.newBuilder(activity)
+    // Lazy: direct (GitHub / charleshartmann.com) builds never create or connect a Google Play BillingClient.
+    private val client by lazy { BillingClient.newBuilder(activity)
         .setListener(this)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .enableAutoServiceReconnection()
-        .build()
+        .build() }
+
+    // ---- Direct build: Stripe Checkout through DirectBilling (non-consumables only; petal packs and the
+    // Fruit Feast are not sold in direct builds, the boutique hides them). Prices = the approved Stripe prices.
+    private val directPrices = mapOf(
+        "kin_cozy_pass" to "$3.99",
+        "kin_cottage" to "$2.99",
+        "kin_moonlight" to "$2.99",
+        "kin_blossom" to "$2.99"
+    )
+    init {
+        if (DirectBilling.isDirect) DirectBilling.init(activity.applicationContext, "pocketkin")
+    }
+    private fun directProducts() {
+        val map = JSONObject()
+        for ((id, price) in directPrices) map.put(id, JSONObject().put("productId", id).put("title", id).put("description", "").put("price", price))
+        activity.runOnUiThread { reply("products_details", JSONObject().put("ok", true).put("products", map)) }
+    }
+    private fun directGrant(kind: String): Int {
+        var n = 0
+        for (id in nonConsumables) if (DirectBilling.isEntitled(id)) {
+            n++
+            activity.runOnUiThread {
+                reply(kind, JSONObject().put("ok", true).put("verified", true).put("product", id)
+                    .put("purchase_token", "stripe:$id").put("message", grantMessage(id)))
+            }
+        }
+        return n
+    }
 
     private fun ready(action: () -> Unit) {
         if (client.isReady) {
@@ -51,7 +81,7 @@ class BillingBridge(
         })
     }
 
-    fun queryProducts() = ready {
+    fun queryProducts() { if (DirectBilling.isDirect) directProducts() else ready {
         val list = allProducts.map { id ->
             QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(id)
@@ -82,10 +112,18 @@ class BillingBridge(
                 }
             }
         }
-    }
+    } }
 
     fun purchase(id: String) {
         if (id !in allProducts) return
+        if (DirectBilling.isDirect) {
+            if (id !in directPrices) { message("purchase", "This item is not sold in this version of Pocket Kin."); return }
+            DirectBilling.purchase(activity, id) { ok -> if (ok && DirectBilling.isEntitled(id)) activity.runOnUiThread {
+                reply("purchase", JSONObject().put("ok", true).put("verified", true).put("product", id)
+                    .put("purchase_token", "stripe:$id").put("message", grantMessage(id)))
+            } }
+            return
+        }
         ready {
             val product = QueryProductDetailsParams.Product.newBuilder()
                 .setProductId(id)
@@ -212,7 +250,11 @@ class BillingBridge(
         }
     }
 
-    fun restore() = ready {
+    fun restore() { if (DirectBilling.isDirect) { DirectBilling.restore(activity) { _ ->
+            if (directGrant("restore") == 0) message("restore", "No purchases were found for that email.") }; return }
+        restoreFromPlay() }
+
+    private fun restoreFromPlay() = ready {
         // Recover any pending unconsumed grants stored locally
         val prefs = GamePrefs.game(activity)
         for ((key, prodId) in prefs.all) {

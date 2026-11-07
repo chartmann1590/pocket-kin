@@ -250,6 +250,8 @@ func show_page_raw(next: String) -> void:
 	add_petal_btn.add_theme_font_size_override("font_size", 18)
 	add_petal_btn.add_theme_stylebox_override("normal", box(Color("ffeedb"), 10, Color("e5a968"), 1))
 	add_petal_btn.pressed.connect(func(): sound(); show_page(I18n.T("nav.shop", "Shop")))
+	# Direct build: petals are earned only (no petal packs), so no "+" next to the balance.
+	add_petal_btn.visible = not Platform.direct
 	petal_box.add_child(add_petal_btn)
 
 	# Settings Button
@@ -1413,7 +1415,7 @@ func shop_page() -> void:
 			play_sound("reward")
 			toast(I18n.T("shop.royal.opened", "Opened Royal Trunk: ") + p.get("text", "+250 Petals"))
 			show_page(I18n.T("nav.shop", "Shop"))
-		else: toast(I18n.T("shop.need.petals2", "Not enough petals! Visit Petal Bundles or explore."))
+		else: toast(I18n.T("shop.need.petals.earn", "Not enough petals! Complete daily chores or explore.") if Platform.direct else I18n.T("shop.need.petals2", "Not enough petals! Visit Petal Bundles or explore."))
 	, rb_card, true)
 
 	# --- 🍬 Gourmet Bakery & Delicacies (Buy with Petals) ---
@@ -1511,68 +1513,70 @@ func shop_page() -> void:
 				toast(I18n.T("shop.need.petals5", "Earn a few more petals to adopt this look!"))
 		, ac, is_wearing)
 
-	# --- 🌸 Petal Currency Bundles (Play Store IAP) ---
-	var bundles_card := card(body, Color("fcf9f2"))
-	bundles_card.add_child(label(I18n.T("shop.bundles.kicker", "🌸 PETAL BUNDLES"), 17, SAGE))
-	bundles_card.add_child(label(I18n.T("shop.bundles.title", "Pouch & Treasure Packs"), 27, INK, true))
-	paragraph(I18n.T("shop.bundles.desc", "Instantly add petals to your pouch for cozy room furnishings, charming accessories, and treats."), bundles_card, 21)
+	# Direct build: petal packs (consumables) are not sold; earned petals only.
+	if not Platform.direct:
+		# --- 🌸 Petal Currency Bundles (Play Store IAP) ---
+		var bundles_card := card(body, Color("fcf9f2"))
+		bundles_card.add_child(label(I18n.T("shop.bundles.kicker", "🌸 PETAL BUNDLES"), 17, SAGE))
+		bundles_card.add_child(label(I18n.T("shop.bundles.title", "Pouch & Treasure Packs"), 27, INK, true))
+		paragraph(I18n.T("shop.bundles.desc", "Instantly add petals to your pouch for cozy room furnishings, charming accessories, and treats."), bundles_card, 21)
 
-	var petal_packs := [
-		{
-			"id": "kin_petals_small",
-			"name": I18n.T("iap.petals.small.name", "Handful of Petals"),
-			"petals": 250,
-			"desc": I18n.T("iap.petals.small.desc", "+250 Petals for charming decor & accessories"),
-			"icon": "🌸",
-			"badge": "STARTER",
-			"badge_color": SAGE,
-			"fallback_price": "$0.99"
-		},
-		{
-			"id": "kin_petals_medium",
-			"name": I18n.T("iap.petals.medium.name", "Basket of Petals"),
-			"petals": 750,
-			"desc": I18n.T("iap.petals.medium.desc", "+750 Petals · Most popular choice!"),
-			"icon": "🧺",
-			"badge": "MOST POPULAR",
-			"badge_color": Color("e67e22"),
-			"fallback_price": "$2.49"
-		},
-		{
-			"id": "kin_petals_large",
-			"name": I18n.T("iap.petals.large.name", "Treasure Chest"),
-			"petals": 2000,
-			"desc": I18n.T("iap.petals.large.desc", "+2,000 Petals · Best value for full rooms!"),
-			"icon": "✨",
-			"badge": "BEST VALUE",
-			"badge_color": Color("9b59b6"),
-			"fallback_price": "$4.99"
-		}
-	]
+		var petal_packs := [
+			{
+				"id": "kin_petals_small",
+				"name": I18n.T("iap.petals.small.name", "Handful of Petals"),
+				"petals": 250,
+				"desc": I18n.T("iap.petals.small.desc", "+250 Petals for charming decor & accessories"),
+				"icon": "🌸",
+				"badge": "STARTER",
+				"badge_color": SAGE,
+				"fallback_price": "$0.99"
+			},
+			{
+				"id": "kin_petals_medium",
+				"name": I18n.T("iap.petals.medium.name", "Basket of Petals"),
+				"petals": 750,
+				"desc": I18n.T("iap.petals.medium.desc", "+750 Petals · Most popular choice!"),
+				"icon": "🧺",
+				"badge": "MOST POPULAR",
+				"badge_color": Color("e67e22"),
+				"fallback_price": "$2.49"
+			},
+			{
+				"id": "kin_petals_large",
+				"name": I18n.T("iap.petals.large.name", "Treasure Chest"),
+				"petals": 2000,
+				"desc": I18n.T("iap.petals.large.desc", "+2,000 Petals · Best value for full rooms!"),
+				"icon": "✨",
+				"badge": "BEST VALUE",
+				"badge_color": Color("9b59b6"),
+				"fallback_price": "$4.99"
+			}
+		]
 
-	for pack in petal_packs:
-		var item_card := card(bundles_card, Color("ffffff"))
-		var r1 := row(item_card)
-		var icon_lbl := label(pack.icon, 34)
-		r1.add_child(icon_lbl)
+		for pack in petal_packs:
+			var item_card := card(bundles_card, Color("ffffff"))
+			var r1 := row(item_card)
+			var icon_lbl := label(pack.icon, 34)
+			r1.add_child(icon_lbl)
 
-		var title_box := VBoxContainer.new()
-		title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		r1.add_child(title_box)
+			var title_box := VBoxContainer.new()
+			title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			r1.add_child(title_box)
 
-		var name_row := row(title_box, 8)
-		name_row.add_child(label(pack.name, 22, INK, true))
-		var badge := label(" " + I18n.t(pack.badge) + " ", 14, Color.WHITE)
-		badge.add_theme_stylebox_override("normal", box(pack.badge_color, 8))
-		name_row.add_child(badge)
+			var name_row := row(title_box, 8)
+			name_row.add_child(label(pack.name, 22, INK, true))
+			var badge := label(" " + I18n.t(pack.badge) + " ", 14, Color.WHITE)
+			badge.add_theme_stylebox_override("normal", box(pack.badge_color, 8))
+			name_row.add_child(badge)
 
-		title_box.add_child(label(pack.desc, 18, MUTED))
+			title_box.add_child(label(pack.desc, 18, MUTED))
 
-		var price_str: String = Platform.product_prices.get(pack.id, {}).get("price", pack.fallback_price)
-		if price_str.is_empty(): price_str = pack.fallback_price
-		button(I18n.T("shop.adopt.for", "Adopt for ") + price_str, func():
-			parent_gate(func(): Platform.call_service("purchase", {"product": pack.id}))
-		, item_card, pack.badge == "MOST POPULAR")
+			var price_str: String = Platform.product_prices.get(pack.id, {}).get("price", pack.fallback_price)
+			if price_str.is_empty(): price_str = pack.fallback_price
+			button(I18n.T("shop.adopt.for", "Adopt for ") + price_str, func():
+				parent_gate(func(): Platform.call_service("purchase", {"product": pack.id}))
+			, item_card, pack.badge == "MOST POPULAR")
 
 	# --- 👑 Cozy Caretaker Pass ---
 	var pass_card := card(body, Color("fbf3ea"))
@@ -1591,24 +1595,25 @@ func shop_page() -> void:
 			parent_gate(func(): Platform.call_service("purchase", {"product": "kin_cozy_pass"}))
 		, pass_card, true)
 
-	# --- 🧺 Deluxe Fruit Feast (IAP) ---
-	var feast_section := card(body, Color("f3f8f2"))
-	feast_section.add_child(label(I18n.T("iap.feast.kicker", "CARE BUNDLE"), 17, SAGE))
-	feast_section.add_child(label(I18n.T("iap.feast.name", "🍓 Deluxe Fruit Feast"), 27, INK, true))
-	var feast_card := card(feast_section, Color("ffffff"))
-	var fr := row(feast_card)
-	fr.add_child(label("🍓", 34))
-	var f_box := VBoxContainer.new()
-	f_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	fr.add_child(f_box)
-	f_box.add_child(label(I18n.T("iap.feast.title", "Deluxe Fruit Feast Basket"), 22, INK, true))
-	f_box.add_child(label(I18n.T("iap.feast.desc", "+5 of every favorite fruit, instant full energy & +100 Petals"), 18, MUTED))
+	if not Platform.direct:
+		# --- 🧺 Deluxe Fruit Feast (IAP) ---
+		var feast_section := card(body, Color("f3f8f2"))
+		feast_section.add_child(label(I18n.T("iap.feast.kicker", "CARE BUNDLE"), 17, SAGE))
+		feast_section.add_child(label(I18n.T("iap.feast.name", "🍓 Deluxe Fruit Feast"), 27, INK, true))
+		var feast_card := card(feast_section, Color("ffffff"))
+		var fr := row(feast_card)
+		fr.add_child(label("🍓", 34))
+		var f_box := VBoxContainer.new()
+		f_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		fr.add_child(f_box)
+		f_box.add_child(label(I18n.T("iap.feast.title", "Deluxe Fruit Feast Basket"), 22, INK, true))
+		f_box.add_child(label(I18n.T("iap.feast.desc", "+5 of every favorite fruit, instant full energy & +100 Petals"), 18, MUTED))
 
-	var feast_price: String = Platform.product_prices.get("kin_treat_basket", {}).get("price", "$1.49")
-	if feast_price.is_empty(): feast_price = "$1.49"
-	button(I18n.T("iap.feast.cta", "Treat My Companion · ") + feast_price, func():
-		parent_gate(func(): Platform.call_service("purchase", {"product": "kin_treat_basket"}))
-	, feast_card)
+		var feast_price: String = Platform.product_prices.get("kin_treat_basket", {}).get("price", "$1.49")
+		if feast_price.is_empty(): feast_price = "$1.49"
+		button(I18n.T("iap.feast.cta", "Treat My Companion · ") + feast_price, func():
+			parent_gate(func(): Platform.call_service("purchase", {"product": "kin_treat_basket"}))
+		, feast_card)
 
 	# --- 🏡 Storybook Cosmetic Sets ---
 	var collections_card := card(body, Color("f6f2f9"))
@@ -1649,11 +1654,12 @@ func shop_page() -> void:
 	button(I18n.T("shop.restore", "🔄 Restore Prior Purchases"), func():
 		parent_gate(func():
 			Platform.call_service("restore")
-			toast(I18n.T("shop.checking.play", "Checking Google Play for previous purchases…"))
+			toast(I18n.T("shop.checking.email", "Looking up your purchases by email…") if Platform.direct else I18n.T("shop.checking.play", "Checking Google Play for previous purchases…"))
 		)
 	, body)
 
-	var footer := paragraph(I18n.T("shop.footer", "Pocket Kin respects your privacy and uses standard Google Play Billing with Family-Safe parent gates. All pet food, basic care, minigames, and growth are completely free forever."), body, 19)
+	var footer_text: String = I18n.T("shop.footer.direct", "Pocket Kin respects your privacy and uses secure Stripe Checkout with Family-Safe parent gates. All pet food, basic care, minigames, and growth are completely free forever.") if Platform.direct else I18n.T("shop.footer", "Pocket Kin respects your privacy and uses standard Google Play Billing with Family-Safe parent gates. All pet food, basic care, minigames, and growth are completely free forever.")
+	var footer := paragraph(footer_text, body, 19)
 	footer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
 func room_page() -> void:

@@ -1,0 +1,108 @@
+name: Direct download build (Stripe) + emulator test
+# Direct-download build of Pocket Kin (GitHub Releases / charleshartmann.com): same code, built with -Pstore=direct.
+# Stripe Checkout (DirectBilling) instead of Google Play Billing for the Caretaker Pass and the decor suites;
+# petal packs and the Fruit Feast (consumables) are not sold in direct builds. The Godot pack is re-exported
+# from game/ so the GDScript store check ships. Branch builds only make a DRAFT release; nothing is uploaded to any store.
+on:
+  push:
+    branches: [direct-stripe]
+  workflow_dispatch:
+    inputs:
+      steps:
+        description: steps file under .github/direct (steps-release.txt or steps-restore.txt)
+        default: steps-release.txt
+permissions:
+  contents: write
+concurrency:
+  group: direct-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  direct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    env:
+      ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
+      BANNER_AD_UNIT: ${{ secrets.BANNER_AD_UNIT }}
+      INTERSTITIAL_AD_UNIT: ${{ secrets.INTERSTITIAL_AD_UNIT }}
+      REWARDED_INTERSTITIAL_AD_UNIT: ${{ secrets.REWARDED_INTERSTITIAL_AD_UNIT }}
+      REWARDED_AD_UNIT: ${{ secrets.REWARDED_AD_UNIT }}
+      KIN_STORE_PASSWORD: ${{ secrets.KIN_STORE_PASSWORD }}
+      KIN_KEY_ALIAS: ${{ secrets.KIN_KEY_ALIAS || 'pocketkin' }}
+      KIN_KEY_PASSWORD: ${{ secrets.KIN_KEY_PASSWORD }}
+      PLAY_KEYSTORE_BASE64: ${{ secrets.PLAY_KEYSTORE_BASE64 }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: "17"
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        packages: platform-tools
+    - name: Re-export the Godot game pack (direct store check in GDScript)
+      run: |
+        set -o pipefail
+        V=4.7.2-stable
+        curl -sSL -o /tmp/godot.zip "https://github.com/godotengine/godot/releases/download/$V/Godot_v${V}_linux.x86_64.zip" 2>&1 | tee -a /tmp/dsk-build.log
+        unzip -q -o /tmp/godot.zip -d /tmp/godot
+        G=$(ls /tmp/godot/Godot_v*linux* | head -1); chmod +x "$G"
+        mkdir -p artifacts
+        ls -la android/phone/src/main/assets/pocket-kin.pck | tee -a /tmp/dsk-build.log
+        (cd game && timeout -k 10 600 "$G" --headless --import . ) 2>&1 | tail -40 | tee -a /tmp/dsk-build.log || true
+        (cd game && timeout -k 10 600 "$G" --headless --export-pack Pack ../artifacts/pocket-kin.pck) 2>&1 | tail -60 | tee -a /tmp/dsk-build.log
+        test -s artifacts/pocket-kin.pck
+        ls -la artifacts/pocket-kin.pck | tee -a /tmp/dsk-build.log
+        cp artifacts/pocket-kin.pck android/phone/src/main/assets/pocket-kin.pck
+    - name: Decode upload keystore
+      run: |
+        python3 -c "import base64, os; open('android/pocket-kin-upload.keystore', 'wb').write(base64.b64decode(os.environ['PLAY_KEYSTORE_BASE64']))"
+        chmod +x android/gradlew
+    - name: Build direct APK (store=direct)
+      run: |
+        set -o pipefail
+        cd android
+        ./gradlew --no-daemon :phone:assembleRelease -Pstore=direct -x lintVitalRelease --stacktrace 2>&1 | tee -a /tmp/dsk-build.log
+        cd ..
+        mkdir -p dsk-apk
+        cp "$(ls android/phone/build/outputs/apk/release/*.apk | grep -v unsigned | head -1 || ls android/phone/build/outputs/apk/release/*.apk | head -1)" dsk-apk/PocketKin-direct-release.apk
+        ls -la dsk-apk
+        BT=$ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | sort -V | tail -1)
+        $BT/apksigner verify --print-certs dsk-apk/PocketKin-direct-release.apk | head -3 || true
+        $BT/aapt2 dump badging dsk-apk/PocketKin-direct-release.apk | head -3 || true
+        echo "--- Play Store URL strings left in the direct release dex:"; unzip -p dsk-apk/PocketKin-direct-release.apk 'classes*.dex' | strings | grep -E "play\.google\.com/store|market://" | head || true
+    - name: Ship build log tail to the private drop (on failure)
+      if: failure()
+      env:
+        DROP_KEY: ${{ secrets.DROP_KEY }}
+      run: |
+        tail -c 60000 /tmp/dsk-build.log 2>/dev/null | curl -s -m 60 -X PUT -H "X-Key: $DROP_KEY" --data-binary @- "https://hs-apk-drop.charles-h-hartmann1.workers.dev/c/dsklog_${{ github.event.repository.name }}_r${{ github.run_number }}/0" || true
+    - name: Enable KVM
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+    - name: Emulator test (Google APIs, no Play Store)
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 30
+        profile: Nexus 7 2013
+        target: google_apis
+        arch: x86_64
+        ram-size: 3072M
+        disk-size: 4096M
+        emulator-options: -no-window -gpu swangle_indirect -noaudio -no-boot-anim -camera-back none
+        disable-animations: true
+        script: STEPS_FILE=${{ github.event.inputs.steps || 'steps-release.txt' }} bash .github/direct/run-tests.sh
+    - name: Upload test results to Tab's private drop
+      if: always()
+      env:
+        DROP_KEY: ${{ secrets.DROP_KEY }}
+      run: bash .github/direct/direct-upload.sh /tmp/dsk-out dsk_PocketKin_r${{ github.run_number }}
+    - name: Draft release with the direct APK (not published)
+      if: success()
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: direct-${{ github.run_number }}
+        name: Direct build ${{ github.run_number }} (${{ github.sha }})
+        draft: true
+        files: dsk-apk/PocketKin-direct-release.apk

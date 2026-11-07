@@ -4,6 +4,10 @@ if (file("google-services.json").exists()) {
     apply(plugin = "com.google.firebase.crashlytics")
 }
 android {
+    // DirectBilling: real Stripe client in direct builds, a no-op stub in Play builds (java + kotlin dirs: AGP 9 built-in Kotlin reads kotlin dirs)
+    val hsBillingDir = if (((project.findProperty("store") as String?) ?: "play") == "direct") "src/hsdirect/java" else "src/hsplay/java"
+    sourceSets.getByName("main").java.srcDir(hsBillingDir)
+    sourceSets.getByName("main").kotlin.srcDir(hsBillingDir)
     namespace = "com.pocketkin.game"
     compileSdk = 36
     signingConfigs {
@@ -18,6 +22,9 @@ android {
         }
     }
     defaultConfig {
+        // Store this build is for: "play" (default) or "direct" (./gradlew ... -Pstore=direct, GitHub/charleshartmann.com APK).
+        // Direct builds use Stripe Checkout (DirectBilling) instead of Google Play Billing, and drop Play links + the Play review prompt.
+        buildConfigField("String", "STORE", "\"${(project.findProperty("store") as String?) ?: "play"}\"")
         applicationId = "com.pocketkin.game"
         minSdk = 28
         targetSdk = 36
