@@ -60,6 +60,8 @@ class AdsBridge(private val activity:Activity,private val reply:(String,JSONObje
     }
     fun interstitial() {
         if(GamePrefs.game(activity).getBoolean("cozy_pass", false)) return
+        // Direct (Stripe) builds: the pass lives in the DirectBilling license, not only in the Play-path pref.
+        if(com.hartmannstudios.direct.DirectBilling.isDirect && com.hartmannstudios.direct.DirectBilling.isEntitled("kin_cozy_pass")) return
         if(loading || !prefs.contains("age_band") || System.currentTimeMillis()-prefs.getLong("last_ad",0)<120000) return
         consent {
             loading=true

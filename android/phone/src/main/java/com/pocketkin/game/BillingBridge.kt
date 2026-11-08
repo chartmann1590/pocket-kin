@@ -56,6 +56,7 @@ class BillingBridge(
         var n = 0
         for (id in nonConsumables) if (DirectBilling.isEntitled(id)) {
             n++
+            if (id == "kin_cozy_pass") GamePrefs.game(activity).edit().putBoolean("cozy_pass", true).apply()
             activity.runOnUiThread {
                 reply(kind, JSONObject().put("ok", true).put("verified", true).put("product", id)
                     .put("purchase_token", "stripe:$id").put("message", grantMessage(id)))
@@ -119,6 +120,7 @@ class BillingBridge(
         if (DirectBilling.isDirect) {
             if (id !in directPrices) { message("purchase", "This item is not sold in this version of Pocket Kin."); return }
             DirectBilling.purchase(activity, id) { ok -> if (ok && DirectBilling.isEntitled(id)) activity.runOnUiThread {
+                if (id == "kin_cozy_pass") GamePrefs.game(activity).edit().putBoolean("cozy_pass", true).apply()
                 reply("purchase", JSONObject().put("ok", true).put("verified", true).put("product", id)
                     .put("purchase_token", "stripe:$id").put("message", grantMessage(id)))
             } }
