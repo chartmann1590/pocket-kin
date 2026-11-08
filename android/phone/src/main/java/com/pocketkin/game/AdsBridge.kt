@@ -7,6 +7,7 @@ import android.widget.EditText
 import com.google.android.gms.ads.*
 import com.google.android.gms.ads.interstitial.*
 import com.google.android.gms.ads.rewarded.*
+import com.google.android.gms.ads.rewardedinterstitial.*
 import com.google.android.ump.*
 import org.json.JSONObject
 import java.util.UUID
@@ -49,13 +50,27 @@ class AdsBridge(private val activity:Activity,private val reply:(String,JSONObje
         if(loading) return
         consent {
             loading=true
-            RewardedAd.load(activity,BuildConfig.REWARDED_AD_UNIT,AdRequest.Builder().build(),object:RewardedAdLoadCallback(){
-                override fun onAdFailedToLoad(error:LoadAdError){loading=false;message("rewarded","No video available right now. You can keep playing.")}
-                override fun onAdLoaded(ad:RewardedAd){loading=false; val id=UUID.randomUUID().toString(); ad.show(activity) {
-                    prefs.edit().putLong("last_ad",System.currentTimeMillis()).apply()
-                    reply("rewarded",JSONObject().put("earned",true).put("id",id).put("reward_type",rewardType).put("message","A little bonus! +35 petals."))
-                }}
-            })
+            // The "watch a video" unit may be a REWARDED_INTERSTITIAL ad unit (when no plain Rewarded unit is
+            // configured, REWARDED_AD_UNIT falls back to it in build.gradle.kts). Loading a rewarded-interstitial
+            // unit through RewardedAd.load is refused by AdMob (error 3, HTTP 403), so pick the matching format.
+            // The player opts in by tapping the button, so showing it right away is the intro/opt-in step.
+            val unit=BuildConfig.REWARDED_AD_UNIT
+            val failed={ _:LoadAdError -> loading=false; message("rewarded","No video available right now. You can keep playing.") }
+            val earned={ id:String ->
+                prefs.edit().putLong("last_ad",System.currentTimeMillis()).apply()
+                reply("rewarded",JSONObject().put("earned",true).put("id",id).put("reward_type",rewardType).put("message","A little bonus! +35 petals."))
+            }
+            if (unit.isBlank() || unit==BuildConfig.REWARDED_INTERSTITIAL_AD_UNIT) {
+                RewardedInterstitialAd.load(activity,BuildConfig.REWARDED_INTERSTITIAL_AD_UNIT,AdRequest.Builder().build(),object:RewardedInterstitialAdLoadCallback(){
+                    override fun onAdFailedToLoad(error:LoadAdError){failed(error)}
+                    override fun onAdLoaded(ad:RewardedInterstitialAd){loading=false; val id=UUID.randomUUID().toString(); ad.show(activity) { earned(id) }}
+                })
+            } else {
+                RewardedAd.load(activity,unit,AdRequest.Builder().build(),object:RewardedAdLoadCallback(){
+                    override fun onAdFailedToLoad(error:LoadAdError){failed(error)}
+                    override fun onAdLoaded(ad:RewardedAd){loading=false; val id=UUID.randomUUID().toString(); ad.show(activity) { earned(id) }}
+                })
+            }
         }
     }
     fun interstitial() {

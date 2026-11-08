@@ -28,8 +28,8 @@ android {
         applicationId = "com.pocketkin.game"
         minSdk = 28
         targetSdk = 36
-        versionCode = 10007
-        versionName = "0.2.1"
+        versionCode = 10008
+        versionName = "0.2.2"
         val admobApp = providers.environmentVariable("ADMOB_APP_ID")
             .orElse(providers.gradleProperty("admobAppId"))
             .getOrElse("ca-app-pub-3940256099942544~3347511713")
