@@ -253,7 +253,11 @@ class BillingBridge(
     }
 
     fun restore() { if (DirectBilling.isDirect) { DirectBilling.restore(activity) { _ ->
-            if (directGrant("restore") == 0) message("restore", "No purchases were found for that email.") }; return }
+            if (directGrant("restore") == 0) message("restore", when {
+                DirectBilling.lastRestoreRateLimited -> DirectBilling.RATE_LIMITED_MESSAGE
+                DirectBilling.lastRestoreUnreachable -> "Couldn't reach the license server. Try again."
+                else -> "No purchases were found for that email."
+            }) }; return }
         restoreFromPlay() }
 
     private fun restoreFromPlay() = ready {
