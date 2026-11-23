@@ -36,6 +36,7 @@ class KinPlugin(godot: Godot) : GodotPlugin(godot) {
     fun reply(kind: String, payload: JSONObject) { emitSignal("result", kind, payload.toString()) }
     fun isPaused() = services.paused
     fun openWidget() = services.openWidget()
+    fun healthPermissionRequestFinished() = services.healthPermissionRequestFinished()
     override fun onMainResume() { 
         current = WeakReference(this)
         services.resume()
