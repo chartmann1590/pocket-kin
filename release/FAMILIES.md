@@ -19,8 +19,13 @@ Play Console → App content → Target audience & content / Families.
       (`AdsBridge.consent` sets TFCD/TFUA + G rating before any ad request); no personalized
       ads for child users; no ad content that links out to purchases without a parent gate.
 - [x] No behavioral ad targeting for known child users; consent screen before first ad request.
-- [x] Purchases behind a parent gate (7 × 8 question in `main.gd parent_gate`), permanent
-      cosmetic bundles only, no consumables, no loot boxes, no time-pressure offers.
+- [x] Purchases behind a parent gate (7 × 8 question in `main.gd parent_gate`): consumable
+      Petal packs and a treat basket, a permanent Cozy Caretaker Pass and fixed-content
+      cosmetic sets — all fixed-content — PLUS two randomized mystery crates bought with
+      Petals (in-game currency; earnable and also sold). Crate odds are disclosed in the shop
+      before opening (Play loot-box disclosure, added 2026-11-23). No real-money gambling,
+      no cash-out, no time-pressure offers. (Corrected 2026-11-23: an earlier version of this
+      checklist wrongly claimed 'no consumables, no loot boxes'.)
 - [x] No social features: no chat, no profile sharing, no user-generated content, no external links
       that bypass the parent gate (Settings actions that touch accounts/purchases are gated).
 - [x] Neutral age screen (`AdsBridge.configureAge`) before first consent/ad flow.

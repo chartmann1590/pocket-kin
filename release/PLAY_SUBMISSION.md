@@ -1,7 +1,12 @@
-# Pocket Kin — Play submission runbook (0.2.0 / versionCode 3)
+# Pocket Kin — Play submission runbook (0.2.1 / phone versionCode 10007, wear 20007)
 
-Target: full Play Store submission (phone + Wear OS). Version code bumped 2 → 3 for the
-release-readiness build. All repo-side work is done; remaining items are console actions
+Target: full Play Store submission (phone + Wear OS). 2026-11-23 compliance build:
+versionName 0.2.0 → 0.2.1, phone versionCode 10006 → 10007, wear 20006 → 20007
+(see android/phone/build.gradle.kts and android/wear/build.gradle.kts — the 'versionCode 3'
+figures in older drafts of this runbook were stale and are superseded). BEFORE uploading,
+re-export the Godot PCK (`game/` scripts changed: mystery-crate odds disclosure) and sync
+it into `android/phone/src/main/assets/pocket-kin.pck`, or the in-game changes will not
+be in the bundle. All repo-side work is done; remaining items are console actions
 on your accounts, listed in the exact order they must happen.
 
 ## 0. What ships (built from this branch)
@@ -72,7 +77,8 @@ SHA1 `9D:85:2B:39:86:0F:03:FD:91:6C:CC:67:C1:24:2D:0A:7F:F9:D7:DE`.
 | Data safety | `release/DATA_SAFETY.md` |
 | Content rating | questionnaire answers in `release/CONTENT_RATING.md` |
 | Ads declaration | Yes, contains ads (AdMob); UMP consent implemented |
-| Health apps declaration | steps (phone) + watch heart rate; demo video + `release/HEALTH_PERMISSIONS.md` |
+| Health apps declaration | steps (phone) + watch heart rate, game use only, not a health/fitness/medical app; demo video + `release/HEALTH_PERMISSIONS.md` |
+| Account deletion URL | `https://chartmann1590.github.io/pocket-kin/delete-account.html` (in-app deletion also exists: Settings → Delete cloud account) |
 | Families policy | self-certification checklist in `release/FAMILIES.md` |
 | App content → website | `https://chartmann1590.github.io/pocket-kin/` |
 

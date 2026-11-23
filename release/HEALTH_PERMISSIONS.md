@@ -1,7 +1,9 @@
 # Pocket Kin — Health permission declaration (Play Console → App content)
 
 Apps that use Health Connect (or health permissions) must declare usage in Play Console
-and pass review. Pocket Kin uses exactly two health data types:
+and pass review. Pocket Kin is a virtual-pet **game**, not a health, fitness or medical app:
+it makes no health claims, gives no health advice, and diagnoses nothing. It accesses
+exactly two health data types, both used only as game inputs:
 
 - **Phone:** `android.permission.health.READ_STEPS` (+ legacy `ACTIVITY_RECOGNITION` for the
   on-device sensor fallback) — optional Walk Together milestones.
@@ -10,11 +12,17 @@ and pass review. Pocket Kin uses exactly two health data types:
   dashboard. Requested at runtime the first time the watch dashboard opens; a denied prompt
   simply hides heart-rate rows. Readings stay on the watch/phone pair, are never uploaded to
   any server, never used for ads or analytics, and nothing is written back to Health Connect.
+  Only real sensor readings are shown: before the first reading the watch shows no BPM value,
+  and there is no simulated or generated heart-rate value anywhere in the app (fixed 2026-11-23;
+  earlier builds displayed a placeholder value — that code was removed, see WatchHealthManager).
 
 ## Declare in App content → Health apps
 
-- **Is your app a health/fitness app?** Yes (reads steps on the phone; reads heart rate on the
-  paired Wear OS companion).
+- **Does your app access health data?** Yes — steps (phone, Health Connect) and heart rate
+  (paired Wear OS companion, body sensors), both used only for game features.
+- **Is your app a health/fitness/medical app?** No. Pocket Kin is a game; the data only moves
+  the pet (walking milestones, a friendship bonus). It does not track, monitor, diagnose or
+  advise on the user's health, and the store listing says so.
 - **Which permissions?** `READ_STEPS` (phone) and `BODY_SENSORS` (wear).
 - **Purpose:** "Steps are read only if the player opts into the optional Walk Together
   feature. Today's/yesterday's step totals unlock walking milestones (500/1500/3000 steps)
