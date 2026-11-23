@@ -97,7 +97,7 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
             "steps" -> { walkRequest = input; steps.read(input.optLong("activated")) }
             "steps_permission" -> {
                 walkRequest = input
-                activity.startActivityForResult(PermissionController.createRequestPermissionResultContract().createIntent(activity, setOf(HealthPermission.getReadPermission(StepsRecord::class))), 701)
+                (activity as? MainActivity)?.requestHealthPermissions() ?: activity.startActivityForResult(PermissionController.createRequestPermissionResultContract().createIntent(activity, setOf(HealthPermission.getReadPermission(StepsRecord::class))), 701)
             }
             "start_walk" -> {
                 walkRequest = input
@@ -158,6 +158,7 @@ class KinServices(private val activity: Activity, private val reply: (String, JS
         if (code == 701) steps.read(walkRequest.optLong("activated"),false)
         if (code == 704) cloud.signInResult(data)
     }
+    fun healthPermissionRequestFinished() { steps.read(walkRequest.optLong("activated"), false) }
     fun permissionResult(code: Int, grants: IntArray) {
         if (code == 702 && grants.firstOrNull() == PackageManager.PERMISSION_GRANTED) startWalk()
         if (code == 703) CareScheduler.schedule(activity)
