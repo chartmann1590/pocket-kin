@@ -17,7 +17,7 @@ class WatchHealthManager(private val context: Context, private val onHealthChang
 
     private var baselineStep = -1
     private var simulatedSteps = 0
-    private var currentHeartRate = 74
+    private var currentHeartRate = 0 // 0 = no real sensor reading yet; never a placeholder
     private var hasHeartRateSensor = false
     private var hasStepSensor = false
 
@@ -34,7 +34,7 @@ class WatchHealthManager(private val context: Context, private val onHealthChang
         }
         simulatedSteps = prefs.getInt("simulated_steps", 0)
         baselineStep = prefs.getInt("baseline_step", -1)
-        currentHeartRate = prefs.getInt("last_hr", 74)
+        currentHeartRate = prefs.getInt("last_hr", 0)
 
         registerSensors()
     }
@@ -110,13 +110,14 @@ class WatchHealthManager(private val context: Context, private val onHealthChang
         return currentHeartRate
     }
 
-    fun measureHeartRatePulse(): Int {
-        // Subtle natural pulse variation around resting 72-78 bpm
-        val variation = ((-3..4).random())
-        currentHeartRate = (currentHeartRate + variation).coerceIn(65, 88)
-        prefs.edit().putInt("last_hr", currentHeartRate).apply()
-        notifyChange()
-        return currentHeartRate
+    /**
+     * Ask the sensor stack for a fresh reading. There is deliberately NO way to
+     * generate a heart-rate value in code: an earlier version fabricated a plausible
+     * BPM here (and defaulted the display to 74), which presented invented data as a
+     * sensor reading. Only TYPE_HEART_RATE sensor events may set currentHeartRate.
+     */
+    fun requestFreshReading() {
+        registerSensors()
     }
 
     fun getHydrationCups(): Int {

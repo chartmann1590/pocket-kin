@@ -12,6 +12,8 @@ import java.net.InetAddress
 import java.net.ServerSocket
 import java.net.Socket
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.security.SecureRandom
 
 object PhoneSyncServer {
     private const val TAG = "PhoneSyncServer"
@@ -20,6 +22,33 @@ object PhoneSyncServer {
     private var job: Job? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var appContext: Context? = null
+
+    private const val TOKEN_PREF = "sync_pairing_token"
+    const val TOKEN_HEADER = "X-Kin-Pairing-Token"
+
+    /**
+     * Pairing token for the local HTTP fallback channel. Generated once, stored in the
+     * never-backed-up private prefs, and shared with the watch ONLY over the paired
+     * Wearable (Bluetooth) channel (see PhoneWatchService's /kin/ping reply) — it is
+     * never included in any HTTP response, so a device that merely finds port 8765 on
+     * the LAN learns nothing and can do nothing.
+     */
+    fun pairingToken(context: Context): String {
+        val prefs = GamePrefs.private(context)
+        prefs.getString(TOKEN_PREF, null)?.let { if (it.isNotBlank()) return it }
+        val bytes = ByteArray(24).also { SecureRandom().nextBytes(it) }
+        val token = bytes.joinToString("") { "%02x".format(it) }
+        prefs.edit().putString(TOKEN_PREF, token).apply()
+        return token
+    }
+
+    private fun tokenMatches(provided: String?, context: Context): Boolean {
+        if (provided.isNullOrBlank()) return false
+        return MessageDigest.isEqual(
+            pairingToken(context).toByteArray(StandardCharsets.UTF_8),
+            provided.toByteArray(StandardCharsets.UTF_8)
+        )
+    }
     @Volatile
     var latestSnapshot: JSONObject? = null
 
@@ -67,10 +96,14 @@ object PhoneSyncServer {
             val path = parts[1]
 
             var contentLength = 0
+            var pairingHeader: String? = null
             var line: String? = input.readLine()
             while (!line.isNullOrEmpty()) {
                 if (line.lowercase().startsWith("content-length:")) {
                     contentLength = line.substring(15).trim().toIntOrNull() ?: 0
+                }
+                if (line.lowercase().startsWith("x-kin-pairing-token:")) {
+                    pairingHeader = line.substring(20).trim()
                 }
                 line = input.readLine()
             }
@@ -87,13 +120,14 @@ object PhoneSyncServer {
                 body = String(buf, 0, read)
             }
 
-            val response = processRequest(method, path, body)
+            val (status, response) = processRequest(method, path, body, pairingHeader)
             val bytes = response.toByteArray(StandardCharsets.UTF_8)
 
-            output.write("HTTP/1.1 200 OK\r\n")
+            output.write("HTTP/1.1 $status ${if (status == 200) "OK" else "Error"}\r\n")
             output.write("Content-Type: application/json; charset=utf-8\r\n")
             output.write("Content-Length: ${bytes.size}\r\n")
-            output.write("Access-Control-Allow-Origin: *\r\n")
+            // No CORS header: the only legitimate client is the paired watch app
+            // (a native HTTP client), never a web page.
             output.write("Connection: close\r\n\r\n")
             output.write(response)
             output.flush()
@@ -104,13 +138,19 @@ object PhoneSyncServer {
         }
     }
 
-    private fun processRequest(method: String, path: String, body: String): String {
-        val ctx = appContext ?: return JSONObject().put("ok", false).put("message", "Service initializing").toString()
+    private fun processRequest(method: String, path: String, body: String, pairingHeader: String?): Pair<Int, String> {
+        val ctx = appContext ?: return 503 to JSONObject().put("ok", false).put("message", "Service initializing").toString()
+        // Every /kin/* endpoint requires the pairing token. Before this check existed,
+        // any device on the same Wi-Fi could read the pet snapshot, post care actions
+        // that rewrite the save file, or inject step/heart-rate values.
+        if (!tokenMatches(pairingHeader, ctx)) {
+            return 401 to JSONObject().put("ok", false).put("message", "Unauthorized: missing or invalid pairing token").toString()
+        }
         val prefs = GamePrefs.game(ctx)
 
         when {
             path == "/kin/ping" -> {
-                return JSONObject()
+                return 200 to JSONObject()
                     .put("ok", true)
                     .put("server", "PocketKin-Phone")
                     .put("time", System.currentTimeMillis())
@@ -118,9 +158,9 @@ object PhoneSyncServer {
             }
             path == "/kin/state" && method == "GET" -> {
                 val mem = latestSnapshot?.toString()
-                if (!mem.isNullOrEmpty()) return mem
+                if (!mem.isNullOrEmpty()) return 200 to mem
                 val snapshotStr = prefs.getString("snapshot", "{}") ?: "{}"
-                return snapshotStr
+                return 200 to snapshotStr
             }
             path == "/kin/action" && method == "POST" -> {
                 val inputJson = runCatching { JSONObject(body) }.getOrDefault(JSONObject())
@@ -134,7 +174,7 @@ object PhoneSyncServer {
                     runCatching { Thread.sleep(80) }
                     val snap = latestSnapshot ?: runCatching { JSONObject(prefs.getString("snapshot", "{}") ?: "{}") }.getOrNull()
                     if (snap != null) ack.put("snapshot", snap)
-                    return ack.toString()
+                    return 200 to ack.toString()
                 }
 
                 val pathStr = prefs.getString("save_path", "") ?: ""
@@ -168,7 +208,7 @@ object PhoneSyncServer {
                         }
                     }
                 }
-                return ack.toString()
+                return 200 to ack.toString()
             }
             path == "/kin/sync_health" && method == "POST" -> {
                 val data = runCatching { JSONObject(body) }.getOrDefault(JSONObject())
@@ -212,10 +252,10 @@ object PhoneSyncServer {
                     }
                 }
 
-                return JSONObject().put("ok", true).put("message", "Watch health synchronized").toString()
+                return 200 to JSONObject().put("ok", true).put("message", "Watch health synchronized").toString()
             }
             else -> {
-                return JSONObject().put("ok", false).put("message", "Not found").toString()
+                return 404 to JSONObject().put("ok", false).put("message", "Not found").toString()
             }
         }
     }

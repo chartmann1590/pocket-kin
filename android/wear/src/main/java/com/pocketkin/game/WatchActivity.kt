@@ -51,7 +51,7 @@ class WatchActivity : ComponentActivity() {
 
     // Health state
     private var todaySteps by mutableIntStateOf(0)
-    private var heartRate by mutableIntStateOf(74)
+    private var heartRate by mutableIntStateOf(0) // 0 = waiting for a real sensor reading
     private var hydrationCups by mutableIntStateOf(0)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -504,7 +504,7 @@ class WatchActivity : ComponentActivity() {
                     }
                 }
 
-                // Health Tracking (Heart Harmony & Hydration)
+                // Pet Heartbeat Harmony & pet sips (game features, not health tracking)
                 item {
                     Column(
                         modifier = Modifier
@@ -520,13 +520,14 @@ class WatchActivity : ComponentActivity() {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("$heartRate BPM", color = Color(0xFFFFFDF8), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                            Text(if (heartRate > 0) "$heartRate BPM" else "— BPM", color = Color(0xFFFFFDF8), fontSize = 15.sp, fontWeight = FontWeight.Bold)
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(Color(0xFFF06292).copy(alpha = 0.2f))
                                     .clickable {
-                                        heartRate = healthManager.measureHeartRatePulse()
+                                        healthManager.requestFreshReading()
+                                        heartRate = healthManager.getHeartRate()
                                         vibrate(40)
                                         scope.launch { syncManager.syncHealth(healthManager.getHealthPayload()) }
                                     }
@@ -536,19 +537,19 @@ class WatchActivity : ComponentActivity() {
                             }
                         }
                         Text(
-                            if (heartRate in 60..82) "Calm & Serene · +Friendship Boost" else "Active & Lively",
+                            when { heartRate <= 0 -> "Waiting for a real heart-rate reading…"; heartRate in 60..82 -> "Calm & Serene · +Friendship Boost"; else -> "Active & Lively" },
                             color = Color(0xFFB0C4AC),
                             fontSize = 10.sp
                         )
 
                         Spacer(Modifier.height(8.dp))
-                        Text("💧 Daily Hydration", color = Color(0xFF4FC3F7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("💧 Pet's Daily Sips", color = Color(0xFF4FC3F7), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("$hydrationCups / 8 cups", color = Color(0xFFFFFDF8), fontSize = 13.sp)
+                            Text("$hydrationCups / 8 sips for your pet", color = Color(0xFFFFFDF8), fontSize = 13.sp)
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
@@ -564,7 +565,7 @@ class WatchActivity : ComponentActivity() {
                             }
                         }
                         Text(
-                            "${healthManager.getActiveMinutes()} active min · ${healthManager.getCalories()} kcal",
+                            "≈ ${healthManager.getActiveMinutes()} active min · ${healthManager.getCalories()} kcal (game estimate from steps)",
                             color = Color(0xFFB0C4AC),
                             fontSize = 10.sp,
                             modifier = Modifier.padding(top = 4.dp)

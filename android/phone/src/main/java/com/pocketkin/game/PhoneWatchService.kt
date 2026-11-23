@@ -28,6 +28,9 @@ class PhoneWatchService : WearableListenerService() {
                 val snapshot=JSONObject(prefs.getString("snapshot","{}") ?: "{}")
                 snapshot.put("phone_ip", PhoneSyncServer.getLocalIpAddress(this@PhoneWatchService))
                 snapshot.put("server_port", PhoneSyncServer.PORT)
+                // Pairing token for the local HTTP fallback, shared ONLY on this paired
+                // Wearable message channel — never over HTTP itself.
+                snapshot.put("sync_token", PhoneSyncServer.pairingToken(this@PhoneWatchService))
                 runCatching { Wearable.getMessageClient(this@PhoneWatchService).sendMessage(event.sourceNodeId,"/kin/state",snapshot.toString().toByteArray()).await() }
                 return@launch
             }
