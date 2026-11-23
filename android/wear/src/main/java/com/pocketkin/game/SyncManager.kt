@@ -42,6 +42,7 @@ class SyncManager(
     private var heartbeatJob: Job? = null
     private var fallbackIp: String = "10.0.2.2"
     private var fallbackPort: Int = 8765
+    private var pairingToken: String = ""
     private var lastWorkingBaseUrl: String? = null
     private var currentSnapshot: JSONObject = JSONObject()
 
@@ -50,6 +51,7 @@ class SyncManager(
         currentSnapshot = runCatching { JSONObject(cached) }.getOrDefault(JSONObject())
         fallbackIp = prefs.getString("phone_ip", "10.0.0.113") ?: "10.0.0.113"
         fallbackPort = prefs.getInt("server_port", 8765)
+        pairingToken = prefs.getString("sync_token", "") ?: ""
         extractFallbackInfo(currentSnapshot)
     }
 
@@ -76,6 +78,19 @@ class SyncManager(
         if (port > 0) {
             fallbackPort = port
             prefs.edit().putInt("server_port", port).apply()
+        }
+        // The phone shares this only over the paired Wearable channel; the HTTP
+        // fallback must present it on every request or the phone returns 401.
+        val token = snapshot.optString("sync_token", "")
+        if (token.isNotBlank()) {
+            pairingToken = token
+            prefs.edit().putString("sync_token", token).apply()
+        }
+    }
+
+    private fun addAuth(conn: HttpURLConnection) {
+        if (pairingToken.isNotBlank()) {
+            conn.setRequestProperty("X-Kin-Pairing-Token", pairingToken)
         }
     }
 
@@ -153,6 +168,7 @@ class SyncManager(
                 conn.connectTimeout = 1500
                 conn.readTimeout = 1500
                 conn.requestMethod = "GET"
+                addAuth(conn)
                 if (conn.responseCode == 200) {
                     val reader = BufferedReader(InputStreamReader(conn.inputStream, StandardCharsets.UTF_8))
                     val body = reader.readText()
@@ -253,6 +269,7 @@ class SyncManager(
                 conn.requestMethod = "POST"
                 conn.doOutput = true
                 conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                addAuth(conn)
                 val writer = OutputStreamWriter(conn.outputStream, StandardCharsets.UTF_8)
                 writer.write(jsonStr)
                 writer.flush()
@@ -313,6 +330,7 @@ class SyncManager(
                     conn.requestMethod = "POST"
                     conn.doOutput = true
                     conn.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    addAuth(conn)
                     val writer = OutputStreamWriter(conn.outputStream, StandardCharsets.UTF_8)
                     writer.write(jsonStr)
                     writer.flush()

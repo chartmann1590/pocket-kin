@@ -3,17 +3,19 @@
 Canonical public URL: **https://chartmann1590.github.io/pocket-kin/privacy**
 (source: `docs/privacy.html`, deployed to GitHub Pages by `.github/workflows/deploy-pages.yml`).
 
-Last updated: 2026-09-29. Contact: support@charleshartmann.com.
+Last updated: 2026-11-23. Contact: support@charleshartmann.com.
 
 ## What Pocket Kin is
 Single-player cozy virtual pet game for all ages. One active pet, no chat/trading, English, portrait phone + Wear OS companion.
 
 ## Data we collect
 - **Game save (optional cloud backup):** pet state, inventory, room, discoveries, memories, settings, revision, entitlements. Raw step counts and timezone offset are stripped before upload (`World.cloud_snapshot`, `validateSave`). Stored in Firebase Firestore per-account (`users/{uid}`), writes via Cloud Functions only.
-- **Account:** Firebase Anonymous ID; optional Google link (parent-managed for children). Deletion via in-game Delete Account → removes Firestore save + receipts + Auth user.
+- **Account:** Firebase Anonymous ID; optional Google link (parent-managed for children). Deletion via in-game Delete Account → removes Firestore save + receipts + Auth user. Web deletion page (Play account-deletion link): https://chartmann1590.github.io/pocket-kin/delete-account.html (`docs/delete-account.html`).
 - **Purchases:** Play purchase tokens verified server-side; receipt hashes stored for dedup/restore/refund handling. No card data touched by us.
 - **Steps (optional, opt-in only):** today's/yesterday's step totals via Health Connect (preferred) or on-device sensor session. Used only for walking milestones (500/1500/3000 → petals/friendship/parcels). Raw steps stay on device; only milestone claim IDs sync. No GPS or routes. Deny/revoke anytime; game fully playable without steps.
-- **Watch heart rate (optional, opt-in only):** on a paired Wear OS watch, the companion can read the current heart-rate (BPM) from the watch's sensor after you grant the body-sensors permission on the watch. It powers the "Heartbeat Harmony" mood bonus and the live watch/phone dashboard. Readings stay on the watch and phone, are never uploaded to any server, and are never used for advertising or analytics. No health data is ever written back. Skip or revoke the permission and the game stays fully playable.
+- **Watch heart rate (optional, opt-in only):** on a paired Wear OS watch, the companion can read the current heart-rate (BPM) from the watch's sensor after you grant the body-sensors permission on the watch. It powers the "Heartbeat Harmony" mood bonus and the live watch/phone dashboard. Readings stay on the watch and phone, are never uploaded to any server, and are never used for advertising or analytics. No health data is ever written back. Skip or revoke the permission and the game stays fully playable. Only real sensor readings are used — the app contains no simulated or placeholder heart-rate value (removed 2026-11-23).
+- **Local watch sync (your phone ↔ your watch only):** if Bluetooth sync is unavailable, the watch reaches the phone app over your own local Wi-Fi (`PhoneSyncServer`, port 8765, `/kin/*`). Every request must carry the pairing token the phone shares with your watch only over the paired Wearable channel; unauthenticated requests are rejected. It carries the pet snapshot, care actions and the watch game inputs above. It never leaves your local network and is never sent to us or any third party.
+- **Not a health app:** Pocket Kin is a game. Steps and heart rate are game inputs only — the app does not monitor your health, track fitness, diagnose anything, or give health advice.
 - **Diagnostics:** Crashlytics technical crash logs (analytics collection disabled in manifest). No health data in crashes/ads/analytics.
 
 ## Data we never collect/share

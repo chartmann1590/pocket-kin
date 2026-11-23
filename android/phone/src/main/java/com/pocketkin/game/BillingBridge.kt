@@ -155,11 +155,14 @@ class BillingBridge(
                 val consumeParams = ConsumeParams.newBuilder()
                     .setPurchaseToken(token)
                     .build()
-                client.consumeAsync(consumeParams) { billingResult, _ ->
-                    if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        prefs.edit().remove("pending_grant_$token").apply()
-                    }
-                }
+                // Billing P1 (PR #2) — do NOT clear pending_grant in this callback.
+                // The record may only be cleared by confirmGrant(), after Godot has
+                // durably saved the grant (world.gd records the purchase token in
+                // data.claims before confirming). Clearing it here, on consume success,
+                // would still lose a paid grant if the app died between consumption and
+                // the game saving; restore() replays any leftover record on the next
+                // launch and the token claim makes that replay idempotent.
+                client.consumeAsync(consumeParams) { _, _ -> }
             } else {
                 // Non-consumables: acknowledge so Google Play doesn't auto-refund after 3 days
                 if (!purchase.isAcknowledged) {

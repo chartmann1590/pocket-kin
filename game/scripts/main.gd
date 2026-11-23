@@ -1294,9 +1294,12 @@ func walk_page() -> void:
 		var sync_badge := label(I18n.T("walk.synced", "🟢 Wear Companion Synced"), 19, Color("2e7d32"))
 		sync_row.add_child(sync_badge)
 
-		var hr: int = int(watch_info.get("heart_rate", 74))
-		var hr_text := I18n.T("walk.hr", "❤️ %d BPM (from your watch, stays on this device) · %s") % [hr, I18n.T("walk.serene", "Serene Harmony (+Friendship)") if hr in range(60, 83) else I18n.T("walk.lively", "Lively Pulse")]
-		paragraph(hr_text, content, 21)
+		var hr: int = int(watch_info.get("heart_rate", 0))
+		if hr > 0:
+			var hr_text := I18n.T("walk.hr", "❤️ %d BPM (from your watch, stays on this device) · %s") % [hr, I18n.T("walk.serene", "Serene Harmony (+Friendship)") if hr in range(60, 83) else I18n.T("walk.lively", "Lively Pulse")]
+			paragraph(hr_text, content, 21)
+		else:
+			paragraph(I18n.T("walk.hr.waiting", "❤️ Heart rate: waiting for a real reading from your watch — nothing is shown until your watch measures it."), content, 21)
 
 		var hydration: int = int(watch_info.get("hydration", 0))
 		var hydro_text := I18n.T("walk.hydration", "💧 Hydration: %d / 8 cups water logged") % hydration
@@ -1384,6 +1387,7 @@ func shop_page() -> void:
 	var mystery_card := card(body, Color("fcf5fb"))
 	mystery_card.add_child(label(I18n.T("shop.mystery.kicker", "SURPRISE MYSTERY CRATES"), 17, Color("8e24aa")))
 	mystery_card.add_child(label(I18n.T("shop.mystery.title", "Unbox Secret Treasures"), 27, INK, true))
+	paragraph(I18n.T("shop.mystery.odds", "Prize odds, shown before you open: Lucky Petal Crate — 40% 50-90 Petals, 30% a gourmet treat, 15% 100-150 Petals jackpot, 15% a decor or accessory item you don't own yet (100 Petals instead if you own them all). Royal Golden Trunk — 50% 200-350 Petals, 50% a decor or outfit item (300 Petals instead if you own them all)."), mystery_card, 16)
 
 	var m_row := row(mystery_card, 12)
 	# Lucky Box
@@ -1405,7 +1409,7 @@ func shop_page() -> void:
 	var rb_card := card(m_row, Color("ffffff"))
 	rb_card.get_parent().size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rb_card.add_child(label(I18n.T("shop.royal.trunk", "👑 Royal Golden Trunk"), 22, INK, true))
-	paragraph(I18n.T("shop.royal.desc", "Guaranteed 200-350 Petals, rare decor, or luxury outfits."), rb_card, 18)
+	paragraph(I18n.T("shop.royal.desc", "200-350 Petals or a rare decor / luxury outfit item — see the odds above before opening."), rb_card, 18)
 	button(I18n.T("shop.open.140", "Open for ✦ 140 petals"), func():
 		var res: Dictionary = World.open_mystery_box("royal")
 		if res.get("ok", false):

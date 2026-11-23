@@ -1,6 +1,6 @@
 # Pocket Kin 🐾
 
-A cozy storybook virtual-pet game for Android with original hand-crafted artwork, egg hatching, care and growth, interactive petting, bubble baths, treat tossing, mini-games, exploration, room decoration, walking rewards, home-screen widget, and a connected **Wear OS companion app** featuring live step tracking and health monitoring.
+A cozy storybook virtual-pet game for Android with original hand-crafted artwork, egg hatching, care and growth, interactive petting, bubble baths, treat tossing, mini-games, exploration, room decoration, walking rewards, home-screen widget, and a connected **Wear OS companion app**. Your real-world steps unlock in-game parcels, and — only if you allow it — your pet playfully reacts to your watch's heart-rate sensor. Those are game mechanics only: Pocket Kin is not a health, fitness or medical app, does not monitor your health, and never uploads step or heart-rate values.
 
 ---
 
@@ -14,11 +14,11 @@ A cozy storybook virtual-pet game for Android with original hand-crafted artwork
   - **Illness & Recovery**: Soothing treatments to heal your friend when unwell.
 - **⌚ Wear OS Companion App**:
   - **Dual-Channel Synchronization**: Primary sync via Google Play Services Wearable API (`Wearable.MessageClient`) with automatic real-time fallback to local HTTP (`PhoneSyncServer`).
-  - **Step Tracking**: Live hardware step counter counts toward daily expedition parcel unlocks (Dewdrop Pouch, Sunbeam Parcel, Golden Star Chest).
-  - **Pet Heartbeat Harmony**: Monitors heart rate (BPM) and rewards calm rhythms with pet friendship bonuses.
-  - **Daily Hydration**: One-tap water logging (`+1 Sip 💧`) to refresh pet vitality.
+  - **Walk Together (game feature)**: The hardware step counter counts your steps toward daily in-game expedition parcel unlocks (Dewdrop Pouch, Sunbeam Parcel, Golden Star Chest). Steps are a game input, not fitness tracking.
+  - **Pet Heartbeat Harmony (game feature)**: With the body-sensors permission on the watch, the pet earns friendship bonuses when the watch's heart-rate sensor reads a calm range. Only real sensor readings are used (no simulated values), readings stay on the watch/phone pair and are never uploaded, and the feature is a playful pet reaction — not heart-rate monitoring, health advice, or a medical function.
+  - **Pet's Daily Sips**: One-tap (`+1 Sip 💧`) gives your *pet* a drink in the game to refresh its vitality. It does not track your own drinking.
   - **Quick Care from Wrist**: Feed, Cuddle, Wash, Bed, and Raindrop Rhythm minigame.
-  - **Wear OS Tiles & Complications**: Glanceable pet mood and steps directly on your watch face.
+  - **Wear OS Tile & Complications**: Pocket Kin provides a Wear OS Tile — swipe on your watch face to the Pocket Kin Tile to see your pet's mood, hunger, happiness and today's in-game walking progress at a glance, and tap it to open the watch app for quick care. A watch-face complication also shows pet mood or steps.
 - **🖼️ Interactive Home-Screen Widget**:
   - Live stage badge, mood status, Hunger and Happiness progress bars, and synced step counters.
   - Quick-action buttons (`🍎 Feed`, `💖 Love`, `👟 Walk`) with cold-start intent routing directly into the game.
@@ -32,11 +32,11 @@ A cozy storybook virtual-pet game for Android with original hand-crafted artwork
 | :---: | :---: | :---: |
 | ![Widget](screenshots/phone_widget.png) | ![Sanctuary](screenshots/phone_sanctuary.png) | ![Bubble Bath](screenshots/phone_bath.png) |
 
-| Fruit Picnic | Walk & Health Expedition | Wear OS Companion |
+| Fruit Picnic | Walk Together Expedition | Wear OS Companion |
 | :---: | :---: | :---: |
 | ![Picnic](screenshots/phone_picnic.png) | ![Walk](screenshots/phone_walk.png) | ![Watch Status](screenshots/wear_pet_status.png) |
 
-| Wear Health & Harmony | Wear Live Sync |
+| Wear Heartbeat Harmony (game feature) | Wear Live Sync |
 | :---: | :---: |
 | ![Watch Health](screenshots/wear_health_dashboard.png) | ![Live Sync](screenshots/wear_live_sync.png) |
 
@@ -48,7 +48,7 @@ A cozy storybook virtual-pet game for Android with original hand-crafted artwork
 flowchart TD
     subgraph WearOS["⌚ Wear OS Companion (:wear)"]
         WS["WearSyncService & SyncManager"]
-        Health["Step Counter & Health Sensors\n(Heart Rate, Hydration, Energy)"]
+        Health["Step Counter & Watch Sensors\n(heart rate for the pet's game reaction; in-game sips/energy)"]
         UI_Wear["Compose Wear OS UI"]
     end
 
@@ -97,7 +97,7 @@ Families self-certification checklist (`FAMILIES.md`).
   (see `android/gradle.properties.example`) — never commit production ad IDs.
 - **Compliance:** cleartext traffic is disabled except local Wear sync, backups/transfer rules
   are declared, Wear OS pairing intent filters are present, and `versionCode` bumps with every
-  upload (currently 3).
+  upload (this release: phone 10007, wear 20007, versionName 0.2.1).
 
 ## 🚀 Building & Testing
 

@@ -17,8 +17,9 @@ Pocket Kin is an original cozy virtual pet game. Hatch a creature from three sta
 - Grow together: baby → juvenile (~2 days) → adult (~7 days of kind care). Personality, tricks, friendship milestones, memory album.
 - Play: fruit catching, matching pairs, rhythm tapping + meadow, woodland, moonlit pond outings with collectible discoveries.
 - Decorate: 30 earned decorations, 12 earned accessories, sanctuary for retired friends, daily tasks + collection goals. Missing days never erases progress.
-- Walk Together (optional): count steps via Health Connect or on-device sensor for happiness + parcels. Fully playable without it; steps-only, no GPS.
-- Wear OS companion: glanceable pet, needs, care shortcuts, 20-sec rhythm game, walking milestones, optional heart-rate harmony (watch sensor permission), tile + complication (needs connected phone).
+- Walk Together (optional): count steps via Health Connect or on-device sensor for happiness + parcels. Fully playable without it; steps-only, no GPS. Steps are used only as a game input — Pocket Kin is not a fitness or health tracker and gives no health advice.
+- Wear OS companion: glanceable pet, needs, care shortcuts, 20-sec rhythm game, walking milestones, and — only with the watch body-sensors permission — a game feature where your pet reacts to your watch's heart-rate sensor with a friendship bonus. Pocket Kin does not monitor your health and heart-rate readings are never uploaded.
+- Wear OS Tile: Pocket Kin includes a Wear OS Tile. Swipe on your watch face to the Pocket Kin Tile to see your pet's mood, hunger and happiness and today's in-game walking progress at a glance; tap the Tile to open the watch app and use quick care (Feed, Cuddle, Wash, Bed). A watch-face complication can also show your pet's mood or steps. (Tile and complication need a connected phone.)
 - Cloud saves, family-friendly: parent gate, no chat, core care always free.
 - Fair monetization: Optional Petal Bundles, Cozy Caretaker Pass (ad-free care forever + golden crown), and seasonal cosmetic bundles. All purchases and external links are strictly protected behind parent gates. Optional rewarded ads never interrupt care.
 
@@ -35,5 +36,7 @@ Full questionnaire answers: release/CONTENT_RATING.md.
 - Privacy policy: https://chartmann1590.github.io/pocket-kin/privacy.html
 - Terms of service: https://chartmann1590.github.io/pocket-kin/terms.html
 
-## What's new (0.2.0)
-First Play release: 6 species, 3 mini-games, 3 destinations, decorating + sanctuary, Walk Together, Wear OS companion + tile/complication, cloud saves.
+## What's new (0.2.1)
+Compliance and honesty update: step and heart-rate features are described and used only as game mechanics (no health monitoring; only real watch sensor readings are shown); the local watch-sync channel now requires the pairing token shared privately between your own phone and watch; mystery-crate prize odds are disclosed in the shop before opening; consumable purchases are now credited durably before they are consumed, so a purchase cannot be lost if the app closes at the wrong moment.
+
+First Play release (0.2.0): 6 species, 3 mini-games, 3 destinations, decorating + sanctuary, Walk Together, Wear OS companion + Tile/complication, cloud saves.
